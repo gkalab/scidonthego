@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Scid on the go</string>
+	<string-array name="font_size_texts">
+    	<item>Small</item>
+	    <item>Medium</item>
+    	<item>Large</item>
+	</string-array>
+	<string-array name="font_size_values">
+	    <item>10</item>
+    	<item>12</item>
+	    <item>16</item>
+	</string-array>
+    <string-array name="theme_texts">
+        <item>Default</item>
+        <item>Brown</item>
+        <item>Blue</item>
+        <item>Grey</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+	<string name="about_info">\
+<b>About</b>\n\
+<i>Scid on the go</i> is a viewer for <i>Scid</i> chess database files. \n\
+\n\
+<b>Features</b>\n\
+* Browse Scid database files\n\
+* Search current board\n\
+* Copy/paste to/from clipboard\n\
+* Edit board\n\
+* Support for variations\n\
+\n\
+<b>Hints</b>\n\
+* Put all three files (*.si4, *.sg4, *.sn4) of a Scid database into the scid folder on your SD Card.\n\
+* Long press chess board to activate copy/paste menu.\n\
+* In edit board mode, long press chess board to activate edit menu.\n\
+* If the game contains multiple variations, scroll up/down on the chess board to \
+go to the previous/next variation.\n\
+\n\
+<b>License</b>\n\
+GNU GPL v2\n\
+\n\
+<b>Developers</b>\n\
+* Most of the GUI code was taken from Peter Österlunds DroidFish and re-released under GPL v2 by the authors permission.\n\
+* Scid integration by Gerhard Kalab.
+	</string>
+	<string name="offer_draw">Offer Draw</string>
+	<string name="queen">Queen</string>
+	<string name="rook">Rook</string>
+	<string name="bishop">Bishop</string>
+	<string name="knight">Knight</string>
+	<string name="promote_pawn_to">Promote pawn to?</string>
+	<string name="copy_game">Copy Game to Clipboard</string>
+	<string name="copy_position">Copy Position to Clipboard</string>
+	<string name="paste">Paste from Clipboard</string>
+	<string name="load_scid_game">Open a Scid file</string>
+	<string name="remove_variation">Remove variation</string>
+	<string name="tools_menu">Tools</string>
+	<string name="goto_move">Goto move</string>
+    <string name="goto_game">Goto game</string>
+	<string name="invalid_number_format">Invalid number format</string>
+	<string name="side_to_move">Side to Move</string>
+	<string name="clear_board">Clear Board</string>
+	<string name="initial_position">Initial Position</string>
+	<string name="castling_flags">Castling Flags</string>
+	<string name="en_passant_file">En Passant File</string>
+	<string name="move_counters">Move Counters</string>
+	<string name="paste_position">Paste Position</string>
+	<string name="edit_board">Edit Board</string>
+	<string name="select_side_to_move_first">Select side to move first</string>
+	<string name="white">White</string>
+	<string name="black">Black</string>
+	<string name="white_king_castle">White king castle</string>
+	<string name="white_queen_castle">White queen castle</string>
+	<string name="black_king_castle">Black king castle</string>
+	<string name="black_queen_castle">Black queen castle</string>
+	<string name="none">None</string>
+	<string name="select_en_passant_file">Select En Passant File</string>
+	<string name="edit_move_counters">Edit Move Counters</string>
+	<string name="internal_book">&lt;Internal Book&gt;</string>
+	<string name="select_opening_book_file">Select opening book file</string>
+	<string name="select_pgn_file">Select file to open</string>
+	<string name="select_pgn_game">Select game to open</string>
+	<string name="reading_pgn_file">Reading PGN file</string>
+	<string name="reading_scid_file">Reading Scid file</string>
+	<string name="please_wait">Please wait...</string>
+	<string name="no_pgn_files">No files found in directory /scid on the SD card</string>
+	<string name="no_scid_files">No files found in directory /scid on the SD card</string>
+	<string name="select_color_theme">Select Color Theme</string>
+    <string name="reset_filter">Reset search filter</string>
+    <string name="search_current_board">Search current board</string>
+    <string name="search_header">Search header</string>
+    <string name="search">Search</string>
+    <string name="search_exact_position">Exact Position (all pieces on same squares)</string>
+    <string name="search_pawns">Pawns (same material, all pawns on same squares)</string>
+    <string name="search_files">Files (same material, all pawns on same files)</string>
+    <string name="search_any">Any (same material, pawns and pieces anywhere)</string>
+    <string name="ignore_colors">Ignore colors</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="result">Result:</string>
+    <string name="event">Event</string>
+    <string name="site">Site</string>
+    <string name="game_number">Game number</string>
+    <string name="move_number">Move number</string>
+    <string name="halfmove_clock">Halfmove clock</string>
+    <string name="fullmove_counter">Fullmove counter</string>
+    <string name="eco_code">ECO code:</string>
+    <string name="search_eco_from_default">A00</string>
+    <string name="search_eco_to_default">E99</string>
+    <string name="search_filter_prompt">Operation on current filter:</string>
+    <string-array name="search_filter_array">
+        <item>IGNORE (Reset filter)</item>
+        <item>OR (Add to filter)</item>
+        <item>AND (Restrict filter)</item>
+    </string-array>
+</resources>

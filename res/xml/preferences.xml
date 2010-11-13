@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory
+		android:title="User Interface">
+		<CheckBoxPreference
+			android:key="oneTouchMoves"
+			android:title="One Touch Moves"
+			android:summary="Touching a square that corresponds to one unique move makes that move immediately"
+			android:defaultValue="false">
+		</CheckBoxPreference>
+		<ListPreference
+			android:key="fontSize"
+			android:title="Text Size"
+			android:summary="Font size for move list and game information"
+			android:entryValues="@array/font_size_values"
+			android:entries="@array/font_size_texts"
+			android:defaultValue="12">
+		</ListPreference>
+        <ListPreference
+            android:key="colorTheme"
+            android:title="Color Theme"
+            android:summary="Change the color theme"
+            android:entryValues="@array/theme_values"
+            android:entries="@array/theme_texts"
+            android:defaultValue="0">
+        </ListPreference>
+	</PreferenceCategory>
+</PreferenceScreen>

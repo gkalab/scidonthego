@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <view
+        class="org.scid.android.ChessBoard"
+        android:id="@+id/chessboard"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <view
+            class="org.scid.android.MoveIndicator"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="15dp"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/moveindicator">
+        </view>
+        <ImageButton
+            android:id="@+id/previous_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onPreviousGameClick"
+            android:src="@drawable/previous_game" />
+        <ImageButton
+            android:id="@+id/next_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onNextGameClick"
+            android:src="@drawable/next_game" />
+        <ImageButton
+            android:id="@+id/flip_board"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onFlipBoardClick"
+            android:src="@drawable/flip" />
+        <ImageButton
+            android:id="@+id/previous_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onPreviousMoveClick"
+            android:src="@drawable/previous" />
+        <ImageButton
+            android:id="@+id/next_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onNextMoveClick"
+            android:src="@drawable/next" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/status"
+        android:singleLine="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="true"
+        android:textStyle="bold"
+        android:typeface="monospace"
+        android:textSize="12dip" />
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingTop="5dp">
+        <TextView
+            android:id="@+id/moveList"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="true"
+            android:typeface="monospace"
+            android:textSize="10dip" />
+    </ScrollView>
+</LinearLayout>
