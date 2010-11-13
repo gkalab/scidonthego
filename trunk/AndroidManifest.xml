@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.scid.android"
+    android:versionCode="1"
+    android:versionName="1.0"
+    android:installLocation="auto">
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:name=".ScidApplication">
+        <activity
+            android:name=".ScidAndroidActivity"
+            android:label="@string/app_name"
+            android:configChanges="orientation">
+            <intent-filter>
+                <action
+                    android:name="android.intent.action.MAIN" />
+                <category
+                    android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="Preferences"
+            android:label="Preferences">
+        </activity>
+        <activity
+            android:name="EditBoard"
+            android:label="Edit Board"
+            android:configChanges="orientation">
+        </activity>
+        <activity
+            android:name="SearchCurrentBoardActivity"
+            android:label="Board Search">
+        </activity>
+        <activity
+            android:name="SearchHeaderActivity"
+            android:label="Header Search">
+        </activity>
+
+        <provider
+            android:name="org.scid.database.ScidProvider"
+            android:authorities="org.scid.database.scidprovider" />
+    </application>
+    <uses-sdk
+        android:minSdkVersion="3" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+</manifest> 

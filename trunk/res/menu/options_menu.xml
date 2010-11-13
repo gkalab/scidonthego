@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- item
+  		android:id="@+id/item_new_game"
+	  	android:title="New Game"
+  		android:icon="@drawable/ic_menu_add">
+	</item-->
+	<item
+  		android:id="@+id/item_open_file"
+	  	android:title="Open File"
+  		android:icon="@drawable/ic_menu_archive">
+	</item>
+	<item
+  		android:id="@+id/item_editboard"
+	  	android:title="Edit Board"
+  		android:icon="@drawable/ic_menu_manage">
+	</item>
+	<item
+	 	android:id="@+id/item_settings"
+	  	android:title="Settings"
+  		android:icon="@drawable/ic_menu_preferences">
+	</item>
+    <item
+        android:id="@+id/item_goto_game"
+        android:title="Goto Game"
+  		android:icon="@drawable/ic_menu_goto">
+    </item>
+	<item
+		android:id="@+id/item_goto_move"
+		android:title="Goto Move">
+	</item>
+    <item
+        android:id="@+id/item_search"
+        android:title="Search">
+    </item>
+	<!-- item
+		android:id="@+id/item_draw"
+		android:title="Claim/Offer/Accept Draw">
+	</item>
+	<item
+		android:id="@+id/item_resign"
+		android:title="Resign game">
+	</item-->
+	<item
+		android:id="@+id/item_about"
+		android:title="About / Help"
+  		android:icon="@drawable/ic_menu_help">
+	</item>
+</menu>
