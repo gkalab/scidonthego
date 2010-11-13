@@ -16,11 +16,6 @@
 	  	android:title="Edit Board"
   		android:icon="@drawable/ic_menu_manage">
 	</item>
-	<item
-	 	android:id="@+id/item_settings"
-	  	android:title="Settings"
-  		android:icon="@drawable/ic_menu_preferences">
-	</item>
     <item
         android:id="@+id/item_goto_game"
         android:title="Goto Game"
@@ -30,6 +25,11 @@
 		android:id="@+id/item_goto_move"
 		android:title="Goto Move">
 	</item>
+    <item
+        android:id="@+id/item_settings"
+        android:title="Settings"
+        android:icon="@drawable/ic_menu_preferences">
+    </item>
     <item
         android:id="@+id/item_search"
         android:title="Search">
