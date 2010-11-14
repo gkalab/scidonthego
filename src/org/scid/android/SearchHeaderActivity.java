@@ -69,14 +69,17 @@ public class SearchHeaderActivity extends Activity {
 			EditText ecoFrom = (EditText) findViewById(R.id.search_eco_from);
 			EditText ecoTo = (EditText) findViewById(R.id.search_eco_to);
 			String[] search = { "" + filterOperation,
-					white.getText().toString(), black.getText().toString(),
+					white.getText().toString().trim(),
+					black.getText().toString().trim(),
 					ignoreColors.isChecked() ? "true" : "false",
 					resultWhiteWins.isChecked() ? "true" : "false",
 					resultDraw.isChecked() ? "true" : "false",
 					resultBlackWins.isChecked() ? "true" : "false",
 					resultUnspecified.isChecked() ? "true" : "false",
-					event.getText().toString(), site.getText().toString(),
-					ecoFrom.getText().toString(), ecoTo.getText().toString() };
+					event.getText().toString().trim(),
+					site.getText().toString().trim(),
+					ecoFrom.getText().toString().trim(),
+					ecoTo.getText().toString().trim() };
 
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
 					"Searching...", true, false);
