@@ -37,7 +37,6 @@ public class ColorTheme {
 			"arrow5" };
 	private static final String prefPrefix = "color_";
 
-	final static String[] themeNames = { "Default", "Brown", "Blue", "Grey" };
 	private final static String themeColors[][] = {
 			{ "#FF80A0A0", "#FFD0E0D0", "#FFFF0000", "#FF00FF00", "#FF000000",
 					"#FFFFFFFF", "#FF888888", "#A01F1FFF", "#A0FF1F1F",
@@ -48,7 +47,7 @@ public class ColorTheme {
 			{ "#FF83A5D2", "#FFFFFFFA", "#FF3232D1", "#FF5F5FFD", "#FF282828",
 					"#FFF0F0F0", "#FF3333FF", "#A01F1FFF", "#A01FFF1F",
 					"#501F1FFF", "#501FFF1F", "#1E1F1FFF", "#281FFF1F" },
-			{ "#FF666666", "#FFDDDDDD", "#FFFF0000", "#FF0000FF", "#FF000000",
+			{ "#FF769656", "#FFEEEED2", "#FFFF0000", "#FF0000FF", "#FF000000",
 					"#FFFFFFFF", "#FF888888", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" } };
 

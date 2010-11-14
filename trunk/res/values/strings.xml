@@ -15,7 +15,7 @@
         <item>Default</item>
         <item>Brown</item>
         <item>Blue</item>
-        <item>Grey</item>
+        <item>Green</item>
     </string-array>
     <string-array name="theme_values">
         <item>0</item>
@@ -88,8 +88,8 @@ GNU GPL v2\n\
 	<string name="reading_pgn_file">Reading PGN file</string>
 	<string name="reading_scid_file">Reading Scid file</string>
 	<string name="please_wait">Please wait...</string>
-	<string name="no_pgn_files">No files found in directory /scid on the SD card</string>
-	<string name="no_scid_files">No files found in directory /scid on the SD card</string>
+	<string name="no_pgn_files">No files found in directory\n/scid on the SD card.\nPlease put scid files\n(*.si4, *.sn4,\n*.sg4) in this directory.</string>
+	<string name="no_scid_files">No files found in directory\n/scid on the SD card.\nPlease put scid files\n(*.si4, *.sn4,\n*.sg4) in this directory.</string>
 	<string name="select_color_theme">Select Color Theme</string>
     <string name="reset_filter">Reset search filter</string>
     <string name="search_current_board">Search current board</string>
