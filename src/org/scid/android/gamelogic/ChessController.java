@@ -275,8 +275,12 @@ public class ChessController {
 
 	private final void setPlayerNames(Game game) {
 		if (game != null) {
-			String white = gameMode.playerWhite() ? "Player" : "Engine";
-			String black = gameMode.playerBlack() ? "Player" : "Engine";
+			String white = "";
+			String black = "";
+			if (!gameMode.humansTurn(game.currPos().whiteMove)) {
+				white = gameMode.playerWhite() ? "Player" : "Engine";
+				black = gameMode.playerBlack() ? "Player" : "Engine";
+			}
 			game.tree.setPlayerNames(white, black);
 		}
 	}
