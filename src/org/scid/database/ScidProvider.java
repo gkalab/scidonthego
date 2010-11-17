@@ -68,7 +68,8 @@ public class ScidProvider extends ContentProvider {
 				result = new ScidCursor(selection);
 			} else if (selectionArgs.length == 3) {
 				result = searchBoard(selection, 0, selectionArgs);
-			} else if (selectionArgs.length == 12) {
+                // TODO: refactor 13 to constant
+			} else if (selectionArgs.length == 13) {
 				result = searchHeader(selection, 0, selectionArgs);
 			}
 			break;
@@ -82,7 +83,7 @@ public class ScidProvider extends ContentProvider {
 				result = new ScidCursor(selection, startPosition);
 			} else if (selectionArgs.length == 3) {
 				result = searchBoard(selection, startPosition, selectionArgs);
-			} else if (selectionArgs.length == 12) {
+			} else if (selectionArgs.length == 13) {
 				result = searchHeader(selection, startPosition, selectionArgs);
 			}
 			break;

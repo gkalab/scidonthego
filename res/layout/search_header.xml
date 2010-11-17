@@ -108,6 +108,12 @@
                 android:text=""
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/eco_none"
+                android:text="@string/eco_none"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
         </LinearLayout>
         <TextView
             android:layout_width="fill_parent"

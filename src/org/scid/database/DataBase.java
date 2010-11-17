@@ -16,7 +16,7 @@ public class DataBase {
 	/**
 	 * Do a board search and return the found game numbers and plys in an int
 	 * array
-	 * 
+	 *
 	 * @param fileName
 	 *            the file name to search
 	 * @param fen
@@ -38,7 +38,7 @@ public class DataBase {
 			String black, boolean ignoreColors, boolean result_win_white,
 			boolean result_draw, boolean result_win_black, boolean result_none,
 			String event, String site, String ecoFrom, String ecoTo,
-			int filterOperation, int[] currentFilter);
+			boolean includeEcoNone, int filterOperation, int[] currentFilter);
 
 	/** Get the number of games of a scid file. */
 	public final native int getSize(String fileName);

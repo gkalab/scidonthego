@@ -118,11 +118,12 @@ public class ScidCursor extends AbstractCursor {
 		String site = selectionArgs[9];
 		String ecoFrom = selectionArgs[10];
 		String ecoTo = selectionArgs[11];
+        boolean ecoNone = Boolean.parseBoolean(selectionArgs[12]);
 
 		filterMap.put(fileName, new Filter(db.searchHeader(fileName, white,
 				black, ignoreColors, result_win_white, result_draw,
 				result_win_black, result_none, event, site, ecoFrom, ecoTo,
-				filterOp, filter)));
+				ecoNone, filterOp, filter)));
 	}
 
 	@Override

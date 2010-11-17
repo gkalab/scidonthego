@@ -18,7 +18,6 @@ const filterOpT FILTEROP_AND = 2;
 const filterOpT FILTEROP_OR = 1;
 const filterOpT FILTEROP_RESET = 0;
 
-
 /*
  * Class:     org_scid_database_DataBase
  * Method:    loadGame
@@ -88,25 +87,14 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
     const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
         Index * sourceIndex = new Index;
-        NameBase * sourceNameBase = new NameBase;
-        GFile * sourceGFile = new GFile;
 
         sourceIndex->SetFileName(sourceFileName);
-        sourceNameBase->SetFileName(sourceFileName);
         if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
-            return 0;
-        }
-        if (sourceNameBase->ReadNameFile() != OK) {
-            return 0;
-        }
-        if (sourceGFile->Open(sourceFileName, FMODE_ReadOnly) != OK) {
             return 0;
         }
         int result = sourceIndex->GetNumGames();
         // cleanup
         sourceIndex->CloseIndexFile();
-        sourceNameBase->Clear();
-        sourceGFile->Close();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
@@ -294,18 +282,13 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
     const char* fen = (*env).GetStringUTFChars(position, NULL);
     if (sourceFileName && fen) {
         Index * sourceIndex = new Index;
-        NameBase * sourceNameBase = new NameBase;
         GFile * sourceGFile = new GFile;
         ByteBuffer * bbuf = new ByteBuffer;
         bbuf->SetBufferSize (BBUF_SIZE);
         errorT err = 0;
 
         sourceIndex->SetFileName(sourceFileName);
-        sourceNameBase->SetFileName(sourceFileName);
         if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
-            return (*env).NewIntArray(0);
-        }
-        if (sourceNameBase->ReadNameFile() != OK) {
             return (*env).NewIntArray(0);
         }
         if (sourceGFile->Open(sourceFileName, FMODE_ReadOnly) != OK) {
@@ -388,7 +371,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             int lastCallbackGameNo = -1;
             for (gameNum=0; gameNum < sourceIndex->GetNumGames(); gameNum++) {
                 //  show progress
-                // make sure to only call callback not more than 100 times - 512 calls crash the Application
+                // make sure to only call callback not more than 100 times
                 if (gameNum % progress_mod == 0 && gameNum != lastCallbackGameNo) {
                     lastCallbackGameNo = gameNum;
                     jclass cls = env->GetObjectClass(obj);
@@ -484,7 +467,6 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 
         // cleanup
         sourceIndex->CloseIndexFile();
-        sourceNameBase->Clear();
         sourceGFile->Close();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         (*env).ReleaseStringUTFChars(position, fen);
@@ -764,7 +746,8 @@ matchGameFlags (IndexEntry * ie, flagT fStdStart, flagT fPromos,
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHeader
         (JNIEnv *env, jobject obj, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
          jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
-         jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jint filterOperation, jintArray currentFilter)
+         jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
+         jint filterOperation, jintArray currentFilter)
 {
     jintArray result;
     int filterOp = filterOperation;
@@ -862,7 +845,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     ecoT ecoRange [2];    // ECO code range.
     ecoRange[0] = eco_FromString ("A00");
     ecoRange[1] = eco_FromString ("E99");
-    bool ecoNone = true;  // Whether to include games with no ECO code.
+    bool ecoNone = includeEcoNone;  // Whether to include games with no ECO code.
 
     // gameNumRange: a range of game numbers to search.
     int gameNumRange[2];
@@ -1027,7 +1010,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     int lastCallbackGameNo = -1;
     for (; i < noGames; i++) {
         // show progress
-        // make sure to only call callback not more than 100 times - 512 calls crash the Application
+        // make sure to only call callback not more than 100 times
         if (i % progress_mod == 0 && i != lastCallbackGameNo) {
             lastCallbackGameNo = i;
             jclass cls = env->GetObjectClass(obj);

@@ -513,6 +513,8 @@ errorT
 StrTree<C>::AddLast (const char * str, nodeT<C> ** returnNode)
 {
     if (TreeMode) { MakeList(); }
+    /* ANDROID: disable this check --> otherwise valid namebases sometimes will not open on Android
+             //TODO: check why
     if (TotalSize > 0) {
         // Make sure this string is larger than the previous string added:
         // Only do this if the string starts with the same character as the
@@ -525,7 +527,7 @@ StrTree<C>::AddLast (const char * str, nodeT<C> ** returnNode)
                 strCompare_INLINE (str, Last->name) <= 0) {
             return ERROR_Corrupt;
         }
-    }
+    }*/
 #ifdef WINCE
     nodeT<C> * node = (nodeT<C> *) my_Tcl_Alloc(sizeof(nodeT<C>));
 #else
@@ -615,7 +617,7 @@ StrTree<C>::GetFirstMatches (const char * str, uint maxMatches,
     ASSERT (array != NULL  &&  maxMatches > 0);
     if (! TreeMode) { MakeTree(); }
     uint matches = 0;
-    nodeT<C> * root = Root[(uint) *str];
+    nodeT<C> * root = Root[(byte) *str];
     FindMatches (str, strlen(str), root, &matches, maxMatches, array);
     return matches;
 }
