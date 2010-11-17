@@ -68,6 +68,7 @@ public class SearchHeaderActivity extends Activity {
 			EditText site = (EditText) findViewById(R.id.search_site);
 			EditText ecoFrom = (EditText) findViewById(R.id.search_eco_from);
 			EditText ecoTo = (EditText) findViewById(R.id.search_eco_to);
+			CheckBox ecoNone = (CheckBox) findViewById(R.id.eco_none);
 			String[] search = { "" + filterOperation,
 					white.getText().toString().trim(),
 					black.getText().toString().trim(),
@@ -79,7 +80,8 @@ public class SearchHeaderActivity extends Activity {
 					event.getText().toString().trim(),
 					site.getText().toString().trim(),
 					ecoFrom.getText().toString().trim(),
-					ecoTo.getText().toString().trim() };
+					ecoTo.getText().toString().trim(),
+					ecoNone.isChecked() ? "true" : "false" };
 
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
 					"Searching...", true, false);

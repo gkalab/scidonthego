@@ -118,4 +118,5 @@ GNU GPL v2\n\
         <item>OR (Add to filter)</item>
         <item>AND (Restrict filter)</item>
     </string-array>
+    <string name="eco_none">no ECO</string>
 </resources>
