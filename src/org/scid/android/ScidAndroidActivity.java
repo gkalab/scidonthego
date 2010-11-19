@@ -1253,11 +1253,5 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public boolean onSearchRequested() {
 		showDialog(SEARCH_DIALOG);
 		return true;
-		/*
-		 * Intent i = new Intent(ScidAndroidActivity.this,
-		 * SearchActivity.class); i.setAction(ctrl.getFEN());
-		 * startActivityForResult(i, RESULT_SEARCH); return true;
-		 */
 	}
-
 }
