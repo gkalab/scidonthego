@@ -29,48 +29,49 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_loadGame
     game->Clear();
     const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
-        Index * sourceIndex = new Index;
-        NameBase * sourceNameBase = new NameBase;
-        GFile * sourceGFile = new GFile;
-        ByteBuffer * bbuf = new ByteBuffer;
-        bbuf->SetBufferSize (BBUF_SIZE);
+        Index sourceIndex;
+        NameBase sourceNameBase;
+        GFile sourceGFile;
+        ByteBuffer bbuf;
+        bbuf.SetBufferSize (BBUF_SIZE);
         errorT err = 0;
 
-        sourceIndex->SetFileName(sourceFileName);
-        sourceNameBase->SetFileName(sourceFileName);
-        if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
-            return;
+        sourceIndex.SetFileName(sourceFileName);
+        sourceNameBase.SetFileName(sourceFileName);
+        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+        	goto cleanup;
         }
-        if (sourceNameBase->ReadNameFile() != OK) {
-            return;
+        if (sourceNameBase.ReadNameFile() != OK) {
+            goto cleanup;
         }
-        if (sourceGFile->Open(sourceFileName, FMODE_ReadOnly) != OK) {
-            return;
+        if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
+            goto cleanup;
         }
-        if (gameNo < sourceIndex->GetNumGames()) {
+        if (gameNo < sourceIndex.GetNumGames()) {
             IndexEntry iE;
-            err = sourceIndex->ReadEntries(&iE, gameNo, 1);
+            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
             if (err != OK) {
-                return;
+                goto cleanup;
             }
-            bbuf->Empty();
-            err = sourceGFile->ReadGame(bbuf, iE.GetOffset(), iE.GetLength());
+            bbuf.Empty();
+            err = sourceGFile.ReadGame(&bbuf, iE.GetOffset(), iE.GetLength());
             if (err != OK) {
-                return;
+                goto cleanup;
             }
-            if (game->Decode(bbuf, GAME_DECODE_ALL) != OK) {
-                return;
+            if (game->Decode(&bbuf, GAME_DECODE_ALL) != OK) {
+                goto cleanup;
             }
-            game->LoadStandardTags(&iE, sourceNameBase);
+            game->LoadStandardTags(&iE, &sourceNameBase);
             game->AddPgnStyle(PGN_STYLE_TAGS);
             game->AddPgnStyle(PGN_STYLE_COMMENTS);
             game->AddPgnStyle(PGN_STYLE_VARS);
             game->SetPgnFormat(PGN_FORMAT_Plain);
         }
         // cleanup
-        sourceIndex->CloseIndexFile();
-        sourceNameBase->Clear();
-        sourceGFile->Close();
+        sourceIndex.CloseIndexFile();
+        sourceNameBase.Clear();
+        sourceGFile.Close();
+      cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return;
     }
@@ -86,15 +87,16 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
 {
     const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
-        Index * sourceIndex = new Index;
+        Index sourceIndex;
 
-        sourceIndex->SetFileName(sourceFileName);
-        if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
+        sourceIndex.SetFileName(sourceFileName);
+        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+            (*env).ReleaseStringUTFChars(fileName, sourceFileName);
             return 0;
         }
-        int result = sourceIndex->GetNumGames();
+        int result = sourceIndex.GetNumGames();
         // cleanup
-        sourceIndex->CloseIndexFile();
+        sourceIndex.CloseIndexFile();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
@@ -110,12 +112,12 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
         (JNIEnv* env, jobject obj)
 {
     if (game->GetNumHalfMoves() > 0) {
-        TextBuffer * tbuf = new TextBuffer;
-        tbuf->SetBufferSize(TBUF_SIZE);
-        tbuf->Empty();
-        tbuf->SetWrapColumn(99999);
-        game->WriteToPGN(tbuf);
-        return (*env).NewStringUTF(tbuf->GetBuffer());
+        TextBuffer tbuf;
+        tbuf.SetBufferSize(TBUF_SIZE);
+        tbuf.Empty();
+        tbuf.SetWrapColumn(99999);
+        game->WriteToPGN(&tbuf);
+        return (*env).NewStringUTF(tbuf.GetBuffer());
     } else {
         static char emptyString = 0;
         return (*env).NewStringUTF(&emptyString);
@@ -131,25 +133,24 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
         (JNIEnv* env, jobject obj)
 {
     if (game->GetNumHalfMoves() > 0) {
-        TextBuffer * tbuf = new TextBuffer;
-        tbuf->SetBufferSize(TBUF_SIZE);
-        tbuf->Empty();
-        tbuf->SetWrapColumn(99999);
+        TextBuffer tbuf;
+        tbuf.SetBufferSize(TBUF_SIZE);
+        tbuf.Empty();
+        tbuf.SetWrapColumn(99999);
 
         game->MoveToPly(0);
-        moveT * m = (moveT *) new moveT;
-        m->prev = m->next = m->varParent = m->varChild = NULL;
-        m->numVariations = 0;
-        m->comment = NULL;
-        m->nagCount = 0;
-        m->nags[0] = 0;
-        m->marker = NO_MARKER;
-        m->san[0] = 0;
-        game->WriteMoveList (tbuf, 0, m, true, false);
-        delete m;
-        tbuf->PrintWord(RESULT_LONGSTR[game->GetResult()]);
+        moveT m;
+        m.prev = m.next = m.varParent = m.varChild = NULL;
+        m.numVariations = 0;
+        m.comment = NULL;
+        m.nagCount = 0;
+        m.nags[0] = 0;
+        m.marker = NO_MARKER;
+        m.san[0] = 0;
+        game->WriteMoveList (&tbuf, 0, &m, true, false);
+        tbuf.PrintWord(RESULT_LONGSTR[game->GetResult()]);
 
-        return (*env).NewStringUTF(tbuf->GetBuffer());
+        return (*env).NewStringUTF(tbuf.GetBuffer());
     } else {
         static char emptyString = 0;
         return (*env).NewStringUTF(&emptyString);
@@ -281,20 +282,20 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
     const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
     const char* fen = (*env).GetStringUTFChars(position, NULL);
     if (sourceFileName && fen) {
-        Index * sourceIndex = new Index;
-        GFile * sourceGFile = new GFile;
-        ByteBuffer * bbuf = new ByteBuffer;
-        bbuf->SetBufferSize (BBUF_SIZE);
+        Index sourceIndex;
+        GFile sourceGFile;
+        ByteBuffer bbuf;
+        bbuf.SetBufferSize (BBUF_SIZE);
         errorT err = 0;
 
-        sourceIndex->SetFileName(sourceFileName);
-        if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
+        sourceIndex.SetFileName(sourceFileName);
+        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
             return (*env).NewIntArray(0);
         }
-        if (sourceGFile->Open(sourceFileName, FMODE_ReadOnly) != OK) {
+        if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
             return (*env).NewIntArray(0);
         }
-        int noGames = sourceIndex->GetNumGames();
+        int noGames = sourceIndex.GetNumGames();
 
         if (noGames > 0) {
             // type of search
@@ -339,20 +340,20 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 
             // setup FEN position
             game->Clear();
-            Position * pos = new Position;
-            if (pos->ReadFromFEN (fen) != OK) {
-                if (pos->ReadFromLongStr (fen) != OK) {
+            Position pos;
+            if (pos.ReadFromFEN (fen) != OK) {
+                if (pos.ReadFromLongStr (fen) != OK) {
                     // invalid FEN
                     return (*env).NewIntArray(0);
                 }
             }
             // ReadFromFEN checks that there is one king of each side, but it
             // does not check that the position is actually legal:
-            if (! pos->IsLegal()) {
+            if (! pos.IsLegal()) {
                return (*env).NewIntArray(0);
             }
-            matSigT msig = matsig_Make (pos->GetMaterial());
-            uint hpSig = pos->GetHPSig();
+            matSigT msig = matsig_Make (pos.GetMaterial());
+            uint hpSig = pos.GetHPSig();
 
             // If filter operation is to reset the filter, reset it:
             if (filterOp == FILTEROP_RESET) {
@@ -363,13 +364,12 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             }
 
             // Here is the loop that searches on each game:
-            IndexEntry * ie;
-            Game * g = new Game;
+            Game g;
             uint gameNum;
 
             int progress_mod = noGames / 100;
             int lastCallbackGameNo = -1;
-            for (gameNum=0; gameNum < sourceIndex->GetNumGames(); gameNum++) {
+            for (gameNum=0; gameNum < sourceIndex.GetNumGames(); gameNum++) {
                 //  show progress
                 // make sure to only call callback not more than 100 times
                 if (gameNum % progress_mod == 0 && gameNum != lastCallbackGameNo) {
@@ -398,7 +398,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 }
 
                 IndexEntry ie;
-                err = sourceIndex->ReadEntries(&ie, gameNum, 1);
+                err = sourceIndex.ReadEntries(&ie, gameNum, 1);
                 if (err != OK) {
                     // Skip games with no gamefile record:
                     fill[gameNum] = 0;
@@ -436,8 +436,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 }
 
                 // At this point, the game needs to be loaded:
-                bbuf->Empty();
-                err = sourceGFile->ReadGame(bbuf, ie.GetOffset(), ie.GetLength());
+                bbuf.Empty();
+                err = sourceGFile.ReadGame(&bbuf, ie.GetOffset(), ie.GetLength());
                 if (err != OK) {
                     fill[gameNum] = 0;
                     continue;
@@ -445,9 +445,9 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 uint ply = 0;
                 // No searching in variations:
                 if (possibleMatch) {
-                    if (g->ExactMatch (pos, bbuf, NULL, searchType)) {
+                    if (g.ExactMatch (&pos, &bbuf, NULL, searchType)) {
                         // Set its auto-load move number to the matching move:
-                        ply = g->GetCurrentPly() + 1;
+                        ply = g.GetCurrentPly() + 1;
                     }
                 }
                 if (ply > 255) { ply = 255; }
@@ -455,19 +455,19 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 // if ply==0 --> not found
                 fill[gameNum] = ply;
             }
-            delete pos;
             result = (*env).NewIntArray(noGames);
             if (result == NULL) {
                 return NULL; // out of memory error thrown
             }
             (*env).SetIntArrayRegion(result, 0, noGames, fill);
+            delete [] fill;
         } else {
             result = (*env).NewIntArray(0);
         }
 
         // cleanup
-        sourceIndex->CloseIndexFile();
-        sourceGFile->Close();
+        sourceIndex.CloseIndexFile();
+        sourceGFile.Close();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         (*env).ReleaseStringUTFChars(position, fen);
         return result;
@@ -488,37 +488,37 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_create
     game->Clear();
     const char* targetFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (targetFileName) {
-        Index * targetIndex = new Index;
-        NameBase * targetNameBase = new NameBase;
-        GFile * targetGFile = new GFile;
-        targetIndex->SetFileName (targetFileName);
-        targetNameBase->SetFileName (targetFileName);
+        Index targetIndex;
+        NameBase targetNameBase;
+        GFile targetGFile;
+        targetIndex.SetFileName (targetFileName);
+        targetNameBase.SetFileName (targetFileName);
         // Check that the target database does not already exist:
-        Index * tempIndex = new Index;
-        tempIndex->SetFileName (targetFileName);
-        if (tempIndex->OpenIndexFile(FMODE_ReadOnly) == OK) {
-            tempIndex->CloseIndexFile();
+        Index tempIndex;
+        tempIndex.SetFileName (targetFileName);
+        if (tempIndex.OpenIndexFile(FMODE_ReadOnly) == OK) {
+            tempIndex.CloseIndexFile();
             //fprintf (stderr, "Error: the database %s already exists.\n", targetFileName);
             return;
         }
 
         // Open the target files:
-        if (targetIndex->CreateIndexFile(FMODE_WriteOnly) != OK) {
+        if (targetIndex.CreateIndexFile(FMODE_WriteOnly) != OK) {
             //fileError ("creating", targetFileName, INDEX_SUFFIX);
             return;
         }
-        if (targetGFile->Create (targetFileName, FMODE_WriteOnly) != OK) {
+        if (targetGFile.Create (targetFileName, FMODE_WriteOnly) != OK) {
             //fileError ("creating", targetFileName, GFILE_SUFFIX);
             return;
         }
 
         // Now all files have been read. All we need do is close the new base:
-        targetIndex->CloseIndexFile();
-        if (targetNameBase->WriteNameFile() != OK) {
+        targetIndex.CloseIndexFile();
+        if (targetNameBase.WriteNameFile() != OK) {
             //fileError ("writing", targetFileName, NAMEBASE_SUFFIX);
             return;
         }
-        if (targetGFile->Close() != OK) {
+        if (targetGFile.Close() != OK) {
             //fileError ("closing", targetFileName, GFILE_SUFFIX);
             return;
         }
@@ -762,23 +762,23 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
       result = (*env).NewIntArray(0);
       return result;
     }
-    Index * sourceIndex = new Index;
-    NameBase * sourceNameBase = new NameBase;
-    GFile * sourceGFile = new GFile;
+    Index sourceIndex;
+    NameBase sourceNameBase;
+    GFile sourceGFile;
     errorT err = 0;
 
-    sourceIndex->SetFileName(sourceFileName);
-    sourceNameBase->SetFileName(sourceFileName);
-    if (sourceIndex->OpenIndexFile(FMODE_ReadOnly) != OK) {
+    sourceIndex.SetFileName(sourceFileName);
+    sourceNameBase.SetFileName(sourceFileName);
+    if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
         return (*env).NewIntArray(0);
     }
-    if (sourceNameBase->ReadNameFile() != OK) {
+    if (sourceNameBase.ReadNameFile() != OK) {
         return (*env).NewIntArray(0);
     }
-    if (sourceGFile->Open(sourceFileName, FMODE_ReadOnly) != OK) {
+    if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
         return (*env).NewIntArray(0);
     }
-    int noGames = sourceIndex->GetNumGames();
+    int noGames = sourceIndex.GetNumGames();
 
     if (noGames <= 0) {
         result = (*env).NewIntArray(0);
@@ -903,10 +903,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (sWhite != NULL  &&  sWhite[0] != 0) {
         char * search = sWhite;
         // Search players for match on White name:
-        idNumberT numNames = sourceNameBase->GetNumNames(NAME_PLAYER);
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_PLAYER);
         mWhite = new bool [numNames];
         for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase->GetName (NAME_PLAYER, i);
+            char * name = sourceNameBase.GetName (NAME_PLAYER, i);
             mWhite[i] = strAlphaContains (name, search);
         }
     }
@@ -915,10 +915,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (sBlack != NULL  &&  sBlack[0] != 0) {
         char * search = sBlack;
         // Search players for match on Black name:
-        idNumberT numNames = sourceNameBase->GetNumNames(NAME_PLAYER);
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_PLAYER);
         mBlack = new bool [numNames];
         for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase->GetName (NAME_PLAYER, i);
+            char * name = sourceNameBase.GetName (NAME_PLAYER, i);
             mBlack[i] = strAlphaContains (name, search);
         }
     }
@@ -927,10 +927,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (sEvent != NULL  &&  sEvent[0] != 0) {
         char * search = sEvent;
         // Search players for match on Event name:
-        idNumberT numNames = sourceNameBase->GetNumNames(NAME_EVENT);
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_EVENT);
         mEvent = new bool [numNames];
         for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase->GetName (NAME_EVENT, i);
+            char * name = sourceNameBase.GetName (NAME_EVENT, i);
             mEvent[i] = strAlphaContains (name, search);
         }
     }
@@ -939,10 +939,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (sSite != NULL  &&  sSite[0] != 0) {
         char * search = sSite;
         // Search players for match on Site name:
-        idNumberT numNames = sourceNameBase->GetNumNames(NAME_SITE);
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_SITE);
         mSite = new bool [numNames];
         for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase->GetName (NAME_SITE, i);
+            char * name = sourceNameBase.GetName (NAME_SITE, i);
             mSite[i] = strAlphaContains (name, search);
         }
     }
@@ -951,10 +951,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (sRound != NULL  &&  sRound[0] != 0) {
         char * search = sRound;
         // Search players for match on Event name:
-        idNumberT numNames = sourceNameBase->GetNumNames(NAME_ROUND);
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_ROUND);
         mRound = new bool [numNames];
         for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase->GetName (NAME_ROUND, i);
+            char * name = sourceNameBase.GetName (NAME_ROUND, i);
             mRound[i] = strAlphaContains (name, search);
         }
     }
@@ -1042,7 +1042,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
             continue;
         }
 
-        ie = sourceIndex->FetchEntry (i);
+        ie = sourceIndex.FetchEntry (i);
         if (ie->GetLength() == 0) {  // Skip games with no gamefile record
             fill[i] = 0;
             continue;
@@ -1056,7 +1056,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
                             fQside, fBrilliancy, fBlunder, fUser,
                             fCustom1, fCustom2, fCustom3, fCustom4, fCustom5, fCustom6
                            )) {
-            if (matchGameHeader (ie, sourceNameBase, mWhite, mBlack,
+            if (matchGameHeader (ie, &sourceNameBase, mWhite, mBlack,
                                  mEvent, mSite, mRound,
                                  dateRange[0], dateRange[1], results,
                                  wEloRange[0], wEloRange[1],
@@ -1071,7 +1071,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
             // Try with inverted players/ratings/results if ignoring colors:
 
             if (!match  &&  ignoreColors  &&
-                matchGameHeader (ie, sourceNameBase, mBlack, mWhite,
+                matchGameHeader (ie, &sourceNameBase, mBlack, mWhite,
                                  mEvent, mSite, mRound,
                                  dateRange[0], dateRange[1], resultsF,
                                  bEloRange[0], bEloRange[1],
@@ -1099,10 +1099,12 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     result = (*env).NewIntArray(i);
     if (i > 0) {
         if (result == NULL) {
+            delete [] fill;
             return NULL; // out of memory error thrown
         }
         (*env).SetIntArrayRegion(result, 0, i, fill);
     }
+    delete [] fill;
 
     if (sWhite != NULL) { delete[] sWhite; }
     if (sBlack != NULL) { delete[] sBlack; }
@@ -1118,9 +1120,9 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     if (bTitles != NULL) { delete[] bTitles; }
 
     // cleanup
-    sourceIndex->CloseIndexFile();
-    sourceNameBase->Clear();
-    sourceGFile->Close();
+    sourceIndex.CloseIndexFile();
+    sourceNameBase.Clear();
+    sourceGFile.Close();
     (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     (*env).ReleaseStringUTFChars(white, strWhite);
     (*env).ReleaseStringUTFChars(black, strBlack);
