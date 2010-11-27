@@ -110,7 +110,7 @@ GNU GPL v2\n\
     <string name="move_number">Move number</string>
     <string name="halfmove_clock">Halfmove clock</string>
     <string name="fullmove_counter">Fullmove counter</string>
-    <string name="eco_code">ECO code:</string>
+    <string name="eco_code">ECO:</string>
     <string name="search_eco_from_default">A00</string>
     <string name="search_eco_to_default">E99</string>
     <string name="search_filter_prompt">Operation on current filter:</string>

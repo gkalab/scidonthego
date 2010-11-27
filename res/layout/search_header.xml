@@ -33,15 +33,15 @@
             android:text="@string/ignore_colors"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/result_text"
+            android:text="@string/result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"></TextView>
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content">
-            <TextView
-                android:id="@+id/result_text"
-                android:text="@string/result"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"></TextView>
             <CheckBox
                 android:id="@+id/result_white_wins"
                 android:text="1-0"
@@ -51,7 +51,7 @@
                 android:paddingRight="5dp" />
             <CheckBox
                 android:id="@+id/result_draw"
-                android:text="1/2-1/2"
+                android:text="1/2"
                 android:checked="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
