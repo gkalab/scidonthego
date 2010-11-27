@@ -1,8 +1,6 @@
 package org.scid.database;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import android.database.AbstractCursor;
@@ -48,20 +46,21 @@ public class ScidCursor extends AbstractCursor {
 			return info.toString();
 		}
 
-		public String[] getColumns() {
-			List<String> resultList = new ArrayList<String>();
-			resultList.add("" + id);
-			resultList.add(event);
-			resultList.add(site);
-			resultList.add(date);
-			resultList.add(round);
-			resultList.add(white);
-			resultList.add(black);
-			resultList.add(result);
-			resultList.add(pgn);
-			resultList.add(this.toString());
-			resultList.add("" + currentPly);
-			return (String[]) resultList.toArray(new String[resultList.size()]);
+		public String getColumn(int position) {
+		    switch (position) {
+		    case 0: return "" + id;
+		    case 1: return event;
+		    case 2: return site;
+		    case 3: return date;
+		    case 4: return round;
+		    case 5: return white;
+		    case 6: return black;
+		    case 7: return result;
+		    case 8: return pgn;
+		    case 9: return this.toString();
+		    case 10: return "" + currentPly;
+		    default: return null;
+		    }
 		}
 	}
 
@@ -162,7 +161,7 @@ public class ScidCursor extends AbstractCursor {
 		return filter;
 	}
 
-	@Override
+    @Override
 	public String[] getColumnNames() {
 		return new String[] { "_id", ScidProviderMetaData.ScidMetaData.EVENT,
 				ScidProviderMetaData.ScidMetaData.SITE,
@@ -251,7 +250,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public int getInt(int position) {
 		if (this.gi != null) {
-			return new Integer(this.gi.getColumns()[position]).intValue();
+			return new Integer(this.gi.getColumn(position)).intValue();
 		}
 		return 0;
 	}
@@ -259,7 +258,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public long getLong(int position) {
 		if (this.gi != null) {
-			return new Long(this.gi.getColumns()[position]).longValue();
+			return new Long(this.gi.getColumn(position)).longValue();
 		}
 		return 0;
 	}
@@ -267,7 +266,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public short getShort(int position) {
 		if (this.gi != null) {
-			return new Short(this.gi.getColumns()[position]).shortValue();
+			return new Short(this.gi.getColumn(position)).shortValue();
 		}
 		return 0;
 	}
@@ -275,7 +274,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public String getString(int position) {
 		if (this.gi != null) {
-			return this.gi.getColumns()[position];
+			return this.gi.getColumn(position);
 		}
 		return null;
 	}
@@ -283,7 +282,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public boolean isNull(int position) {
 		if (this.gi != null) {
-			return "".equals(this.gi.getColumns()[position]);
+			return "".equals(this.gi.getColumn(position));
 		}
 		return true;
 	}
