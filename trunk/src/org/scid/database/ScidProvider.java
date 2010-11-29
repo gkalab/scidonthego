@@ -65,12 +65,12 @@ public class ScidProvider extends ContentProvider {
 						"The scid file name must be specified as the selection.");
 			}
 			if (selectionArgs == null) {
-				result = new ScidCursor(selection);
+				result = new ScidCursor(selection, projection, false);
 			} else if (selectionArgs.length == 3) {
-				result = searchBoard(selection, 0, selectionArgs);
+				result = searchBoard(selection, projection, 0, selectionArgs, false);
                 // TODO: refactor 13 to constant
 			} else if (selectionArgs.length == 13) {
-				result = searchHeader(selection, 0, selectionArgs);
+				result = searchHeader(selection, projection, 0, selectionArgs, false);
 			}
 			break;
 		case INCOMING_SINGLE_GAME_URI_INDICATOR:
@@ -80,11 +80,11 @@ public class ScidProvider extends ContentProvider {
 			}
 			int startPosition = new Integer(uri.getLastPathSegment());
 			if (selectionArgs == null) {
-				result = new ScidCursor(selection, startPosition);
+				result = new ScidCursor(selection, projection, startPosition, true);
 			} else if (selectionArgs.length == 3) {
-				result = searchBoard(selection, startPosition, selectionArgs);
+				result = searchBoard(selection, projection, startPosition, selectionArgs, true);
 			} else if (selectionArgs.length == 13) {
-				result = searchHeader(selection, startPosition, selectionArgs);
+				result = searchHeader(selection, projection, startPosition, selectionArgs, true);
 			}
 			break;
 		default:
@@ -93,15 +93,15 @@ public class ScidProvider extends ContentProvider {
 		return result;
 	}
 
-	private Cursor searchBoard(String selection, int startPosition,
-			String[] selectionArgs) {
-		return new ScidCursor(selection, startPosition, selectionArgs[0],
-				selectionArgs[1], new Integer(selectionArgs[2]));
+	private Cursor searchBoard(String selection, String[] projection, int startPosition,
+			String[] selectionArgs, boolean singleGame) {
+		return new ScidCursor(selection, projection, startPosition, selectionArgs[0],
+				selectionArgs[1], new Integer(selectionArgs[2]), singleGame);
 	}
 
-	private Cursor searchHeader(String selection, int startPosition,
-			String[] selectionArgs) {
-		return new ScidCursor(selection, startPosition, selectionArgs);
+	private Cursor searchHeader(String selection, String[] projection, int startPosition,
+			String[] selectionArgs, boolean singleGame) {
+		return new ScidCursor(selection, projection, startPosition, selectionArgs, singleGame);
 	}
 
 	@Override

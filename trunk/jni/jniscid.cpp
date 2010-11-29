@@ -21,32 +21,49 @@ const filterOpT FILTEROP_RESET = 0;
 /*
  * Class:     org_scid_database_DataBase
  * Method:    loadGame
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_loadGame
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo)
+                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders)
 {
-    game->Clear();
+	static bool initialized = false;
+	static char* currFileName = 0;
+	static Index sourceIndex;
+	static NameBase sourceNameBase;
+	static GFile sourceGFile;
+	static ByteBuffer bbuf;
+
+	game->Clear();
     const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
-        Index sourceIndex;
-        NameBase sourceNameBase;
-        GFile sourceGFile;
-        ByteBuffer bbuf;
-        bbuf.SetBufferSize (BBUF_SIZE);
         errorT err = 0;
+        if ((currFileName == 0) || (strcmp(currFileName, sourceFileName) != 0))
+        	initialized = false;
+    	if (!initialized) {
+            if (currFileName != 0) {
+            	// cleanup
+            	sourceIndex.CloseIndexFile();
+            	sourceNameBase.Clear();
+            	sourceGFile.Close();
+            }
+            bbuf.SetBufferSize (BBUF_SIZE);
+            sourceIndex.SetFileName(sourceFileName);
+            sourceNameBase.SetFileName(sourceFileName);
+            if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+            	goto cleanup;
+            }
+            if (sourceNameBase.ReadNameFile() != OK) {
+                goto cleanup;
+            }
+            if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
+                goto cleanup;
+            }
+            if (currFileName)
+            	free(currFileName);
+            currFileName = strdup(sourceFileName);
+    		initialized = true;
+    	}
 
-        sourceIndex.SetFileName(sourceFileName);
-        sourceNameBase.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-        	goto cleanup;
-        }
-        if (sourceNameBase.ReadNameFile() != OK) {
-            goto cleanup;
-        }
-        if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
-            goto cleanup;
-        }
         if (gameNo < sourceIndex.GetNumGames()) {
             IndexEntry iE;
             err = sourceIndex.ReadEntries(&iE, gameNo, 1);
@@ -58,8 +75,12 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_loadGame
             if (err != OK) {
                 goto cleanup;
             }
-            if (game->Decode(&bbuf, GAME_DECODE_ALL) != OK) {
-                goto cleanup;
+            if (onlyHeaders) {
+            	game->SetNumHalfMoves(iE.GetNumHalfMoves());
+            } else {
+            	if (game->Decode(&bbuf, GAME_DECODE_ALL) != OK) {
+            		goto cleanup;
+            	}
             }
             game->LoadStandardTags(&iE, &sourceNameBase);
             game->AddPgnStyle(PGN_STYLE_TAGS);
@@ -67,10 +88,6 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_loadGame
             game->AddPgnStyle(PGN_STYLE_VARS);
             game->SetPgnFormat(PGN_FORMAT_Plain);
         }
-        // cleanup
-        sourceIndex.CloseIndexFile();
-        sourceNameBase.Clear();
-        sourceGFile.Close();
       cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return;
