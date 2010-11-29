@@ -11,7 +11,7 @@ public class DataBase {
 	public final native void create(String fileName);
 
 	/** Load a game from a scid file and set it as the current game. */
-	public final native void loadGame(String fileName, int gameNo);
+	public final native void loadGame(String fileName, int gameNo, boolean onlyHeaders);
 
 	/**
 	 * Do a board search and return the found game numbers and plys in an int
