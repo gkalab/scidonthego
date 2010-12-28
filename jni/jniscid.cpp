@@ -764,7 +764,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         (JNIEnv *env, jobject obj, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
          jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
          jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
-         jint filterOperation, jintArray currentFilter)
+         jstring yearFrom, jstring yearTo, jint filterOperation, jintArray currentFilter)
 {
     jintArray result;
     int filterOp = filterOperation;
@@ -775,7 +775,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     const char* strSite = (*env).GetStringUTFChars(site, NULL);
     const char* strEcoFrom = (*env).GetStringUTFChars(ecoFrom, NULL);
     const char* strEcoTo = (*env).GetStringUTFChars(ecoTo, NULL);
-    if (!sourceFileName || !strWhite || !strBlack || !strEvent || !strSite || !strEcoFrom || !strEcoTo) {
+    const char* strYearFrom = (*env).GetStringUTFChars(yearFrom, NULL);
+    const char* strYearTo = (*env).GetStringUTFChars(yearTo, NULL);
+    if (!sourceFileName || !strWhite || !strBlack || !strEvent || !strSite || !strEcoFrom || !strEcoTo
+        || !strYearFrom || !strYearTo) {
       result = (*env).NewIntArray(0);
       return result;
     }
@@ -834,7 +837,19 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 
     dateT dateRange[2];
     dateRange[0] = ZERO_DATE;
-    dateRange[1] = DATE_MAKE (YEAR_MAX, 12, 31);
+    if (strYearFrom[0] != 0) {
+        uint year = strGetUnsigned(strYearFrom);
+        if (year <= YEAR_MAX && year > 1000) {
+            dateRange[0] = DATE_MAKE(year, 1, 1);
+        }
+    }
+    dateRange[1] = DATE_MAKE(YEAR_MAX, 12, 31);
+    if (strYearTo[0] != 0) {
+        uint year = strGetUnsigned(strYearTo);
+        if (year <= YEAR_MAX && year > 1000) {
+            dateRange[1] = DATE_MAKE(year, 12, 31);
+        }
+    }
 
     bool results [NUM_RESULT_TYPES];
     bool resultsF [NUM_RESULT_TYPES];  // Flipped results for ignore-colors.
@@ -1147,5 +1162,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     (*env).ReleaseStringUTFChars(site, strSite);
     (*env).ReleaseStringUTFChars(ecoFrom, strEcoFrom);
     (*env).ReleaseStringUTFChars(ecoTo, strEcoTo);
+    (*env).ReleaseStringUTFChars(yearFrom, strYearFrom);
+    (*env).ReleaseStringUTFChars(yearTo, strYearTo);
     return result;
 }
