@@ -11,14 +11,23 @@ public class ScidCursor extends AbstractCursor {
 
 	private static final class GameInfo {
 		private String event = "";
+
 		private String site = "";
+
 		private String date = "";
+
 		private String round = "";
+
 		private String white = "";
+
 		private String black = "";
+
 		private String result = "";
+
 		private String pgn = "";
+
 		private int id = -1;
+
 		private int currentPly = 0;
 
 		public String toString() {
@@ -48,61 +57,80 @@ public class ScidCursor extends AbstractCursor {
 		}
 
 		public String getColumn(int position) {
-		    switch (position) {
-		    case 0: return "" + id;
-		    case 1: return event;
-		    case 2: return site;
-		    case 3: return date;
-		    case 4: return round;
-		    case 5: return white;
-		    case 6: return black;
-		    case 7: return result;
-		    case 8: return pgn;
-		    case 9: return this.toString();
-		    case 10: return "" + currentPly;
-		    default: return null;
-		    }
+			switch (position) {
+			case 0:
+				return "" + id;
+			case 1:
+				return event;
+			case 2:
+				return site;
+			case 3:
+				return date;
+			case 4:
+				return round;
+			case 5:
+				return white;
+			case 6:
+				return black;
+			case 7:
+				return result;
+			case 8:
+				return pgn;
+			case 9:
+				return this.toString();
+			case 10:
+				return "" + currentPly;
+			default:
+				return null;
+			}
 		}
 	}
 
 	private int count;
+
 	private DataBase db;
+
 	private String fileName;
+
 	private GameInfo gi;
+
 	private int startPosition;
+
 	private int[] projection;
+
 	boolean wantPGN = false; // True if projection contains pgn column
+
 	boolean singleGame = false;
+
 	// TODO: check for thread safety
 	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
 
 	public ScidCursor(String fileName, String[] projection, boolean singleGame) {
 		super();
 		filterMap.put(fileName, null);
-        this.singleGame = singleGame;
+		this.singleGame = singleGame;
 		init(fileName, projection, 0);
 	}
 
-	public ScidCursor(String fileName, String[] projection, int startPosition, boolean singleGame) {
+	public ScidCursor(String fileName, String[] projection, int startPosition,
+			boolean singleGame) {
 		this(fileName, projection, singleGame);
 		this.startPosition = startPosition;
 		handleProjection(projection);
 	}
 
-	private final static String[] columns = new String[] {
-            "_id",
-            ScidProviderMetaData.ScidMetaData.EVENT,
-            ScidProviderMetaData.ScidMetaData.SITE,
-            ScidProviderMetaData.ScidMetaData.DATE,
-            ScidProviderMetaData.ScidMetaData.ROUND,
-            ScidProviderMetaData.ScidMetaData.WHITE,
-            ScidProviderMetaData.ScidMetaData.BLACK,
-            ScidProviderMetaData.ScidMetaData.RESULT,
-            ScidProviderMetaData.ScidMetaData.PGN,
-            ScidProviderMetaData.ScidMetaData.SUMMARY,
-            ScidProviderMetaData.ScidMetaData.CURRENT_PLY
-    };
-	
+	private final static String[] columns = new String[] { "_id",
+			ScidProviderMetaData.ScidMetaData.EVENT,
+			ScidProviderMetaData.ScidMetaData.SITE,
+			ScidProviderMetaData.ScidMetaData.DATE,
+			ScidProviderMetaData.ScidMetaData.ROUND,
+			ScidProviderMetaData.ScidMetaData.WHITE,
+			ScidProviderMetaData.ScidMetaData.BLACK,
+			ScidProviderMetaData.ScidMetaData.RESULT,
+			ScidProviderMetaData.ScidMetaData.PGN,
+			ScidProviderMetaData.ScidMetaData.SUMMARY,
+			ScidProviderMetaData.ScidMetaData.CURRENT_PLY };
+
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
 		this.db = new DataBase();
@@ -112,45 +140,46 @@ public class ScidCursor extends AbstractCursor {
 	}
 
 	private void handleProjection(String[] projection) {
-	    if (projection == null) {
-	        this.projection = new int[columns.length];
-	        for (int i = 0; i < columns.length; i++)
-	            this.projection[i] = i;
-	    } else {
-	        ArrayList<Integer> proj = new ArrayList<Integer>();
-	        for (String p : projection) {
-	            int idx = 0;
-	            for (int i = 0; i < columns.length; i++)
-	                if (columns[i].equals(p)) {
-	                    idx = i;
-	                    break;
-		        }
-	            proj.add(idx);
-	        }
-	        this.projection = new int[proj.size()];
-	        for (int i = 0; i < proj.size(); i++)
-	            this.projection[i] = proj.get(i);
-	    }
-	    wantPGN = false;
-	    for (int p : this.projection)
-	        if (p == 8) {
-	            wantPGN = true;
-	            break;
-	        }
+		if (projection == null) {
+			this.projection = new int[columns.length];
+			for (int i = 0; i < columns.length; i++)
+				this.projection[i] = i;
+		} else {
+			ArrayList<Integer> proj = new ArrayList<Integer>();
+			for (String p : projection) {
+				int idx = 0;
+				for (int i = 0; i < columns.length; i++)
+					if (columns[i].equals(p)) {
+						idx = i;
+						break;
+					}
+				proj.add(idx);
+			}
+			this.projection = new int[proj.size()];
+			for (int i = 0; i < proj.size(); i++)
+				this.projection[i] = proj.get(i);
+		}
+		wantPGN = false;
+		for (int p : this.projection)
+			if (p == 8) {
+				wantPGN = true;
+				break;
+			}
 	}
 
 	public ScidCursor(String fileName, String[] projection, int startPosition,
-			String filterOperation, String fen, int searchType, boolean singleGame) {
+			String filterOperation, String fen, int searchType,
+			boolean singleGame) {
 		super();
-        this.singleGame = singleGame;
+		this.singleGame = singleGame;
 		init(fileName, projection, startPosition);
 		searchBoard(fileName, filterOperation, fen, searchType);
 	}
 
-	public ScidCursor(String fileName, String[] projection, int startPosition, 
-	                  String[] selectionArgs, boolean singleGame) {
+	public ScidCursor(String fileName, String[] projection, int startPosition,
+			String[] selectionArgs, boolean singleGame) {
 		super();
-        this.singleGame = singleGame;
+		this.singleGame = singleGame;
 		init(fileName, projection, startPosition);
 		searchHeader(fileName, selectionArgs);
 	}
@@ -169,12 +198,14 @@ public class ScidCursor extends AbstractCursor {
 		String site = selectionArgs[9];
 		String ecoFrom = selectionArgs[10];
 		String ecoTo = selectionArgs[11];
-        boolean ecoNone = Boolean.parseBoolean(selectionArgs[12]);
+		boolean ecoNone = Boolean.parseBoolean(selectionArgs[12]);
+		String yearFrom = selectionArgs[13];
+		String yearTo = selectionArgs[14];
 
 		filterMap.put(fileName, new Filter(db.searchHeader(fileName, white,
 				black, ignoreColors, result_win_white, result_draw,
 				result_win_black, result_none, event, site, ecoFrom, ecoTo,
-				ecoNone, filterOp, filter)));
+				ecoNone, yearFrom, yearTo, filterOp, filter)));
 	}
 
 	@Override
@@ -213,13 +244,13 @@ public class ScidCursor extends AbstractCursor {
 		return filter;
 	}
 
-    @Override
+	@Override
 	public String[] getColumnNames() {
-        String[] ret = new String[projection.length];
-        int idx = 0;
-        for (int i : projection)
-            ret[idx++] = columns[i];
-        return ret;
+		String[] ret = new String[projection.length];
+		int idx = 0;
+		for (int i : projection)
+			ret[idx++] = columns[i];
+		return ret;
 	}
 
 	@Override
@@ -238,11 +269,11 @@ public class ScidCursor extends AbstractCursor {
 			gi.site = "";
 		}
 		String date = this.db.getDate();
-        if (date.endsWith(".??.??")) {
-            date = date.substring(0, date.length() - 6);
-        } else if (date.endsWith(".??")) {
-            date = date.substring(0, date.length() - 3);
-        }
+		if (date.endsWith(".??.??")) {
+			date = date.substring(0, date.length() - 6);
+		} else if (date.endsWith(".??")) {
+			date = date.substring(0, date.length() - 3);
+		}
 		if (date.equals("?") || date.equals("????")) {
 			date = "";
 		}
@@ -271,7 +302,7 @@ public class ScidCursor extends AbstractCursor {
 			return this.onFilterMove(oldPosition, newPosition);
 		}
 		int gameNo = startPosition + newPosition;
-        boolean onlyHeaders = !wantPGN;
+		boolean onlyHeaders = !wantPGN;
 		this.db.loadGame(fileName, gameNo, onlyHeaders);
 		setGameInfo(gameNo);
 		return true;
@@ -281,7 +312,7 @@ public class ScidCursor extends AbstractCursor {
 		int gameNo = filterMap.get(fileName).getGameNo(
 				startPosition + newPosition);
 		if (gameNo >= 0) {
-		    boolean onlyHeaders = !wantPGN;
+			boolean onlyHeaders = !wantPGN;
 			this.db.loadGame(fileName, gameNo, onlyHeaders);
 			setGameInfo(gameNo);
 			gi.currentPly = filterMap.get(fileName).getGamePly(
@@ -304,7 +335,8 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public int getInt(int position) {
 		if (this.gi != null) {
-			return new Integer(this.gi.getColumn(projection[position])).intValue();
+			return new Integer(this.gi.getColumn(projection[position]))
+					.intValue();
 		}
 		return 0;
 	}
@@ -312,7 +344,8 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public long getLong(int position) {
 		if (this.gi != null) {
-			return new Long(this.gi.getColumn(projection[position])).longValue();
+			return new Long(this.gi.getColumn(projection[position]))
+					.longValue();
 		}
 		return 0;
 	}
@@ -320,7 +353,8 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public short getShort(int position) {
 		if (this.gi != null) {
-			return new Short(this.gi.getColumn(projection[position])).shortValue();
+			return new Short(this.gi.getColumn(projection[position]))
+					.shortValue();
 		}
 		return 0;
 	}
