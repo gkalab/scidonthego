@@ -9,6 +9,14 @@
 			android:summary="Touching a square that corresponds to one unique move makes that move immediately"
 			android:defaultValue="false">
 		</CheckBoxPreference>
+        <ListPreference
+            android:key="moveDisplay"
+            android:title="Move List"
+            android:summary="Display all moves or current move only"
+            android:entryValues="@array/move_display_values"
+            android:entries="@array/move_display_texts"
+            android:defaultValue="0">
+        </ListPreference>
 		<ListPreference
 			android:key="fontSize"
 			android:title="Text Size"

@@ -988,6 +988,17 @@ public class GameTree {
 			this.postComment = postComment;
 		}
 
+		/**
+		 * Get the complete move string of the node
+		 * @return the move string
+		 */
+		public String getMoveString() {
+			String result = "";
+			result += this.preComment + " " + this.moveStr + " "
+					+ this.postComment;
+			return result.trim();
+		}
+		
 		/** nodePos must represent the same position as this Node object. */
 		private final boolean verifyChildren(Position nodePos) {
 			boolean anyToRemove = false;
