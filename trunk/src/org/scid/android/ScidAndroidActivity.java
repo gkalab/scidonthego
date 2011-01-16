@@ -1,7 +1,11 @@
 package org.scid.android;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +13,7 @@ import java.util.List;
 
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.ChessParseError;
+import org.scid.android.gamelogic.GameTree;
 import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.PgnToken;
 import org.scid.android.gamelogic.Position;
@@ -415,6 +420,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		pgnOptions.view.comments = true;
 		pgnOptions.view.nag = true;
 		pgnOptions.view.headers = false;
+		pgnOptions.view.allMoves = true;
+		String moveDisplayString = settings.getString("moveDisplay", "0");
+		int moveDisplay = Integer.parseInt(moveDisplayString);
+		if (moveDisplay != 0) {
+			pgnOptions.view.allMoves = false;
+		}
 		pgnOptions.imp.variations = true;
 		pgnOptions.imp.comments = true;
 		pgnOptions.imp.nag = true;
@@ -583,7 +594,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void moveListUpdated() {
-		moveList.setText(gameTextListener.getSpannableData());
+		if (pgnOptions.view.allMoves) {
+			moveList.setText(gameTextListener.getSpannableData());
+		} else {
+			moveList.setText(gameTextListener.getCurrentSpannableData());
+		}
 		if (gameTextListener.atEnd())
 			moveListScroll.fullScroll(ScrollView.FOCUS_DOWN);
 	}
@@ -1043,13 +1058,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		private SpannableStringBuilder sb = new SpannableStringBuilder();
 		private int prevType = PgnToken.EOF;
-		int nestLevel = 0;
-		boolean col0 = true;
-		Node currNode = null;
-		final int indentStep = 15;
-		int currPos = 0, endPos = 0;
-		boolean upToDate = false;
-		PGNOptions options;
+		private int nestLevel = 0;
+		private boolean col0 = true;
+		private Node currNode = null;
+		private final int indentStep = 15;
+		private int currPos = 0, endPos = 0;
+		private boolean upToDate = false;
+		private PGNOptions options;
 
 		private static class NodeInfo {
 			int l0, l1;
@@ -1069,6 +1084,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 		public final SpannableStringBuilder getSpannableData() {
 			return sb;
+		}
+
+		/**
+		 * Get spannable data of current move
+		 * @return sb of current move
+		 */
+		public final SpannableStringBuilder getCurrentSpannableData() {
+			NodeInfo ni = nodeToCharPos.get(currNode);
+			if (ni != null) {
+				return new SpannableStringBuilder(currNode.getMoveString());
+			}
+			return new SpannableStringBuilder();
 		}
 
 		public final boolean atEnd() {
@@ -1234,11 +1261,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			sb.removeSpan(bgSpan);
 			NodeInfo ni = nodeToCharPos.get(node);
 			if (ni != null) {
-				int color = ColorTheme.instance().getColor(
-						ColorTheme.CURRENT_MOVE);
-				bgSpan = new BackgroundColorSpan(color);
-				sb.setSpan(bgSpan, ni.l0, ni.l1,
-						Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				if (options.view.allMoves) {
+					int color = ColorTheme.instance().getColor(
+							ColorTheme.CURRENT_MOVE);
+					bgSpan = new BackgroundColorSpan(color);
+					sb.setSpan(bgSpan, ni.l0, ni.l1,
+							Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				}
 				currPos = ni.l0;
 			}
 			currNode = node;
