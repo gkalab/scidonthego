@@ -31,6 +31,10 @@
         android:icon="@drawable/ic_menu_preferences">
     </item>
     <item
+        android:id="@+id/item_study_mode"
+        android:title="Study Mode On/Off">
+    </item>
+    <item
         android:id="@+id/item_search"
         android:title="Search">
     </item>

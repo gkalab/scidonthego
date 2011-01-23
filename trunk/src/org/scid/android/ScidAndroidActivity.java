@@ -1,11 +1,7 @@
 package org.scid.android;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +9,6 @@ import java.util.List;
 
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.ChessParseError;
-import org.scid.android.gamelogic.GameTree;
 import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.PgnToken;
 import org.scid.android.gamelogic.Position;
@@ -67,6 +62,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private boolean mShowThinking;
 	private boolean mShowBookHints;
 	private int maxNumArrows;
+	private boolean inStudyMode = false;
 	private GameMode gameMode = new GameMode(GameMode.TWO_PLAYERS);
 	private boolean boardFlipped = false;
 	private boolean autoSwapSides = false;
@@ -197,6 +193,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	public void onFlipBoardClick(View view) {
 		boardFlipped = !boardFlipped;
+		Editor editor = settings.edit();
+		editor.putBoolean("boardFlipped", boardFlipped);
+		editor.commit();
 		setBoardFlip();
 	}
 
@@ -397,13 +396,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private final void readPrefs() {
+		boardFlipped = settings.getBoolean("boardFlipped", false);
 		setBoardFlip();
 		cb.oneTouchMoves = settings.getBoolean("oneTouchMoves", false);
-
 		mShowThinking = settings.getBoolean("showThinking", false);
 		String tmp = settings.getString("thinkingArrows", "2");
 		maxNumArrows = Integer.parseInt(tmp);
 		mShowBookHints = settings.getBoolean("bookHints", false);
+		inStudyMode = settings.getBoolean("inStudyMode", false);
 
 		ctrl.setTimeLimit(300000, 60, 0);
 
@@ -510,6 +510,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			showDialog(SEARCH_DIALOG);
 			return true;
 		}
+		case R.id.item_study_mode: {
+			setStudyMode();
+			return true;
+		}
 			/*
 			 * TODO enable when saving to scid database case R.id.item_draw: {
 			 * if (ctrl.humansTurn()) { if (!ctrl.claimDrawIfPossible()) {
@@ -523,6 +527,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			return true;
 		}
 		return false;
+	}
+
+	private void setStudyMode() {
+		inStudyMode = !inStudyMode;
+		Editor editor = settings.edit();
+		editor.putBoolean("inStudyMode", inStudyMode);
+		editor.commit();
+		updateThinkingInfo();
+		moveListUpdated();
+		Toast.makeText(
+				getApplicationContext(),
+				inStudyMode ? R.string.study_mode_enabled
+						: R.string.study_mode_disabled, Toast.LENGTH_SHORT)
+				.show();
 	}
 
 	@Override
@@ -594,10 +612,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void moveListUpdated() {
-		if (pgnOptions.view.allMoves) {
-			moveList.setText(gameTextListener.getSpannableData());
+		if (inStudyMode) {
+			moveList.setText("");
 		} else {
-			moveList.setText(gameTextListener.getCurrentSpannableData());
+			if (pgnOptions.view.allMoves) {
+				moveList.setText(gameTextListener.getSpannableData());
+			} else {
+				moveList.setText(gameTextListener.getCurrentSpannableData());
+			}
 		}
 		if (gameTextListener.atEnd())
 			moveListScroll.fullScroll(ScrollView.FOCUS_DOWN);
@@ -655,7 +677,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			status.append(Html.fromHtml(s));
 			thinkingEmpty = false;
 		}
-		if (variantStr.indexOf(' ') >= 0) {
+		if (variantStr.indexOf(' ') >= 0 && !inStudyMode) {
 			String s = "";
 			if (!thinkingEmpty)
 				s += "<br>";
@@ -664,15 +686,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 
 		List<Move> hints = null;
-		if (mShowThinking || gameMode.analysisMode())
-			hints = pvMoves;
-		if ((hints == null) && mShowBookHints)
-			hints = bookMoves;
-		if ((variantMoves != null) && variantMoves.size() > 1) {
-			hints = variantMoves;
-		}
-		if ((hints != null) && (hints.size() > maxNumArrows)) {
-			hints = hints.subList(0, maxNumArrows);
+		if (!inStudyMode) {
+			if (mShowThinking || gameMode.analysisMode())
+				hints = pvMoves;
+			if ((hints == null) && mShowBookHints)
+				hints = bookMoves;
+			if ((variantMoves != null) && variantMoves.size() > 1) {
+				hints = variantMoves;
+			}
+			if ((hints != null) && (hints.size() > maxNumArrows)) {
+				hints = hints.subList(0, maxNumArrows);
+			}
 		}
 		cb.setMoveHints(hints);
 	}
@@ -1088,6 +1112,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 		/**
 		 * Get spannable data of current move
+		 * 
 		 * @return sb of current move
 		 */
 		public final SpannableStringBuilder getCurrentSpannableData() {

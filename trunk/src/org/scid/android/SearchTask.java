@@ -45,11 +45,16 @@ public class SearchTask extends AsyncTask {
 		Integer filterSize = (Integer) result;
 		if (filterSize == 0) {
 			Toast.makeText(activity.getApplicationContext(),
-					"No games found. Filter is reset.", Toast.LENGTH_LONG)
-					.show();
+					activity.getString(R.string.filter_no_games),
+					Toast.LENGTH_LONG).show();
 		} else {
-			Toast.makeText(activity.getApplicationContext(),
-					"" + filterSize + " games in current filter",
+			Toast.makeText(
+					activity.getApplicationContext(),
+					""
+							+ filterSize
+							+ " "
+							+ activity
+									.getString(R.string.filter_numberof_games),
 					Toast.LENGTH_LONG).show();
 		}
 		activity.setResult(activity.RESULT_OK);
