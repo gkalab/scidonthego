@@ -28,6 +28,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:longClickable="true"
             android:onClick="onPreviousGameClick"
             android:src="@drawable/previous_game" />
         <ImageButton
@@ -35,6 +36,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:longClickable="true"
             android:onClick="onNextGameClick"
             android:src="@drawable/next_game" />
         <ImageButton
@@ -49,6 +51,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:longClickable="true"
             android:onClick="onPreviousMoveClick"
             android:src="@drawable/previous" />
         <ImageButton
@@ -56,6 +59,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:longClickable="true"
             android:onClick="onNextMoveClick"
             android:src="@drawable/next" />
     </LinearLayout>

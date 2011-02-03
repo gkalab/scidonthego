@@ -4,6 +4,7 @@ import org.scid.android.gamelogic.Position;
 
 import android.app.Application;
 import android.database.Cursor;
+import android.os.Bundle;
 
 public class ScidApplication extends Application {
 	private Cursor gamesCursor = null;
@@ -48,7 +49,14 @@ public class ScidApplication extends Application {
 		this.currentGameNo = currentGameNo;
 	}
 
-	public void setNoGames(int noGames) {
-		this.noGames = noGames;
+	public void setNoGames(Cursor cursor) {
+		this.noGames = cursor.getCount();
+		Bundle extras = cursor.getExtras();
+		if (extras != Bundle.EMPTY) {
+			int count = extras.getInt("count");
+			if (count > 0) {
+				this.noGames = count;
+			}
+		}
 	}
 }

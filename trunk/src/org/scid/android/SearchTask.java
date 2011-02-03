@@ -26,7 +26,7 @@ public class SearchTask extends AsyncTask {
 			((ScidApplication) activity.getApplicationContext())
 					.setGamesCursor(cursor);
 			((ScidApplication) activity.getApplicationContext())
-					.setNoGames(cursor.getCount());
+					.setNoGames(cursor);
 			Bundle extras = cursor.getExtras();
 			if (extras != Bundle.EMPTY) {
 				filterSize = extras.getInt("filterSize");
