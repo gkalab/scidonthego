@@ -140,6 +140,7 @@ public class ScidCursor extends AbstractCursor {
 		Bundle bundle = new Bundle();
 		if (filterMap.get(fileName) != null) {
 			bundle.putInt("filterSize", filterMap.get(fileName).getSize());
+			bundle.putInt("count", count);
 		}
 		return bundle;
 	}
@@ -181,9 +182,20 @@ public class ScidCursor extends AbstractCursor {
 		return ret;
 	}
 
+	/**
+	 * Return the number of games in the cursor. If the there's a current filter
+	 * only return the number of games in the filter.
+	 * 
+	 * @see android.database.AbstractCursor#getCount()
+	 */
 	@Override
 	public int getCount() {
-		return this.count;
+		Filter filter = filterMap.get(fileName);
+		if (filter != null) {
+			return filter.getSize();
+		} else {
+			return this.count;
+		}
 	}
 
 	private void setGameInfo(int gameNo) {

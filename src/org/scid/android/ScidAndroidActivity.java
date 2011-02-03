@@ -52,6 +52,7 @@ import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -368,6 +369,57 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			public boolean onLongClick(View v) {
 				removeDialog(CLIPBOARD_DIALOG);
 				showDialog(CLIPBOARD_DIALOG);
+				return true;
+			}
+		});
+		// add long click listeners to buttons
+		ImageButton nextButton = (ImageButton) findViewById(R.id.next_move);
+		nextButton.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				ctrl.gotoMove(999);
+				return true;
+			}
+		});
+		ImageButton previousButton = (ImageButton) findViewById(R.id.previous_move);
+		previousButton.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				ctrl.gotoMove(0);
+				return true;
+			}
+		});
+		ImageButton nextGameButton = (ImageButton) findViewById(R.id.next_game);
+		nextGameButton.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				Cursor cursor = getScidAppContext().getGamesCursor();
+				if (cursor == null) {
+					cursor = getCursor();
+				}
+				if (cursor != null) {
+					startManagingCursor(cursor);
+					if (cursor.moveToLast()) {
+						setPgnFromCursor(cursor);
+					}
+				}
+				return true;
+			}
+		});
+		ImageButton previousGameButton = (ImageButton) findViewById(R.id.previous_game);
+		previousGameButton.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				Cursor cursor = getScidAppContext().getGamesCursor();
+				if (cursor == null) {
+					cursor = getCursor();
+				}
+				if (cursor != null) {
+					startManagingCursor(cursor);
+					if (cursor.moveToFirst()) {
+						setPgnFromCursor(cursor);
+					}
+				}
 				return true;
 			}
 		});
@@ -780,8 +832,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 															.parse("content://org.scid.database.scidprovider/games"),
 													null, fileName, null, null);
 									getScidAppContext().setGamesCursor(cursor);
-									getScidAppContext().setNoGames(
-											cursor.getCount());
+									getScidAppContext().setNoGames(cursor);
 									startManagingCursor(cursor);
 									cursor.moveToPosition(getScidAppContext()
 											.getCurrentGameNo());
@@ -1030,8 +1081,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				Uri.parse("content://org.scid.database.scidprovider/games"),
 				null, scidFileName, null, null);
 		((ScidApplication) this.getApplicationContext()).setGamesCursor(cursor);
-		((ScidApplication) this.getApplicationContext()).setNoGames(cursor
-				.getCount());
+		((ScidApplication) this.getApplicationContext()).setNoGames(cursor);
 
 		startManagingCursor(cursor);
 		return cursor;
