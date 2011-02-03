@@ -57,7 +57,6 @@ public class ScidProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-		// TODO Auto-generated method stub
 		Cursor result = null;
 		switch (sUriMatcher.match(uri)) {
 		case INCOMING_GAME_COLLECTION_URI_INDICATOR:

@@ -9,90 +9,13 @@ import android.os.Bundle;
 
 public class ScidCursor extends AbstractCursor {
 
-	private static final class GameInfo {
-		private String event = "";
-
-		private String site = "";
-
-		private String date = "";
-
-		private String round = "";
-
-		private String white = "";
-
-		private String black = "";
-
-		private String result = "";
-
-		private String pgn = "";
-
-		private int id = -1;
-
-		private int currentPly = 0;
-
-		public String toString() {
-			StringBuilder info = new StringBuilder(128);
-			info.append(white);
-			info.append(" - ");
-			info.append(black);
-			if (date.length() > 0) {
-				info.append(' ');
-				info.append(date);
-			}
-			if (round.length() > 0) {
-				info.append(' ');
-				info.append(round);
-			}
-			if (event.length() > 0) {
-				info.append(' ');
-				info.append(event);
-			}
-			if (site.length() > 0) {
-				info.append(' ');
-				info.append(site);
-			}
-			info.append(' ');
-			info.append(result);
-			return info.toString();
-		}
-
-		public String getColumn(int position) {
-			switch (position) {
-			case 0:
-				return "" + id;
-			case 1:
-				return event;
-			case 2:
-				return site;
-			case 3:
-				return date;
-			case 4:
-				return round;
-			case 5:
-				return white;
-			case 6:
-				return black;
-			case 7:
-				return result;
-			case 8:
-				return pgn;
-			case 9:
-				return this.toString();
-			case 10:
-				return "" + currentPly;
-			default:
-				return null;
-			}
-		}
-	}
-
 	private int count;
 
 	private DataBase db;
 
 	private String fileName;
 
-	private GameInfo gi;
+	private GameInfo gameInfo;
 
 	private int startPosition;
 
@@ -142,29 +65,33 @@ public class ScidCursor extends AbstractCursor {
 	private void handleProjection(String[] projection) {
 		if (projection == null) {
 			this.projection = new int[columns.length];
-			for (int i = 0; i < columns.length; i++)
+			for (int i = 0; i < columns.length; i++) {
 				this.projection[i] = i;
+			}
 		} else {
 			ArrayList<Integer> proj = new ArrayList<Integer>();
 			for (String p : projection) {
 				int idx = 0;
-				for (int i = 0; i < columns.length; i++)
+				for (int i = 0; i < columns.length; i++) {
 					if (columns[i].equals(p)) {
 						idx = i;
 						break;
 					}
+				}
 				proj.add(idx);
 			}
 			this.projection = new int[proj.size()];
-			for (int i = 0; i < proj.size(); i++)
+			for (int i = 0; i < proj.size(); i++) {
 				this.projection[i] = proj.get(i);
+			}
 		}
 		wantPGN = false;
-		for (int p : this.projection)
+		for (int p : this.projection) {
 			if (p == 8) {
 				wantPGN = true;
 				break;
 			}
+		}
 	}
 
 	public ScidCursor(String fileName, String[] projection, int startPosition,
@@ -248,8 +175,9 @@ public class ScidCursor extends AbstractCursor {
 	public String[] getColumnNames() {
 		String[] ret = new String[projection.length];
 		int idx = 0;
-		for (int i : projection)
+		for (int i : projection) {
 			ret[idx++] = columns[i];
+		}
 		return ret;
 	}
 
@@ -259,14 +187,14 @@ public class ScidCursor extends AbstractCursor {
 	}
 
 	private void setGameInfo(int gameNo) {
-		this.gi = new GameInfo();
-		gi.event = this.db.getEvent();
-		if (gi.event.equals("?")) {
-			gi.event = "";
+		this.gameInfo = new GameInfo();
+		gameInfo.setEvent(this.db.getEvent());
+		if (gameInfo.getEvent().equals("?")) {
+			gameInfo.setEvent("");
 		}
-		gi.site = this.db.getSite();
-		if (gi.site.equals("?")) {
-			gi.site = "";
+		gameInfo.setSite(this.db.getSite());
+		if (gameInfo.getSite().equals("?")) {
+			gameInfo.setSite("");
 		}
 		String date = this.db.getDate();
 		if (date.endsWith(".??.??")) {
@@ -277,16 +205,16 @@ public class ScidCursor extends AbstractCursor {
 		if (date.equals("?") || date.equals("????")) {
 			date = "";
 		}
-		gi.date = date;
-		gi.round = this.db.getRound();
-		if (gi.round.equals("?")) {
-			gi.round = "";
+		gameInfo.setDate(date);
+		gameInfo.setRound(this.db.getRound());
+		if (gameInfo.getRound().equals("?")) {
+			gameInfo.setRound("");
 		}
-		gi.white = this.db.getWhite();
-		gi.black = this.db.getBlack();
-		gi.result = this.db.getResult();
-		gi.pgn = wantPGN ? this.db.getPGN() : null;
-		gi.id = gameNo;
+		gameInfo.setWhite(this.db.getWhite());
+		gameInfo.setBlack(this.db.getBlack());
+		gameInfo.setResult(this.db.getResult());
+		gameInfo.setPgn(wantPGN ? this.db.getPGN() : null);
+		gameInfo.setId(gameNo);
 	}
 
 	/**
@@ -315,8 +243,8 @@ public class ScidCursor extends AbstractCursor {
 			boolean onlyHeaders = !wantPGN;
 			this.db.loadGame(fileName, gameNo, onlyHeaders);
 			setGameInfo(gameNo);
-			gi.currentPly = filterMap.get(fileName).getGamePly(
-					startPosition + newPosition);
+			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
+					startPosition + newPosition));
 			return true;
 		}
 		return false;
@@ -334,8 +262,8 @@ public class ScidCursor extends AbstractCursor {
 
 	@Override
 	public int getInt(int position) {
-		if (this.gi != null) {
-			return new Integer(this.gi.getColumn(projection[position]))
+		if (this.gameInfo != null) {
+			return new Integer(this.gameInfo.getColumn(projection[position]))
 					.intValue();
 		}
 		return 0;
@@ -343,8 +271,8 @@ public class ScidCursor extends AbstractCursor {
 
 	@Override
 	public long getLong(int position) {
-		if (this.gi != null) {
-			return new Long(this.gi.getColumn(projection[position]))
+		if (this.gameInfo != null) {
+			return new Long(this.gameInfo.getColumn(projection[position]))
 					.longValue();
 		}
 		return 0;
@@ -352,8 +280,8 @@ public class ScidCursor extends AbstractCursor {
 
 	@Override
 	public short getShort(int position) {
-		if (this.gi != null) {
-			return new Short(this.gi.getColumn(projection[position]))
+		if (this.gameInfo != null) {
+			return new Short(this.gameInfo.getColumn(projection[position]))
 					.shortValue();
 		}
 		return 0;
@@ -361,16 +289,16 @@ public class ScidCursor extends AbstractCursor {
 
 	@Override
 	public String getString(int position) {
-		if (this.gi != null) {
-			return this.gi.getColumn(projection[position]);
+		if (this.gameInfo != null) {
+			return this.gameInfo.getColumn(projection[position]);
 		}
 		return null;
 	}
 
 	@Override
 	public boolean isNull(int position) {
-		if (this.gi != null) {
-			return "".equals(this.gi.getColumn(projection[position]));
+		if (this.gameInfo != null) {
+			return "".equals(this.gameInfo.getColumn(projection[position]));
 		}
 		return true;
 	}
