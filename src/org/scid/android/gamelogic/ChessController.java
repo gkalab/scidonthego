@@ -436,22 +436,26 @@ public class ChessController {
 	}
 
 	public final void gotoMove(int moveNr) {
+		gotoHalfMove(moveNr * 2);
+	}
+
+	public final void gotoHalfMove(int moveNr) {
 		boolean needUpdate = false;
-		while (game.currPos().fullMoveCounter > moveNr) { // Go backward
-			int before = game.currPos().fullMoveCounter * 2
+		while (game.currPos().halfMoveCounter > moveNr) { // Go backward
+			int before = game.currPos().halfMoveCounter * 2
 					+ (game.currPos().whiteMove ? 0 : 1);
 			undoMoveNoUpdate();
-			int after = game.currPos().fullMoveCounter * 2
+			int after = game.currPos().halfMoveCounter * 2
 					+ (game.currPos().whiteMove ? 0 : 1);
 			if (after >= before)
 				break;
 			needUpdate = true;
 		}
-		while (game.currPos().fullMoveCounter < moveNr) { // Go forward
-			int before = game.currPos().fullMoveCounter * 2
+		while (game.currPos().halfMoveCounter < moveNr) { // Go forward
+			int before = game.currPos().halfMoveCounter * 2
 					+ (game.currPos().whiteMove ? 0 : 1);
 			redoMoveNoUpdate();
-			int after = game.currPos().fullMoveCounter * 2
+			int after = game.currPos().halfMoveCounter * 2
 					+ (game.currPos().whiteMove ? 0 : 1);
 			if (after <= before)
 				break;

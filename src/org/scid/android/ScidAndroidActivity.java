@@ -14,6 +14,7 @@ import org.scid.android.gamelogic.PgnToken;
 import org.scid.android.gamelogic.Position;
 import org.scid.android.gamelogic.TextIO;
 import org.scid.android.gamelogic.GameTree.Node;
+import org.scid.database.ScidProviderMetaData;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -32,8 +33,8 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
-import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.StyleSpan;
@@ -119,11 +120,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			data = savedInstanceState.getByteArray("gameState");
 		} else {
 			String dataStr = settings.getString("gameState", null);
-			if (dataStr != null)
+			if (dataStr != null) {
 				data = strToByteArr(dataStr);
+			}
 		}
-		if (data != null)
+		if (data != null) {
 			ctrl.fromByteArray(data);
+		}
 
 		ctrl.setGuiPaused(true);
 		ctrl.setGuiPaused(false);
@@ -153,10 +156,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		editor.putInt("currentGameNo", this.getScidAppContext()
 				.getCurrentGameNo());
 		editor.commit();
-		String pgn = cursor.getString(cursor.getColumnIndex("pgn"));
+		String pgn = cursor.getString(cursor
+				.getColumnIndex(ScidProviderMetaData.ScidMetaData.PGN));
 		if (pgn != null && pgn.length() > 0) {
 			try {
 				ctrl.setFENOrPGN(pgn);
+				int moveNo = cursor
+						.getInt(cursor
+								.getColumnIndex(ScidProviderMetaData.ScidMetaData.CURRENT_PLY));
+				if (moveNo > 0) {
+					ctrl.gotoHalfMove(moveNo);
+				}
 				saveGameState();
 			} catch (ChessParseError e) {
 				Toast.makeText(getApplicationContext(), e.getMessage(),
@@ -215,8 +225,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		int nBytes = data.length;
 		for (int i = 0; i < nBytes; i++) {
 			int b = data[i];
-			if (b < 0)
+			if (b < 0) {
 				b += 256;
+			}
 			char c1 = (char) ('A' + (b / 16));
 			char c2 = (char) ('A' + (b & 15));
 			ret.append(c1);
@@ -245,8 +256,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private final void initUI(boolean initTitle) {
-		if (initTitle)
+		if (initTitle) {
 			requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
+		}
 		setContentView(R.layout.main);
 		if (initTitle) {
 			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE,
@@ -272,12 +284,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					private float scrollX = 0;
 					private float scrollY = 0;
 
+					@Override
 					public boolean onDown(MotionEvent e) {
 						scrollX = 0;
 						scrollY = 0;
 						return false;
 					}
 
+					@Override
 					public boolean onScroll(MotionEvent e1, MotionEvent e2,
 							float distanceX, float distanceY) {
 						cb.cancelLongPress();
@@ -300,23 +314,27 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									varDelta--;
 									scrollY += scrollUnit;
 								}
-								if (varDelta != 0)
+								if (varDelta != 0) {
 									scrollX = 0;
+								}
 								ctrl.changeVariation(varDelta);
 							}
 						}
 						return true;
 					}
 
+					@Override
 					public boolean onSingleTapUp(MotionEvent e) {
 						cb.cancelLongPress();
 						handleClick(e);
 						return true;
 					}
 
+					@Override
 					public boolean onDoubleTapEvent(MotionEvent e) {
-						if (e.getAction() == MotionEvent.ACTION_UP)
+						if (e.getAction() == MotionEvent.ACTION_UP) {
 							handleClick(e);
+						}
 						return true;
 					}
 
@@ -324,8 +342,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						if (ctrl.humansTurn()) {
 							int sq = cb.eventToSquare(e);
 							Move m = cb.mousePressed(sq);
-							if (m != null)
+							if (m != null) {
 								ctrl.makeHumanMove(m);
+							}
 						}
 					}
 				});
@@ -335,6 +354,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 		});
 		cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
+			@Override
 			public void onTrackballEvent(MotionEvent event) {
 				if (ctrl.humansTurn()) {
 					Move m = cb.handleTrackballEvent(event);
@@ -621,8 +641,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				moveList.setText(gameTextListener.getCurrentSpannableData());
 			}
 		}
-		if (gameTextListener.atEnd())
-			moveListScroll.fullScroll(ScrollView.FOCUS_DOWN);
+		if (gameTextListener.atEnd()) {
+			moveListScroll.fullScroll(View.FOCUS_DOWN);
+		}
 	}
 
 	@Override
@@ -671,26 +692,30 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		if (mShowBookHints && (bookInfoStr.length() > 0)) {
 			String s = "";
-			if (!thinkingEmpty)
+			if (!thinkingEmpty) {
 				s += "<br>";
+			}
 			s += "<b>Book:</b>" + bookInfoStr;
 			status.append(Html.fromHtml(s));
 			thinkingEmpty = false;
 		}
 		if (variantStr.indexOf(' ') >= 0 && !inStudyMode) {
 			String s = "";
-			if (!thinkingEmpty)
+			if (!thinkingEmpty) {
 				s += "<br>";
+			}
 			s += "<b>Var:</b> " + variantStr;
 			status.append(Html.fromHtml(s));
 		}
 
 		List<Move> hints = null;
 		if (!inStudyMode) {
-			if (mShowThinking || gameMode.analysisMode())
+			if (mShowThinking || gameMode.analysisMode()) {
 				hints = pvMoves;
-			if ((hints == null) && mShowBookHints)
+			}
+			if ((hints == null) && mShowBookHints) {
 				hints = bookMoves;
+			}
 			if ((variantMoves != null) && variantMoves.size() > 1) {
 				hints = variantMoves;
 			}
@@ -775,7 +800,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 							case SEARCH_HEADER: {
 								Intent i = new Intent(ScidAndroidActivity.this,
 										SearchHeaderActivity.class);
-								i.setAction(ctrl.getFEN());
 								startActivityForResult(i, RESULT_SEARCH);
 								break;
 							}
@@ -1032,12 +1056,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								.getAbsolutePath().endsWith(".si4"));
 			}
 		});
-		if (files == null)
+		if (files == null) {
 			files = new File[0];
+		}
 		final int numFiles = files.length;
 		String[] fileNames = new String[numFiles];
-		for (int i = 0; i < files.length; i++)
+		for (int i = 0; i < files.length; i++) {
 			fileNames[i] = files[i].getName();
+		}
 		Arrays.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
 		return fileNames;
 	}
@@ -1142,12 +1168,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					int indent = paraIndent * indentStep;
 					sb.setSpan(new LeadingMarginSpan.Standard(indent),
 							paraStart, paraEnd,
-							Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+							Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
 				if (paraBold) {
 					int paraEnd = sb.length();
 					sb.setSpan(new StyleSpan(Typeface.BOLD), paraStart,
-							paraEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+							paraEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
 				sb.append('\n');
 				paraStart = sb.length();
@@ -1184,8 +1210,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				break;
 			case PgnToken.INTEGER:
 				if ((prevType != PgnToken.LEFT_PAREN)
-						&& (prevType != PgnToken.RIGHT_BRACKET) && !col0)
+						&& (prevType != PgnToken.RIGHT_BRACKET) && !col0) {
 					sb.append(' ');
+				}
 				sb.append(token);
 				col0 = false;
 				break;
@@ -1207,8 +1234,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				break;
 			case PgnToken.LEFT_PAREN:
 				nestLevel++;
-				if (col0)
+				if (col0) {
 					paraIndent++;
+				}
 				newLine();
 				sb.append('(');
 				col0 = false;
@@ -1224,17 +1252,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				break;
 			case PgnToken.SYMBOL: {
 				if ((prevType != PgnToken.RIGHT_BRACKET)
-						&& (prevType != PgnToken.LEFT_BRACKET) && !col0)
+						&& (prevType != PgnToken.LEFT_BRACKET) && !col0) {
 					sb.append(' ');
+				}
 				int l0 = sb.length();
 				sb.append(token);
 				int l1 = sb.length();
 				nodeToCharPos.put(node, new NodeInfo(l0, l1));
-				if (endPos < l0)
+				if (endPos < l0) {
 					endPos = l0;
+				}
 				col0 = false;
-				if (nestLevel == 0)
+				if (nestLevel == 0) {
 					paraBold = true;
+				}
 				break;
 			}
 			case PgnToken.COMMENT:
@@ -1250,8 +1281,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 				sb.append(token.replaceAll("[ \t\r\n]+", " ").trim());
 				col0 = false;
-				if (nestLevel == 0)
+				if (nestLevel == 0) {
 					newLine();
+				}
 				break;
 			case PgnToken.EOF:
 				newLine();
@@ -1291,7 +1323,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 							ColorTheme.CURRENT_MOVE);
 					bgSpan = new BackgroundColorSpan(color);
 					sb.setSpan(bgSpan, ni.l0, ni.l1,
-							Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+							Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
 				currPos = ni.l0;
 			}
