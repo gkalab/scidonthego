@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingTop="5dp">
+        <TextView
+            android:id="@+id/importResult"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="true"
+            android:typeface="monospace"
+            android:textSize="12dip" />
+    </ScrollView>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/import_ok"
+            android:onClick="onOkClick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ok">
+        </Button>
+    </LinearLayout>
+</LinearLayout>

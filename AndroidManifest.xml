@@ -2,7 +2,9 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.scid.android"
-    android:installLocation="auto" android:versionCode="6" android:versionName="1.05">
+    android:installLocation="auto"
+    android:versionCode="7"
+    android:versionName="1.06">
     <application
         android:icon="@drawable/icon"
         android:label="@string/app_name"
@@ -36,6 +38,14 @@
             android:name="SearchHeaderActivity"
             android:label="Header Search">
         </activity>
+        <activity
+            android:name="ImportPgnActivity"
+            android:label="PGN Import">
+        </activity>
+        <activity
+            android:name="ImportTwicActivity"
+            android:label="TWIC Import">
+        </activity>
 
         <provider
             android:name="org.scid.database.ScidProvider"
@@ -45,4 +55,6 @@
         android:minSdkVersion="4" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.INTERNET"></uses-permission>
 </manifest> 
