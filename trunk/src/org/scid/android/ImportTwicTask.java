@@ -17,10 +17,11 @@ public class ImportTwicTask extends AsyncTask {
 		String result = null;
 		this.activity = (Activity) params[0];
 		this.progressDlg = (ProgressDialog) params[1];
+		String zipUrl = (String) params[2];
 		TwicDownloader downloader = new TwicDownloader();
-		File pgnFile = downloader.getCurrentTwic(Environment
+		File pgnFile = downloader.getPgnFromZipUrl(Environment
 				.getExternalStorageDirectory()
-				+ File.separator + "scid");
+				+ File.separator + "scid", zipUrl);
 		if (pgnFile != null) {
 			result = pgnFile.getName();
 		}
