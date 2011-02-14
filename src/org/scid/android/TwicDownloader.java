@@ -46,10 +46,14 @@ public class TwicDownloader {
 	public File getCurrentTwic(String directory) {
 		parseTwicSite();
 		String currentZip = getCurrentTwicZipName();
-		File f = downloadFile(currentZip);
+		return getPgnFromZipUrl(directory, currentZip);
+	}
+
+	public File getPgnFromZipUrl(String directory, String zipUrl) {
+		File f = downloadFile(zipUrl);
 		return unzip(directory, f);
 	}
-	
+
 	private File unzip(String directory, File f) {
 		File result = null;
 		try {
@@ -86,9 +90,13 @@ public class TwicDownloader {
 		return result;
 	}
 
-	public List<String> getLinkList() {
-		List<String> result = new ArrayList<String>(linkList);
-		Collections.sort(result, Collections.reverseOrder());
+	public List<TwicItem> getLinkList() {
+		List<String> llist = new ArrayList<String>(linkList);
+		Collections.sort(llist, Collections.reverseOrder());
+		List<TwicItem> result = new ArrayList<TwicItem>();
+		for (String link : llist) {
+			result.add(new TwicItem(link));
+		}
 		return result;
 	}
 
@@ -146,12 +154,12 @@ public class TwicDownloader {
 	private String getCurrentTwicZipName() {
 		String result = null;
 		if (this.linkList.size() > 0) {
-			result = this.getLinkList().get(0);
+			result = this.getLinkList().get(0).getLink();
 		}
 		return result;
 	}
 
-	private void parseTwicSite() {
+	public void parseTwicSite() {
 		String data = "";
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpGet request = new HttpGet(TWIC_SITE);
@@ -168,11 +176,11 @@ public class TwicDownloader {
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(response.getEntity().getContent()));
 				String line = null;
-				int noLinks=0;
-				while (noLinks<5 && (line = reader.readLine()) != null) {
+				int noLinks = 0;
+				while (noLinks < 10 && (line = reader.readLine()) != null) {
 					result += line + "\n";
 					if (line.contains("g.zip")) {
-						noLinks ++;
+						noLinks++;
 					}
 				}
 				data = result;

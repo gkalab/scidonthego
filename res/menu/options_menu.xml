@@ -44,7 +44,7 @@
     </item>
     <item
         android:id="@+id/item_import_twic"
-        android:title="Import TWIC (current issue)">
+        android:title="Import TWIC">
     </item>
 	<!-- item
 		android:id="@+id/item_draw"
