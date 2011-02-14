@@ -36,7 +36,6 @@ public class SearchCurrentBoardActivity extends Activity {
 		setContentView(R.layout.search_board);
 		addSpinner();
 		Intent i = getIntent();
-		// TODO: remove this.fen
 		this.fen = i.getAction();
 	}
 

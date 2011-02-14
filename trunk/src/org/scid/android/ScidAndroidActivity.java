@@ -90,6 +90,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		File scidFileDir = new File(Environment.getExternalStorageDirectory()
+				+ File.separator + scidDir);
+		if (!scidFileDir.exists()) {
+			scidFileDir.mkdirs();
+		}
 
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		settings
@@ -540,6 +545,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_EDITBOARD = 0;
 	static private final int RESULT_SETTINGS = 1;
 	static private final int RESULT_SEARCH = 2;
+	static private final int RESULT_TWIC_IMPORT = 3;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -586,6 +592,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			setStudyMode();
 			return true;
 		}
+		case R.id.item_import_pgn: {
+			removeDialog(IMPORT_PGN_DIALOG);
+			showDialog(IMPORT_PGN_DIALOG);
+			return true;
+		}
+		case R.id.item_import_twic: {
+			importTwic();
+			return true;
+		}
 			/*
 			 * TODO enable when saving to scid database case R.id.item_draw: {
 			 * if (ctrl.humansTurn()) { if (!ctrl.claimDrawIfPossible()) {
@@ -599,6 +614,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			return true;
 		}
 		return false;
+	}
+
+	private void importTwic() {
+		Intent i = new Intent(ScidAndroidActivity.this,
+				ImportTwicActivity.class);
+		startActivityForResult(i, RESULT_TWIC_IMPORT);
 	}
 
 	private void setStudyMode() {
@@ -643,6 +664,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				if (cursor != null) {
 					startManagingCursor(cursor);
 					setPgnFromCursor(cursor);
+				}
+			}
+			break;
+		case RESULT_TWIC_IMPORT:
+			if (resultCode == RESULT_OK) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					importPgn(getFullScidFileName(pgnFileName));
 				}
 			}
 			break;
@@ -785,6 +814,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int SELECT_GOTO_GAME_DIALOG = 4;
 	static final int SELECT_SCID_FILE_DIALOG = 5;
 	static final int SEARCH_DIALOG = 6;
+	static final int IMPORT_PGN_DIALOG = 7;
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -1021,7 +1051,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			return dialog;
 		}
 		case SELECT_SCID_FILE_DIALOG: {
-			final String[] fileNames = findFilesInDirectory(scidDir);
+			final String[] fileNames = findFilesInDirectory(scidDir, ".si4");
 			final int numFiles = fileNames.length;
 			if (numFiles == 0) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -1066,8 +1096,71 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			AlertDialog alert = builder.create();
 			return alert;
 		}
+		case IMPORT_PGN_DIALOG: {
+			final String[] fileNames = findFilesInDirectory(scidDir, ".pgn");
+			final int numFiles = fileNames.length;
+			if (numFiles == 0) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setTitle(R.string.app_name).setMessage(
+						R.string.no_pgn_files);
+				AlertDialog alert = builder.create();
+				return alert;
+			}
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.select_pgn_file);
+			builder.setSingleChoiceItems(fileNames, 0,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int item) {
+							String baseName = getFullScidFileName(fileNames[item]
+									.toString());
+							importPgn(baseName);
+							dialog.dismiss();
+						}
+					});
+			AlertDialog alert = builder.create();
+			return alert;
+		}
 		}
 		return null;
+	}
+
+	private void startPgnImport(String pgnFileName) {
+		Intent i = new Intent(ScidAndroidActivity.this, ImportPgnActivity.class);
+		i.setAction(pgnFileName);
+		startActivity(i);
+	}
+
+	private void importPgn(String baseName) {
+		final String pgnFileName = baseName + ".pgn";
+		String scidFileName = baseName + ".si4";
+		File scidFile = new File(scidFileName);
+		if (scidFile.exists()) {
+			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
+					ScidAndroidActivity.this).create();
+			fileExistsDialog.setTitle("Database exists");
+			String message = String.format(
+					getString(R.string.pgn_import_db_exists), scidFile
+							.getName());
+			fileExistsDialog.setMessage(message);
+			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
+			fileExistsDialog.setButton(getString(R.string.ok),
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							startPgnImport(pgnFileName);
+						}
+					});
+			fileExistsDialog.setButton2(getString(R.string.cancel),
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							Toast.makeText(getApplicationContext(),
+									getString(R.string.pgn_import_cancel),
+									Toast.LENGTH_SHORT).show();
+						}
+					});
+			fileExistsDialog.show();
+		} else {
+			startPgnImport(pgnFileName);
+		}
 	}
 
 	private Cursor getCursor() {
@@ -1088,22 +1181,27 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private String getFullScidFileName(final String fileName) {
-		String sep = File.separator;
-		String pathName = Environment.getExternalStorageDirectory() + sep
-				+ scidDir + sep + fileName;
+		String pathName = getFullFileName(fileName);
 		String scidFileName = pathName.substring(0, pathName.indexOf("."));
 		return scidFileName;
 	}
 
-	private final String[] findFilesInDirectory(String dirName) {
+	private String getFullFileName(final String fileName) {
+		String sep = File.separator;
+		String pathName = Environment.getExternalStorageDirectory() + sep
+				+ scidDir + sep + fileName;
+		return pathName;
+	}
+
+	private final String[] findFilesInDirectory(String dirName,
+			final String extension) {
 		File extDir = Environment.getExternalStorageDirectory();
 		String sep = File.separator;
 		File dir = new File(extDir.getAbsolutePath() + sep + dirName);
 		File[] files = dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				return pathname.isFile()
-						&& (pathname.getAbsolutePath().endsWith(".pgn") || pathname
-								.getAbsolutePath().endsWith(".si4"));
+						&& (pathname.getAbsolutePath().endsWith(extension));
 			}
 		});
 		if (files == null) {

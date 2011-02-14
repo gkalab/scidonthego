@@ -119,17 +119,17 @@ PgnParser::LogError (const char * errMessage, const char * text)
 {
     NumErrors++;
 #ifdef WINCE
-//     if (ErrorFile != NULL) {
-        //fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
+     if (ErrorFile != NULL) {
+        fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
         if (InFile != NULL) {
             printf ("%s:", InFile->GetFileName());
         }
         printf ("%u: %s%s\n", LineCounter, errMessage, text);
         return;
-//     }
+     }
 #else
     if (ErrorFile != NULL) {
-        //fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
+        fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
         if (InFile != NULL) {
             fprintf (ErrorFile, "%s:", InFile->GetFileName());
         }
@@ -966,7 +966,7 @@ PgnParser::ParseMoves (Game * game)
 #endif
     return err;
 }
-   
+
 
 errorT
 PgnParser::ParseMoves (Game * game, char * buffer, uint bufSize)
@@ -983,7 +983,7 @@ PgnParser::ParseMoves (Game * game, char * buffer, uint bufSize)
     // game->GetCurrentPos()->SetStrictCastling (false);
     ParseMode = PARSE_Game;
     tokenT token = GetNextToken (buffer, bufSize);
-    while (! TOKEN_isResult(token)) {   
+    while (! TOKEN_isResult(token)) {
         switch (token) {
         case TOKEN_Move_Pawn:
         case TOKEN_Move_Promote:

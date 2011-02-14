@@ -2,12 +2,14 @@
 #include <jni.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string>
 
 #include "scid/common.h"
 #include "scid/index.h"
 #include "scid/namebase.h"
 #include "scid/gfile.h"
 #include "scid/game.h"
+#include "scid/pgnparse.h"
 
 int main(int argc, char* argv[]);
 
@@ -1025,8 +1027,6 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 
     char temp[250];
     IndexEntry * ie;
-    uint updateStart, update;
-    updateStart = update = 5000;  // Update progress bar every 5000 games
 
     // If filter operation is to reset the filter, reset it:
     if (filterOp == FILTEROP_RESET) {
@@ -1165,4 +1165,193 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     (*env).ReleaseStringUTFChars(yearFrom, strYearFrom);
     (*env).ReleaseStringUTFChars(yearTo, strYearTo);
     return result;
+}
+
+
+/*
+ * Class:     org_scid_database_DataBase
+ * Method:    import
+ * Signature: (Ljava/lang/String;IZ)V
+ */
+extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
+                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders)
+{
+    const char* pgnName = (*env).GetStringUTFChars(fileName, NULL);
+    std::string resultString = "";
+    if (pgnName) {
+        MFile * pgnFile = new MFile;
+        PgnParser pgnParser (pgnFile);
+        ByteBuffer *bbuf = new ByteBuffer;
+        Index * idx = new Index;
+        Game * game = new Game;
+        GFile * gameFile = new GFile;
+        NameBase * nb = new NameBase;
+        IndexEntry * ie = new IndexEntry;
+        uint t = 0;   // = time(0);
+        int lastCallbackPercent = -1;
+        uint pgnFileSize = fileSize (pgnName, "");
+        // Ensure positive file size counter to avoid division by zero:
+        if (pgnFileSize < 1) { pgnFileSize = 1; }
+
+        // Make baseName from pgnName if baseName is not provided:
+        fileNameT baseName;
+        strCopy (baseName, pgnName);
+        // Trim the ".pgn" suffix:
+        strTrimFileSuffix (baseName);
+
+        // Try opening the log file:
+        fileNameT fname;
+        strCopy (fname, baseName);
+        strAppend (fname, ".err");
+        FILE * logFile = fopen (fname, "w");
+
+        if (pgnFile->Open (pgnName, FMODE_ReadOnly) != OK) {
+            resultString.append("Could not open file ");
+            resultString.append(pgnName);
+            resultString.append("\n");
+            goto cleanup;
+        }
+
+        if (logFile == NULL) {
+            resultString.append("Could not open log file.\n");
+            goto cleanup;
+        }
+
+        scid_Init();
+
+        if ((gameFile->Create (baseName, FMODE_WriteOnly)) != OK) {
+            // could not create the game file
+            pgnFile->Close();
+            goto cleanup;
+        }
+        idx->SetFileName (baseName);
+        idx->CreateIndexFile (FMODE_WriteOnly);
+        gameNumberT gNumber;
+
+        bbuf->SetBufferSize (BBUF_SIZE); // 32768
+
+        pgnParser.SetErrorFile (logFile);
+        pgnParser.SetPreGameText (true);
+
+        // TODO: Add command line option for ignored tags, rather than
+        //       just hardcoding PlyCount as the only ignored tag.
+        pgnParser.AddIgnoredTag ("PlyCount");
+
+        // Add each game found to the database:
+        while (pgnParser.ParseGame(game) != ERROR_NotFound) {
+            ie->Init();
+
+            if (idx->AddGame (&gNumber, ie) != OK) {
+                resultString.append("Too many games!");
+                goto cleanup;
+            }
+
+            // Add the names to the namebase:
+            idNumberT id = 0;
+
+            if (nb->AddName (NAME_PLAYER, game->GetWhiteStr(), &id) != OK) {
+                resultString.append("Too many names: ");
+                resultString.append(NAME_PLAYER);
+                goto cleanup;
+            }
+            nb->IncFrequency (NAME_PLAYER, id, 1);
+            ie->SetWhite (id);
+
+            if (nb->AddName (NAME_PLAYER, game->GetBlackStr(), &id) != OK) {
+                resultString.append("Too many names: ");
+                resultString.append(NAME_PLAYER);
+                goto cleanup;
+            }
+            nb->IncFrequency (NAME_PLAYER, id, 1);
+            ie->SetBlack (id);
+
+            if (nb->AddName (NAME_EVENT, game->GetEventStr(), &id) != OK) {
+                resultString.append("Too many names: ");
+                resultString.append(NAME_TYPE_STRING [NAME_EVENT]);
+                goto cleanup;
+            }
+            nb->IncFrequency (NAME_EVENT, id, 1);
+            ie->SetEvent (id);
+
+            if (nb->AddName (NAME_SITE, game->GetSiteStr(), &id) != OK) {
+                resultString.append("Too many names: ");
+                resultString.append(NAME_TYPE_STRING [NAME_SITE]);
+                goto cleanup;
+            }
+            nb->IncFrequency (NAME_SITE, id, 1);
+            ie->SetSite (id);
+
+            if (nb->AddName (NAME_ROUND, game->GetRoundStr(), &id) != OK) {
+                resultString.append("Too many names: ");
+                resultString.append(NAME_TYPE_STRING [NAME_ROUND]);
+                goto cleanup;
+            }
+            nb->IncFrequency (NAME_ROUND, id, 1);
+            ie->SetRound (id);
+
+            bbuf->Empty();
+            if (game->Encode (bbuf, ie) != OK) {
+                resultString.append("Fatal error encoding game!\n");
+                goto cleanup;
+            }
+            uint offset = 0;
+            if (gameFile->AddGame (bbuf, &offset) != OK) {
+                resultString.append("Fatal error writing game file!\n");
+                goto cleanup;
+            }
+            ie->SetOffset (offset);
+            ie->SetLength (bbuf->GetByteCount());
+            idx->WriteEntries (ie, gNumber, 1);
+
+            // TODO Update the progress bar:
+            if (! (gNumber % 100)) {
+                int bytesSeen = pgnParser.BytesUsed();
+                int percentDone = 1 + ((bytesSeen) * 100 / pgnFileSize);
+                // TODO: progBar.Update (percentDone);
+                if (percentDone != lastCallbackPercent) {
+                    lastCallbackPercent = percentDone;
+                    jclass cls = env->GetObjectClass(obj);
+                    jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
+                    if (mid != 0) {
+                        env->CallVoidMethod(obj, mid, percentDone);
+                    }
+                    env->DeleteLocalRef(cls);
+                }
+
+            }
+
+        }
+
+        nb->SetTimeStamp(t);
+        nb->SetFileName (baseName);
+        if (nb->WriteNameFile() != OK) {
+            resultString.append("Fatal error writing name file!\n");
+            goto cleanup;
+        }
+        //progBar.Finish();
+
+        /*printf ("\nDatabase `%s': %d games, %d players, %d events, %d sites.\n",
+                baseName, idx->GetNumGames(), nb->GetNumNames (NAME_PLAYER),
+                nb->GetNumNames (NAME_EVENT), nb->GetNumNames (NAME_SITE));*/
+        fclose (logFile);
+        if (pgnParser.ErrorCount() > 0) {
+            FILE * errFile = fopen (fname, "r");
+            char line[100];
+            while( fgets(line, sizeof(line), errFile) != NULL ) {
+                resultString.append(line);
+            }
+            fclose(errFile);
+        }
+        removeFile (baseName, ".err");
+        gameFile->Close();
+        idx->CloseIndexFile();
+
+        // If there is a tree cache file for this database, it is out of date:
+        removeFile (baseName, TREEFILE_SUFFIX);
+        pgnFile->Close();
+
+      cleanup:
+        (*env).ReleaseStringUTFChars(fileName, pgnName);
+        return (*env).NewStringUTF(resultString.c_str());
+    }
 }

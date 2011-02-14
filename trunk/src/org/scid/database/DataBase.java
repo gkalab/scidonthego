@@ -75,4 +75,7 @@ public class DataBase {
 	public void callback(int progress) {
 		Log.d("GAME", "Processed up to game number: " + progress);
 	}
+	
+	/** Import a pgn file and create a scid database. */
+	public final native String importPgn(String fileName);
 }
