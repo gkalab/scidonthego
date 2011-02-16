@@ -82,8 +82,7 @@ public class TwicDownloader {
 			}
 			zis.close();
 		} catch (Exception e) {
-			// TODO
-			e.printStackTrace();
+			Log.e("SCID", e.getMessage(), e);
 		} finally {
 			f.delete();
 		}
@@ -141,12 +140,10 @@ public class TwicDownloader {
 				out.flush();
 				out.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Log.e("SCID", e.getMessage(), e);
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e("SCID", e.getMessage(), e);
 		}
 		return result;
 	}
@@ -194,7 +191,7 @@ public class TwicDownloader {
 				}
 			}
 		} catch (IOException e1) {
-			// TODO
+			Log.e("SCID", e1.getMessage(), e1);
 			data = e1.getMessage();
 		}
 	}

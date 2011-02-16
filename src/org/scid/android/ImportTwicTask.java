@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.widget.Toast;
 
 public class ImportTwicTask extends AsyncTask {
 	private Activity activity;
@@ -38,6 +39,14 @@ public class ImportTwicTask extends AsyncTask {
 			activity.finish();
 		} else {
 			activity.setResult(activity.RESULT_CANCELED);
+			activity.runOnUiThread(new Runnable() {
+				public void run() {
+					Toast.makeText(activity.getApplicationContext(),
+							activity.getText(R.string.download_error),
+							Toast.LENGTH_LONG).show();
+				}
+			});
+			activity.finish();
 		}
 	}
 }
