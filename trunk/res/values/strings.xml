@@ -140,4 +140,5 @@ GNU GPL v2\n\
     <string name="pgn_import_failure">There where errors during the PGN import.</string>
     <string name="pgn_import_cancel">Import canceled.</string>
     <string name="pgn_import_db_exists">There is already a database with the same name (%s).\nDo you want to continue to import and delete all the previous data in this database?</string>
+    <string name="download_error">Error downloading file. Please check you internet connection.</string>
 </resources>
