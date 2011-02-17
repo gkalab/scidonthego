@@ -57,7 +57,7 @@ public class SearchTask extends AsyncTask {
 									.getString(R.string.filter_numberof_games),
 					Toast.LENGTH_LONG).show();
 		}
-		activity.setResult(activity.RESULT_OK);
+		activity.setResult(Activity.RESULT_OK);
 		activity.finish();
 	}
 

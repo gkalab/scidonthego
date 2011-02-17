@@ -2,7 +2,6 @@ package org.scid.android;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -61,7 +60,7 @@ public class ImportTwicActivity extends ListActivity {
 				TwicItem item = aa.getItem(pos);
 				progressDlg = ProgressDialog.show(ImportTwicActivity.this,
 						"Downloading from TWIC", "Downloading...", true, false);
-				AsyncTask task = new ImportTwicTask().execute(
+				new ImportTwicTask().execute(
 						ImportTwicActivity.this, progressDlg, item.getLink());
 			}
 		});

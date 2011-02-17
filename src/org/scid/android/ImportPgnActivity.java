@@ -3,7 +3,6 @@ package org.scid.android;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -21,7 +20,7 @@ public class ImportPgnActivity extends Activity {
 			TextView view = (TextView) findViewById(R.id.importResult);
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Import",
 					"Importing...", true, false);
-			AsyncTask task = new ImportPgnTask().execute(this, pgnFileName,
+			new ImportPgnTask().execute(this, pgnFileName,
 					progressDlg);
 		} else {
 			setResult(RESULT_OK);

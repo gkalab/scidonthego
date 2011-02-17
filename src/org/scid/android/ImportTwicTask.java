@@ -34,11 +34,11 @@ public class ImportTwicTask extends AsyncTask {
 		progressDlg.dismiss();
 		String resultText = (String) result;
 		if (result != null) {
-			activity.setResult(activity.RESULT_OK, (new Intent())
+			activity.setResult(Activity.RESULT_OK, (new Intent())
 					.setAction(resultText));
 			activity.finish();
 		} else {
-			activity.setResult(activity.RESULT_CANCELED);
+			activity.setResult(Activity.RESULT_CANCELED);
 			activity.runOnUiThread(new Runnable() {
 				public void run() {
 					Toast.makeText(activity.getApplicationContext(),
