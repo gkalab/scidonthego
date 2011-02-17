@@ -38,11 +38,11 @@ public class ImportPgnTask extends AsyncTask {
 	protected void onPostExecute(Object result) {
 		progressDlg.dismiss();
 		String resultText = (String) result;
-		if (result.equals("")) {
+		if (resultText.equals("")) {
 			Toast.makeText(activity.getApplicationContext(),
 					activity.getString(R.string.pgn_import_success),
 					Toast.LENGTH_LONG).show();
-			activity.setResult(activity.RESULT_OK);
+			activity.setResult(Activity.RESULT_OK);
 			activity.finish();
 		} else {
 			Toast.makeText(activity.getApplicationContext(),

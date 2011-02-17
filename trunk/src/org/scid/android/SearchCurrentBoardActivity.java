@@ -3,7 +3,6 @@ package org.scid.android;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -82,7 +81,7 @@ public class SearchCurrentBoardActivity extends Activity {
 			String[] search = { "" + filterOperation, this.fen, "" + searchType };
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
 					"Searching...", true, false);
-			AsyncTask task = new SearchTask().execute(this, fileName, search,
+			new SearchTask().execute(this, fileName, search,
 					progressDlg);
 		} else {
 			setResult(RESULT_OK);
