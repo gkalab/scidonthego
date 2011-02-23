@@ -3,6 +3,8 @@ package org.scid.android;
 import java.io.File;
 import java.util.Vector;
 
+import org.scid.database.ScidProviderMetaData;
+
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -16,6 +18,12 @@ import android.widget.ListView;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class GameListActivity extends ListActivity {
+	/**
+	 * maximum number of games supported in list
+	 */
+	private static final int MAX_GAMES = 5000;
+
+	// TODO: rework game info and game info display
 	private static final class GameInfo {
 		String summary = "";
 		int gameNo = -1;
@@ -25,10 +33,15 @@ public class GameListActivity extends ListActivity {
 		}
 	}
 
+	final static int PROGRESS_DIALOG = 0;
 	private static Vector<GameInfo> gamesInFile = new Vector<GameInfo>();
 	private String fileName;
 	private ProgressDialog progress;
 	private static int defaultItem = 0;
+	static private long lastModTime = -1;
+	static private String lastFileName = "";
+	static private Cursor lastCursor = null;
+	static private String title = "";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +52,7 @@ public class GameListActivity extends ListActivity {
 		final GameListActivity gameList = this;
 		new Thread(new Runnable() {
 			public void run() {
-				readFile();
+				readGameInformation();
 				runOnUiThread(new Runnable() {
 					public void run() {
 						gameList.showList();
@@ -61,12 +74,11 @@ public class GameListActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
 				defaultItem = pos;
-				sendBackResult(aa.getItem(pos));
+				setResult(RESULT_OK, (new Intent()).setAction("" + defaultItem));
+				finish();
 			}
 		});
 	}
-
-	final static int PROGRESS_DIALOG = 0;
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -75,7 +87,7 @@ public class GameListActivity extends ListActivity {
 			progress = new ProgressDialog(this);
 			progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			progress.setTitle(R.string.please_wait);
-			progress.setMessage(getString(R.string.please_wait));
+			progress.setMessage(getString(R.string.gamelist_loading));
 			progress.setCancelable(false);
 			return progress;
 		default:
@@ -83,30 +95,57 @@ public class GameListActivity extends ListActivity {
 		}
 	}
 
-	static long lastModTime = -1;
-	static String lastFileName = "";
-
-	private final void readFile() {
-		if (!fileName.equals(lastFileName))
+	private final void readGameInformation() {
+		if (!fileName.equals(lastFileName)) {
 			defaultItem = 0;
+		}
 		long modTime = new File(fileName).lastModified();
-		if ((modTime == lastModTime) && fileName.equals(lastFileName))
+		if ((modTime == lastModTime)
+				&& fileName.equals(lastFileName)
+				&& lastCursor != null
+				&& lastCursor
+						.equals(((ScidApplication) getApplicationContext())
+								.getGamesCursor())) {
+			if (GameListActivity.title.length() > 0) {
+				setTitle(GameListActivity.title);
+			}
 			return;
+		}
 		lastModTime = modTime;
 		lastFileName = fileName;
+		lastCursor = ((ScidApplication) getApplicationContext())
+				.getGamesCursor();
 
 		gamesInFile.clear();
 		Cursor cursor = getCursor();
 		if (cursor != null) {
 			int noGames = cursor.getCount();
+			if (noGames > MAX_GAMES) {
+				// limit games shown in list
+				String title = getString(R.string.gamelist) + " - " + MAX_GAMES
+						+ "/" + noGames;
+				setTitle(title);
+				GameListActivity.title = title;
+				noGames = MAX_GAMES;
+			} else {
+				int allGames = ((ScidApplication) getApplicationContext())
+						.getNoGames();
+				if (allGames > noGames) {
+					// there's currently a filter
+					String title = getString(R.string.gamelist_filter) + " "
+							+ noGames + "/" + allGames;
+					setTitle(title);
+					GameListActivity.title = title;
+				}
+			}
 			progress.setMax(noGames);
 			int percent = -1;
 			if (cursor.moveToFirst()) {
+				int gameNo = 0;
 				addGameInfo(cursor);
-				int gameNo = 1;
-				while (cursor.moveToNext()) {
-					addGameInfo(cursor);
+				while (gameNo < noGames && cursor.moveToNext()) {
 					gameNo++;
+					addGameInfo(cursor);
 					final int newPercent = (int) (gameNo * 100 / noGames);
 					if (newPercent > percent) {
 						percent = newPercent;
@@ -126,7 +165,9 @@ public class GameListActivity extends ListActivity {
 	private Cursor getCursor() {
 		Cursor cursor = ((ScidApplication) this.getApplicationContext())
 				.getGamesCursor();
-		startManagingCursor(cursor);
+		if (cursor != null) {
+			startManagingCursor(cursor);
+		}
 		return cursor;
 	}
 
@@ -134,17 +175,8 @@ public class GameListActivity extends ListActivity {
 		GameInfo gi = new GameInfo();
 		final int gameNo = cursor.getInt(cursor.getColumnIndex("_id"));
 		gi.gameNo = gameNo;
-		gi.summary = cursor.getString(cursor.getColumnIndex("summary"));
+		gi.summary = cursor.getString(cursor
+				.getColumnIndex(ScidProviderMetaData.ScidMetaData.SUMMARY));
 		gamesInFile.add(gi);
-	}
-
-	private final void sendBackResult(GameInfo gi) {
-		if (gi.gameNo >= 0) {
-			setResult(RESULT_OK, (new Intent()).setAction("" + gi.gameNo));
-			finish();
-			return;
-		}
-		setResult(RESULT_CANCELED);
-		finish();
 	}
 }

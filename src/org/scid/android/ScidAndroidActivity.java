@@ -575,23 +575,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			removeDialog(SELECT_SCID_FILE_DIALOG);
 			showDialog(SELECT_SCID_FILE_DIALOG);
 			return true;
-			/*
-			 * TODO enable when saving to scid database case R.id.item_new_game:
-			 * if (autoSwapSides && (gameMode.playerWhite() !=
-			 * gameMode.playerBlack())) { int gameModeType; if
-			 * (gameMode.playerWhite()) { gameModeType = GameMode.PLAYER_BLACK;
-			 * } else { gameModeType = GameMode.PLAYER_WHITE; } Editor editor =
-			 * settings.edit(); String gameModeStr = String.format("%d",
-			 * gameModeType); editor.putString("gameMode", gameModeStr);
-			 * editor.commit(); gameMode = new GameMode(gameModeType); }
-			 * ctrl.newGame(gameMode); ctrl.startGame(); return true;
-			 */
-		case R.id.item_editboard: {
-			Intent i = new Intent(ScidAndroidActivity.this, EditBoard.class);
-			i.setAction(ctrl.getFEN());
-			startActivityForResult(i, RESULT_EDITBOARD);
-			return true;
-		}
 		case R.id.item_settings: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
 			startActivityForResult(i, RESULT_SETTINGS);
@@ -628,17 +611,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			startActivityForResult(i, RESULT_GAMELIST);
 			return true;
 		}
-			/*
-			 * TODO enable when saving to scid database case R.id.item_draw: {
-			 * if (ctrl.humansTurn()) { if (!ctrl.claimDrawIfPossible()) {
-			 * Toast.makeText(getApplicationContext(), R.string.offer_draw,
-			 * Toast.LENGTH_SHORT).show(); } } return true; } case
-			 * R.id.item_resign: { if (ctrl.humansTurn()) { ctrl.resignGame(); }
-			 * return true; }
-			 */
-		case R.id.item_about:
+		case R.id.item_about: {
 			showDialog(ABOUT_DIALOG);
 			return true;
+		}
 		}
 		return false;
 	}
@@ -698,8 +674,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (resultCode == RESULT_OK) {
 				try {
 					int gameNo = Integer.parseInt(data.getAction());
-					Cursor cursor = getCursor();
+					Cursor cursor = this.getScidAppContext().getGamesCursor();
+					if (cursor == null) {
+						cursor = this.getCursor();
+					}
 					if (cursor != null && cursor.moveToPosition(gameNo)) {
+						startManagingCursor(cursor);
 						setPgnFromCursor(cursor);
 					}
 				} catch (NumberFormatException nfe) {
@@ -899,16 +879,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								final String fileName = getScidAppContext()
 										.getCurrentFileName();
 								if (fileName.length() != 0) {
-									Cursor cursor = getContentResolver()
-											.query(
-													Uri
-															.parse("content://org.scid.database.scidprovider/games"),
-													null, fileName, null, null);
-									getScidAppContext().setGamesCursor(cursor);
-									getScidAppContext().setNoGames(cursor);
-									startManagingCursor(cursor);
-									cursor.moveToPosition(getScidAppContext()
-											.getCurrentGameNo());
+									Cursor cursor = getCursor();
+									if (cursor != null) {
+										cursor
+												.moveToPosition(getScidAppContext()
+														.getCurrentGameNo());
+									}
 								} else {
 									getScidAppContext().setGamesCursor(null);
 								}
@@ -938,9 +914,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int COPY_POSITION = 1;
 			final int PASTE = 2;
 			final int REMOVE_VARIATION = 3;
+			final int EDIT_BOARD = 4;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
+			lst.add(getString(R.string.edit_board));
+			actions.add(EDIT_BOARD);
 			lst.add(getString(R.string.copy_game));
 			actions.add(COPY_GAME);
 			lst.add(getString(R.string.copy_position));
@@ -958,6 +937,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
+							case EDIT_BOARD: {
+								Intent i = new Intent(ScidAndroidActivity.this,
+										EditBoard.class);
+								i.setAction(ctrl.getFEN());
+								startActivityForResult(i, RESULT_EDITBOARD);
+								break;
+							}
 							case COPY_GAME: {
 								String pgn = ctrl.getPGN();
 								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);

@@ -6,15 +6,19 @@
 	  	android:title="Open File"
   		android:icon="@drawable/ic_menu_archive">
 	</item>
-	<item
-  		android:id="@+id/item_editboard"
-	  	android:title="Edit Board"
-  		android:icon="@drawable/ic_menu_manage">
-	</item>
     <item
         android:id="@+id/item_gamelist"
         android:title="Game List"
         android:icon="@drawable/ic_menu_list">
+    </item>
+    <item
+        android:id="@+id/item_study_mode"
+        android:title="Study Mode On/Off">
+    </item>
+    <item
+        android:id="@+id/item_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search">
     </item>
     <item
         android:id="@+id/item_settings"
@@ -22,8 +26,12 @@
         android:icon="@drawable/ic_menu_preferences">
     </item>
     <item
-        android:id="@+id/item_study_mode"
-        android:title="Study Mode On/Off">
+        android:id="@+id/item_import_pgn"
+        android:title="Import PGN">
+    </item>
+    <item
+        android:id="@+id/item_import_twic"
+        android:title="Import TWIC">
     </item>
     <item
         android:id="@+id/item_goto_game"
@@ -33,18 +41,6 @@
     <item
         android:id="@+id/item_goto_move"
         android:title="Goto Move">
-    </item>
-    <item
-        android:id="@+id/item_search"
-        android:title="Search">
-    </item>
-    <item
-        android:id="@+id/item_import_pgn"
-        android:title="Import PGN">
-    </item>
-    <item
-        android:id="@+id/item_import_twic"
-        android:title="Import TWIC">
     </item>
 	<item
 		android:id="@+id/item_about"
