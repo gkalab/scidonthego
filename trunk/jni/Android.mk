@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := jni
 LOCAL_SRC_FILES := jniscid.cpp
+LOCAL_LDLIBS    := -llog
 
 LOCAL_CFLAGS    := -mandroid \
 	-DTARGET_OS=android -D__ANDROID__ \

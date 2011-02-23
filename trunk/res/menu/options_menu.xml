@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
 	xmlns:android="http://schemas.android.com/apk/res/android">
-	<!-- item
-  		android:id="@+id/item_new_game"
-	  	android:title="New Game"
-  		android:icon="@drawable/ic_menu_add">
-	</item-->
 	<item
   		android:id="@+id/item_open_file"
 	  	android:title="Open File"
@@ -17,14 +12,10 @@
   		android:icon="@drawable/ic_menu_manage">
 	</item>
     <item
-        android:id="@+id/item_goto_game"
-        android:title="Goto Game"
-  		android:icon="@drawable/ic_menu_goto">
+        android:id="@+id/item_gamelist"
+        android:title="Game List"
+        android:icon="@drawable/ic_menu_list">
     </item>
-	<item
-		android:id="@+id/item_goto_move"
-		android:title="Goto Move">
-	</item>
     <item
         android:id="@+id/item_settings"
         android:title="Settings"
@@ -33,6 +24,15 @@
     <item
         android:id="@+id/item_study_mode"
         android:title="Study Mode On/Off">
+    </item>
+    <item
+        android:id="@+id/item_goto_game"
+        android:title="Goto Game"
+        android:icon="@drawable/ic_menu_goto">
+    </item>
+    <item
+        android:id="@+id/item_goto_move"
+        android:title="Goto Move">
     </item>
     <item
         android:id="@+id/item_search"
@@ -46,14 +46,6 @@
         android:id="@+id/item_import_twic"
         android:title="Import TWIC">
     </item>
-	<!-- item
-		android:id="@+id/item_draw"
-		android:title="Claim/Offer/Accept Draw">
-	</item>
-	<item
-		android:id="@+id/item_resign"
-		android:title="Resign game">
-	</item-->
 	<item
 		android:id="@+id/item_about"
 		android:title="About / Help"
