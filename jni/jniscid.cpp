@@ -1,5 +1,6 @@
 #include <string.h>
 #include <jni.h>
+#include <android/log.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string>
@@ -10,6 +11,11 @@
 #include "scid/gfile.h"
 #include "scid/game.h"
 #include "scid/pgnparse.h"
+
+#define  LOG_TAG    "SCIDjni"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
 int main(int argc, char* argv[]);
 
@@ -136,6 +142,14 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
         tbuf.Empty();
         tbuf.SetWrapColumn(99999);
         game->WriteToPGN(&tbuf);
+        // Make sure pgn only contains valid UTF-8 Characters
+        char* bytes = tbuf.GetBuffer();
+        while (*bytes != '\0') {
+            if (*bytes >= 0x80) {
+                *bytes = '?';
+            }
+            bytes++;
+        }
         return (*env).NewStringUTF(tbuf.GetBuffer());
     } else {
         static char emptyString = 0;

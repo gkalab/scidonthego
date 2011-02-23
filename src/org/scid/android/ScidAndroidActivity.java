@@ -566,6 +566,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_SETTINGS = 1;
 	static private final int RESULT_SEARCH = 2;
 	static private final int RESULT_TWIC_IMPORT = 3;
+	static private final int RESULT_GAMELIST = 4;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -619,6 +620,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case R.id.item_import_twic: {
 			importTwic();
+			return true;
+		}
+		case R.id.item_gamelist: {
+			Intent i = new Intent(ScidAndroidActivity.this,
+					GameListActivity.class);
+			startActivityForResult(i, RESULT_GAMELIST);
 			return true;
 		}
 			/*
@@ -684,6 +691,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				if (cursor != null) {
 					startManagingCursor(cursor);
 					setPgnFromCursor(cursor);
+				}
+			}
+			break;
+		case RESULT_GAMELIST:
+			if (resultCode == RESULT_OK) {
+				try {
+					int gameNo = Integer.parseInt(data.getAction());
+					Cursor cursor = getCursor();
+					if (cursor != null && cursor.moveToPosition(gameNo)) {
+						setPgnFromCursor(cursor);
+					}
+				} catch (NumberFormatException nfe) {
+					Toast.makeText(getApplicationContext(),
+							R.string.invalid_number_format, Toast.LENGTH_SHORT)
+							.show();
 				}
 			}
 			break;
