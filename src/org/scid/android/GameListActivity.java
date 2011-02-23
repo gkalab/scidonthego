@@ -138,7 +138,7 @@ public class GameListActivity extends ListActivity {
 					GameListActivity.title = title;
 				}
 			}
-			progress.setMax(noGames);
+			progress.setMax(100);
 			int percent = -1;
 			if (cursor.moveToFirst()) {
 				int gameNo = 0;
