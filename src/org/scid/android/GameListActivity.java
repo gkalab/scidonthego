@@ -136,6 +136,8 @@ public class GameListActivity extends ListActivity {
 							+ noGames + "/" + allGames;
 					setTitle(title);
 					GameListActivity.title = title;
+				} else {
+					setTitle(getString(R.string.gamelist));
 				}
 			}
 			progress.setMax(100);
