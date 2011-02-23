@@ -319,7 +319,7 @@ public class ChessController {
 				throw e;
 			}
 			Date d2 = new Date();
-			Log.i("timing", "before/after readPGN " + df.format(d1) + "/"
+			Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
 					+ df.format(d2));
 		}
 		ss.searchResultWanted = false;
