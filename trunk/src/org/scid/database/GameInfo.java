@@ -13,7 +13,7 @@ public class GameInfo {
 	private int currentPly = 0;
 
 	public String toString() {
-		StringBuilder info = new StringBuilder(128);
+		StringBuilder info = new StringBuilder();
 		info.append(white);
 		info.append(" - ");
 		info.append(black);
@@ -62,6 +62,8 @@ public class GameInfo {
 			return this.toString();
 		case 10:
 			return "" + currentPly;
+		case 11:
+			return this.getDetails();
 		default:
 			return null;
 		}
@@ -145,5 +147,29 @@ public class GameInfo {
 
 	public int getCurrentPly() {
 		return currentPly;
+	}
+
+	public String getDetails() {
+		StringBuilder info = new StringBuilder();
+		info.append(result);
+		info.append(' ');
+		if (event.length() > 0) {
+			info.append(' ');
+			info.append(event);
+		}
+		if (site.length() > 0) {
+			info.append(' ');
+			info.append(site);
+		}
+		if (round.length() > 0) {
+			info.append(' ');
+			info.append(round);
+		}
+		if (date.length() > 0) {
+			info.append(' ');
+			info.append(date);
+		}
+		return info.toString();
+
 	}
 }
