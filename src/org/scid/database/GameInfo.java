@@ -151,7 +151,7 @@ public class GameInfo {
 
 	public String getDetails() {
 		StringBuilder info = new StringBuilder();
-		info.append(result);
+		info.append("<b>" + result + "</b>");
 		info.append(' ');
 		if (event.length() > 0) {
 			info.append(' ');
