@@ -31,6 +31,7 @@ public class ScidProviderMetaData {
 		public static final String EVENT = "event";
 		public static final String PGN = "pgn";
 		public static final String SUMMARY = "summary";
+		public static final String DETAILS = "details";
 		public static final String CURRENT_PLY = "current_ply";
 	}
 }

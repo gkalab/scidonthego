@@ -23,20 +23,11 @@ public class GameListActivity extends ListActivity {
 	 */
 	private static final int MAX_GAMES = 5000;
 
-	// TODO: rework game info and game info display
-	private static final class GameInfo {
-		String summary = "";
-		int gameNo = -1;
-
-		public String toString() {
-			return summary;
-		}
-	}
-
+	private ArrayAdapter<GameInfo> listAdapter;
 	final static int PROGRESS_DIALOG = 0;
 	private static Vector<GameInfo> gamesInFile = new Vector<GameInfo>();
 	private String fileName;
-	private ProgressDialog progress;
+	private ProgressDialog progress = null;
 	private static int defaultItem = 0;
 	static private long lastModTime = -1;
 	static private String lastFileName = "";
@@ -48,7 +39,10 @@ public class GameListActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 		fileName = ((ScidApplication) this.getApplicationContext())
 				.getCurrentFileName();
+		listAdapter = new GameListArrayAdapter(this, R.id.item_title);
+		setListAdapter(listAdapter);
 		showDialog(PROGRESS_DIALOG);
+
 		final GameListActivity gameList = this;
 		new Thread(new Runnable() {
 			public void run() {
@@ -64,11 +58,9 @@ public class GameListActivity extends ListActivity {
 
 	private final void showList() {
 		progress.dismiss();
-		final ArrayAdapter<GameInfo> aa = new ArrayAdapter<GameInfo>(this,
-				R.layout.select_game_list_item, gamesInFile);
-		setListAdapter(aa);
 		ListView lv = getListView();
 		lv.setSelectionFromTop(defaultItem, 0);
+		lv.setFastScrollEnabled(true);
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
@@ -109,16 +101,25 @@ public class GameListActivity extends ListActivity {
 			if (GameListActivity.title.length() > 0) {
 				setTitle(GameListActivity.title);
 			}
+			runOnUiThread(new Runnable() {
+				public void run() {
+					for (GameInfo info : gamesInFile) {
+						listAdapter.add(info);
+					}
+				}
+			});
 			return;
 		}
 		lastModTime = modTime;
 		lastFileName = fileName;
 		lastCursor = ((ScidApplication) getApplicationContext())
 				.getGamesCursor();
-
 		gamesInFile.clear();
 		Cursor cursor = getCursor();
 		if (cursor != null) {
+			// disable loading of PGN information in the cursor to speeding up
+			// the list view
+			setPgnLoading(cursor, false);
 			int noGames = cursor.getCount();
 			if (noGames > MAX_GAMES) {
 				// limit games shown in list
@@ -140,6 +141,8 @@ public class GameListActivity extends ListActivity {
 					setTitle(getString(R.string.gamelist));
 				}
 			}
+			final int games = noGames;
+			gamesInFile.ensureCapacity(games);
 			progress.setMax(100);
 			int percent = -1;
 			if (cursor.moveToFirst()) {
@@ -160,8 +163,16 @@ public class GameListActivity extends ListActivity {
 						}
 					}
 				}
+				// re-enable loading of PGN data in the cursor
+				setPgnLoading(cursor, true);
 			}
 		}
+	}
+
+	private void setPgnLoading(Cursor cursor, boolean value) {
+		Bundle bundle = new Bundle();
+		bundle.putBoolean("loadPGN", value);
+		cursor.respond(bundle);
 	}
 
 	private Cursor getCursor() {
@@ -174,11 +185,39 @@ public class GameListActivity extends ListActivity {
 	}
 
 	private void addGameInfo(Cursor cursor) {
-		GameInfo gi = new GameInfo();
-		final int gameNo = cursor.getInt(cursor.getColumnIndex("_id"));
-		gi.gameNo = gameNo;
-		gi.summary = cursor.getString(cursor
-				.getColumnIndex(ScidProviderMetaData.ScidMetaData.SUMMARY));
-		gamesInFile.add(gi);
+		final GameInfo info = new GameInfo();
+		info.setDetails(cursor.getString(cursor
+				.getColumnIndex(ScidProviderMetaData.ScidMetaData.DETAILS)));
+		info
+				.setTitle(cursor
+						.getString(cursor
+								.getColumnIndex(ScidProviderMetaData.ScidMetaData.WHITE))
+						+ " - "
+						+ cursor
+								.getString(cursor
+										.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
+		gamesInFile.add(info);
+		runOnUiThread(new Runnable() {
+			public void run() {
+				listAdapter.add(info);
+			}
+		});
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		// need to distroy progress dialog in case user turns device
+		if (progress != null) {
+			progress.dismiss();
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (progress != null) {
+			progress.dismiss();
+		}
 	}
 }

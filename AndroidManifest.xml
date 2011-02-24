@@ -32,23 +32,28 @@
         </activity>
         <activity
             android:name="SearchCurrentBoardActivity"
-            android:label="Board Search">
+            android:label="Board Search"
+            android:configChanges="orientation">
         </activity>
         <activity
             android:name="SearchHeaderActivity"
-            android:label="Header Search">
+            android:label="Header Search"
+            android:configChanges="orientation">
         </activity>
         <activity
             android:name="ImportPgnActivity"
-            android:label="PGN Import">
+            android:label="PGN Import"
+            android:configChanges="orientation">
         </activity>
         <activity
             android:name="ImportTwicActivity"
-            android:label="TWIC Import">
+            android:label="TWIC Import"
+            android:configChanges="orientation">
         </activity>
         <activity
             android:name="GameListActivity"
-            android:label="Game List">
+            android:label="Game List"
+            android:configChanges="orientation">
         </activity>
 
         <provider

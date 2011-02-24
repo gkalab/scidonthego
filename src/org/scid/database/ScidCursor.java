@@ -21,9 +21,9 @@ public class ScidCursor extends AbstractCursor {
 
 	private int[] projection;
 
-	boolean wantPGN = false; // True if projection contains pgn column
+	private boolean loadPGN = false; // True if projection contains pgn column
 
-	boolean singleGame = false;
+	private boolean singleGame = false;
 
 	// TODO: check for thread safety
 	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
@@ -52,7 +52,8 @@ public class ScidCursor extends AbstractCursor {
 			ScidProviderMetaData.ScidMetaData.RESULT,
 			ScidProviderMetaData.ScidMetaData.PGN,
 			ScidProviderMetaData.ScidMetaData.SUMMARY,
-			ScidProviderMetaData.ScidMetaData.CURRENT_PLY };
+			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
+			ScidProviderMetaData.ScidMetaData.DETAILS };
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
@@ -85,10 +86,10 @@ public class ScidCursor extends AbstractCursor {
 				this.projection[i] = proj.get(i);
 			}
 		}
-		wantPGN = false;
+		loadPGN = false;
 		for (int p : this.projection) {
 			if (p == 8) {
-				wantPGN = true;
+				loadPGN = true;
 				break;
 			}
 		}
@@ -225,7 +226,7 @@ public class ScidCursor extends AbstractCursor {
 		gameInfo.setWhite(this.db.getWhite());
 		gameInfo.setBlack(this.db.getBlack());
 		gameInfo.setResult(this.db.getResult());
-		gameInfo.setPgn(wantPGN ? this.db.getPGN() : null);
+		gameInfo.setPgn(loadPGN ? this.db.getPGN() : null);
 		gameInfo.setId(gameNo);
 	}
 
@@ -242,7 +243,7 @@ public class ScidCursor extends AbstractCursor {
 			return this.onFilterMove(oldPosition, newPosition);
 		}
 		int gameNo = startPosition + newPosition;
-		boolean onlyHeaders = !wantPGN;
+		boolean onlyHeaders = !loadPGN;
 		this.db.loadGame(fileName, gameNo, onlyHeaders);
 		setGameInfo(gameNo);
 		return true;
@@ -252,7 +253,7 @@ public class ScidCursor extends AbstractCursor {
 		int gameNo = filterMap.get(fileName).getGameNo(
 				startPosition + newPosition);
 		if (gameNo >= 0) {
-			boolean onlyHeaders = !wantPGN;
+			boolean onlyHeaders = !loadPGN;
 			this.db.loadGame(fileName, gameNo, onlyHeaders);
 			setGameInfo(gameNo);
 			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
@@ -314,4 +315,11 @@ public class ScidCursor extends AbstractCursor {
 		}
 		return true;
 	}
+
+	@Override
+	public Bundle respond(Bundle extras) {
+		this.loadPGN = extras.getBoolean("loadPGN");
+		return null;
+	}
+
 }
