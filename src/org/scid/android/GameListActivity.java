@@ -21,7 +21,7 @@ public class GameListActivity extends ListActivity {
 	/**
 	 * maximum number of games supported in list
 	 */
-	private static final int MAX_GAMES = 5000;
+	private static final int MAX_GAMES = 10000;
 
 	private ArrayAdapter<GameInfo> listAdapter;
 	final static int PROGRESS_DIALOG = 0;
