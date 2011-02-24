@@ -580,10 +580,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			startActivityForResult(i, RESULT_SETTINGS);
 			return true;
 		}
-		case R.id.item_goto_move: {
-			showDialog(SELECT_MOVE_DIALOG);
-			return true;
-		}
 		case R.id.item_goto_game: {
 			showDialog(SELECT_GOTO_GAME_DIALOG);
 			return true;
@@ -833,7 +829,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int PROMOTE_DIALOG = 0;
 	static final int CLIPBOARD_DIALOG = 1;
 	static final int ABOUT_DIALOG = 2;
-	static final int SELECT_MOVE_DIALOG = 3;
 	static final int SELECT_GOTO_GAME_DIALOG = 4;
 	static final int SELECT_SCID_FILE_DIALOG = 5;
 	static final int SEARCH_DIALOG = 6;
@@ -985,51 +980,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			builder.setTitle(R.string.app_name).setMessage(R.string.about_info);
 			AlertDialog alert = builder.create();
 			return alert;
-		}
-		case SELECT_MOVE_DIALOG: {
-			final Dialog dialog = new Dialog(this);
-			dialog.setContentView(R.layout.select_move_number);
-			dialog.setTitle(R.string.goto_move);
-			final EditText moveNrView = (EditText) dialog
-					.findViewById(R.id.selmove_number);
-			Button ok = (Button) dialog.findViewById(R.id.selmove_ok);
-			Button cancel = (Button) dialog.findViewById(R.id.selmove_cancel);
-			moveNrView.setText("1");
-			final Runnable gotoMove = new Runnable() {
-				public void run() {
-					try {
-						int moveNr = Integer.parseInt(moveNrView.getText()
-								.toString());
-						ctrl.gotoMove(moveNr);
-						dialog.cancel();
-					} catch (NumberFormatException nfe) {
-						Toast.makeText(getApplicationContext(),
-								R.string.invalid_number_format,
-								Toast.LENGTH_SHORT).show();
-					}
-				}
-			};
-			moveNrView.setOnKeyListener(new OnKeyListener() {
-				public boolean onKey(View v, int keyCode, KeyEvent event) {
-					if ((event.getAction() == KeyEvent.ACTION_DOWN)
-							&& (keyCode == KeyEvent.KEYCODE_ENTER)) {
-						gotoMove.run();
-						return true;
-					}
-					return false;
-				}
-			});
-			ok.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					gotoMove.run();
-				}
-			});
-			cancel.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					dialog.cancel();
-				}
-			});
-			return dialog;
 		}
 		case SELECT_GOTO_GAME_DIALOG: {
 			final Dialog dialog = new Dialog(this);
