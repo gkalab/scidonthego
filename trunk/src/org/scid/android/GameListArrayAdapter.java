@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import android.content.Context;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +34,7 @@ public class GameListArrayAdapter extends ArrayAdapter<GameInfo> {
 			}
 			if (details != null) {
 				String text = item.getDetails();
-				details.setText(text);
+				details.setText(Html.fromHtml(text));
 			}
 		}
 		return view;
