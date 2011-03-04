@@ -497,7 +497,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		setBoardFlip();
 		cb.oneTouchMoves = settings.getBoolean("oneTouchMoves", false);
 		mShowThinking = settings.getBoolean("showThinking", false);
-		String tmp = settings.getString("thinkingArrows", "2");
+		String tmp = settings.getString("thinkingArrows", "6");
 		maxNumArrows = Integer.parseInt(tmp);
 		mShowBookHints = settings.getBoolean("bookHints", false);
 		inStudyMode = settings.getBoolean("inStudyMode", false);
