@@ -894,7 +894,9 @@ public class GameTree {
     	Move move;					// Computed on demand for better PGN parsing performance.
     								// Subtrees of invalid moves will be dropped when detected.
     								// Always valid for current node.
-    	private UndoInfo ui;		// Computed when move is computed
+    	private int moveNumber;		// the full move number
+
+		private UndoInfo ui;		// Computed when move is computed
     	String playerAction;		// Player action. Draw claim/offer/accept or resign.
 
     	int remainingTime;			// Remaining time in ms for side that played moveStr, or INT_MIN if unknown.
@@ -918,6 +920,7 @@ public class GameTree {
     		this.nag = 0;
     		this.preComment = "";
     		this.postComment = "";
+    		this.moveNumber = 0;
 		}
 
 		public Node(Node parent, String moveStr, String playerAction, int remainingTime, int nag,
@@ -1056,6 +1059,7 @@ public class GameTree {
     	/** Export this node in PGN format. */ 
     	private final boolean addPgnDataOneNode(PgnToken.PgnTokenReceiver out, MoveNumber mn,
     											boolean needMoveNr, PGNOptions options) {
+    		this.moveNumber = mn.moveNo;
     		if ((preComment.length() > 0) && options.exp.comments) {
     			out.processToken(this, PgnToken.COMMENT, preComment);
     			needMoveNr = true;
@@ -1344,11 +1348,15 @@ public class GameTree {
 
 		/**
 		 * Get the complete move string of the node
+		 * @param whiteMove 
 		 * @return the move string
 		 */
-		public String getMoveString() {
-			String result = "";
-			result += this.preComment + " " + this.moveStr;
+		public String getMoveString(boolean whiteMove) {
+			String result = this.preComment + " " + this.moveNumber + ".";
+			if (!whiteMove) {
+				result += "..";
+			}
+			result += " " + this.moveStr;
 			if (this.nag > 0) {
 				result += nagStr(this.nag);
 			}

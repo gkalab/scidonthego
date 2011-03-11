@@ -738,7 +738,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (pgnOptions.view.allMoves) {
 				moveList.setText(gameTextListener.getSpannableData());
 			} else {
-				moveList.setText(gameTextListener.getCurrentSpannableData());
+				boolean whiteMove = false;
+				Position position = this.getScidAppContext().getPosition();
+				if (position != null) {
+					whiteMove = !position.whiteMove;
+				}
+				moveList.setText(gameTextListener.getCurrentSpannableData(whiteMove));
 			}
 		}
 		if (gameTextListener.atEnd()) {
