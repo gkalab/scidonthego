@@ -994,8 +994,11 @@ public class GameTree {
 		 */
 		public String getMoveString() {
 			String result = "";
-			result += this.preComment + " " + this.moveStr + " "
-					+ this.postComment;
+			result += this.preComment + " " + this.moveStr;
+			if (this.nag > 0) {
+				result += nagStr(this.nag);
+			}
+			result += " " + this.postComment;
 			return result.trim();
 		}
 		
