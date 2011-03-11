@@ -48,13 +48,14 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 
 	/**
 	 * Get spannable data of current move
+	 * @param whiteMove 
 	 * 
 	 * @return sb of current move
 	 */
-	public final SpannableStringBuilder getCurrentSpannableData() {
+	public final SpannableStringBuilder getCurrentSpannableData(boolean whiteMove) {
 		PgnScreenText.NodeInfo ni = nodeToCharPos.get(currNode);
 		if (ni != null) {
-			return new SpannableStringBuilder(currNode.getMoveString());
+			return new SpannableStringBuilder(currNode.getMoveString(whiteMove));
 		}
 		return new SpannableStringBuilder();
 	}
