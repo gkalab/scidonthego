@@ -187,7 +187,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			this.lastBlackPlayerName = black;
 			String[] names = myPlayerNames.split("\\n");
 			for (int i = 0; i < names.length; i++) {
-				String playerName = names[i];
+				String playerName = names[i].trim();
 				if (white.equalsIgnoreCase(playerName) && boardFlipped) {
 					boardFlipped = !boardFlipped;
 					setBoardFlip();
