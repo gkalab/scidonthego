@@ -136,6 +136,11 @@ GNU GPL v2\n\
     <string name="study_mode_disabled">study mode turned off</string>
     <string name="filter_no_games">No games found. Filter is reset.</string>
     <string name="filter_numberof_games">games in current filter</string>
+    <string name="import_pgn_title">PGN Import</string>
+    <string name="import_pgn_file">Import PGN file</string>
+    <string name="import_twic">Import from TWIC</string>
+    <string name="import_chessok">Import from ChessOK</string>
+    <string name="import_url">Import from URL</string>
     <string name="pgn_import_success">Import successful.</string>
     <string name="pgn_import_failure">There where errors during the PGN import.</string>
     <string name="pgn_import_cancel">Import canceled.</string>
@@ -144,4 +149,5 @@ GNU GPL v2\n\
     <string name="gamelist">Game List</string>
     <string name="gamelist_filter">Game List - Filter:</string>
     <string name="gamelist_loading">Loading game information.</string>
+    <string name="url">URL</string>
 </resources>
