@@ -51,6 +51,11 @@
             android:configChanges="orientation">
         </activity>
         <activity
+            android:name="ImportPgnFileActivity"
+            android:label="PGN File Import"
+            android:configChanges="orientation">
+        </activity>
+        <activity
             android:name="GameListActivity"
             android:label="Game List"
             android:configChanges="orientation">

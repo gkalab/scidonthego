@@ -8,11 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,8 +46,12 @@ public class TwicDownloader {
 	}
 
 	public File getPgnFromZipUrl(String directory, String zipUrl) {
-		File f = downloadFile(zipUrl);
-		return unzip(directory, f);
+		File f = Tools.downloadFile(zipUrl);
+		if (f != null) {
+			return unzip(directory, f);
+		} else {
+			return null;
+		}
 	}
 
 	private File unzip(String directory, File f) {
@@ -95,55 +95,6 @@ public class TwicDownloader {
 		List<TwicItem> result = new ArrayList<TwicItem>();
 		for (String link : llist) {
 			result.add(new TwicItem(link));
-		}
-		return result;
-	}
-
-	/**
-	 * @param path
-	 * @return
-	 */
-	private File downloadFile(String path) {
-		File result = null;
-		URL url = null;
-		try {
-			url = new URL(path);
-			URLConnection uc;
-			try {
-				uc = url.openConnection();
-				String contentType = uc.getContentType();
-				int contentLength = uc.getContentLength();
-				if (contentType.startsWith("text/") || contentLength == -1) {
-					throw new IOException("This is not a binary file.");
-				}
-				InputStream raw = uc.getInputStream();
-				InputStream in = new BufferedInputStream(raw);
-				byte[] data = new byte[contentLength];
-				int bytesRead = 0;
-				int offset = 0;
-				while (offset < contentLength) {
-					bytesRead = in.read(data, offset, data.length - offset);
-					if (bytesRead == -1)
-						break;
-					offset += bytesRead;
-				}
-				in.close();
-
-				if (offset != contentLength) {
-					throw new IOException("Only read " + offset
-							+ " bytes; Expected " + contentLength + " bytes");
-				}
-				result = File.createTempFile("twic", ".tmp");
-				FileOutputStream out = new FileOutputStream(result
-						.getAbsolutePath());
-				out.write(data);
-				out.flush();
-				out.close();
-			} catch (IOException e) {
-				Log.e("SCID", e.getMessage(), e);
-			}
-		} catch (MalformedURLException e) {
-			Log.e("SCID", e.getMessage(), e);
 		}
 		return result;
 	}

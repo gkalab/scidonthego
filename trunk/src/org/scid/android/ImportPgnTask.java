@@ -4,6 +4,7 @@ import org.scid.database.DataBase;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
@@ -12,11 +13,12 @@ import android.widget.Toast;
 public class ImportPgnTask extends AsyncTask {
 	private Activity activity;
 	private ProgressDialog progressDlg;
+	private String pgnFileName;
 
 	@Override
 	protected Object doInBackground(Object... params) {
 		this.activity = (Activity) params[0];
-		String pgnFileName = (String) params[1];
+		this.pgnFileName = (String) params[1];
 		this.progressDlg = (ProgressDialog) params[2];
 		DataBase db = new DataBase();
 		Log.d("SCID", "Starting import from " + pgnFileName);
@@ -30,7 +32,6 @@ public class ImportPgnTask extends AsyncTask {
 				resultView.setText(result);
 			}
 		});
-
 		return result;
 	}
 
@@ -42,7 +43,12 @@ public class ImportPgnTask extends AsyncTask {
 			Toast.makeText(activity.getApplicationContext(),
 					activity.getString(R.string.pgn_import_success),
 					Toast.LENGTH_LONG).show();
-			activity.setResult(Activity.RESULT_OK);
+			if (pgnFileName != null) {
+				activity.setResult(Activity.RESULT_OK, (new Intent())
+						.setAction(pgnFileName));
+			} else {
+				activity.setResult(Activity.RESULT_OK);
+			}
 			activity.finish();
 		} else {
 			Toast.makeText(activity.getApplicationContext(),
