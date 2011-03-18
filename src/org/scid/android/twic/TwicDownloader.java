@@ -33,13 +33,13 @@ public class TwicDownloader {
 	private Set<String> linkList = new HashSet<String>();
 	private static final int BUFFER = 2048;
 
-	public File getCurrentTwic(String directory) {
+	public File getCurrentTwic(String directory) throws IOException {
 		parseTwicSite();
 		String currentZip = getCurrentTwicZipName();
 		return getPgnFromZipUrl(directory, currentZip);
 	}
 
-	public File getPgnFromZipUrl(String directory, String zipUrl) {
+	public File getPgnFromZipUrl(String directory, String zipUrl) throws IOException {
 		File f = Tools.downloadFile(zipUrl);
 		if (f != null) {
 			return unzip(directory, f);

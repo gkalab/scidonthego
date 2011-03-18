@@ -87,69 +87,66 @@ public class Tools {
 	 * @param path
 	 *            the path to the URL
 	 * @return the downloaded file
+	 * @throws IOException
+	 *             if there's an error downloading the file
 	 */
-	public static final File downloadFile(String path) {
+	public static final File downloadFile(String path) throws IOException {
 		File result = null;
 		URL url = null;
 		try {
 			url = new URL(path);
 			Log.d("SCID", "start downloading from: " + url.toString());
 			URLConnection uc;
-			try {
-				uc = url.openConnection();
-				String contentType = uc.getContentType();
-				// get file name from http headers
-				String fileName = uc.getHeaderField("Content-Disposition");
-				if (fileName != null) {
-					if (fileName.indexOf("filename=") > -1) {
-						fileName = fileName.substring(
-								fileName.indexOf("filename=") + 9).trim();
-						if (fileName.length() > 0)
-							result = new File(Environment
-									.getExternalStorageDirectory()
-									+ File.separator
-									+ ScidAndroidActivity.SCID_DIRECTORY
-									+ File.separator + fileName);
-					}
-				} else {
-					fileName = getFileNameFromUrl(path);
-					if (fileName != null) {
+			uc = url.openConnection();
+			String contentType = uc.getContentType();
+			// get file name from http headers
+			String fileName = uc.getHeaderField("Content-Disposition");
+			if (fileName != null) {
+				if (fileName.indexOf("filename=") > -1) {
+					fileName = fileName.substring(
+							fileName.indexOf("filename=") + 9).trim();
+					if (fileName.length() > 0)
 						result = new File(Environment
 								.getExternalStorageDirectory()
 								+ File.separator
 								+ ScidAndroidActivity.SCID_DIRECTORY
 								+ File.separator + fileName);
-					}
 				}
-				Log.d("SCID", "fileName: " + result);
-				if (contentType == null) {
-					throw new IOException("URL not available.");
+			} else {
+				fileName = getFileNameFromUrl(path);
+				if (fileName != null) {
+					result = new File(Environment.getExternalStorageDirectory()
+							+ File.separator
+							+ ScidAndroidActivity.SCID_DIRECTORY
+							+ File.separator + fileName);
 				}
-				InputStream raw = uc.getInputStream();
-				InputStream in = new BufferedInputStream(raw);
-
-				int downloadedSize = 0;
-				byte[] buffer = new byte[1024];
-				int bufferLength = 0;
-				if (result == null) {
-					result = File.createTempFile("temp", ".tmp");
-				}
-				FileOutputStream out = new FileOutputStream(result
-						.getAbsolutePath());
-				while ((bufferLength = in.read(buffer)) > 0) {
-					out.write(buffer, 0, bufferLength);
-					downloadedSize += bufferLength;
-				}
-				// TODO: compare downloadedSize with content size if content
-				// size > 0
-				in.close();
-				// TODO: check if there was something written to the file,
-				// otherwise delete file and return null
-				out.flush();
-				out.close();
-			} catch (IOException e) {
-				Log.e("SCID", e.getMessage(), e);
 			}
+			Log.d("SCID", "fileName: " + result);
+			if (contentType == null) {
+				throw new IOException("URL not available.");
+			}
+			InputStream raw = uc.getInputStream();
+			InputStream in = new BufferedInputStream(raw);
+
+			int downloadedSize = 0;
+			byte[] buffer = new byte[1024];
+			int bufferLength = 0;
+			if (result == null) {
+				result = File.createTempFile("temp", ".tmp");
+			}
+			FileOutputStream out = new FileOutputStream(result
+					.getAbsolutePath());
+			while ((bufferLength = in.read(buffer)) > 0) {
+				out.write(buffer, 0, bufferLength);
+				downloadedSize += bufferLength;
+			}
+			// TODO: compare downloadedSize with content size if content
+			// size > 0
+			in.close();
+			// TODO: check if there was something written to the file,
+			// otherwise delete file and return null
+			out.flush();
+			out.close();
 		} catch (MalformedURLException e) {
 			Log.e("SCID", e.getMessage(), e);
 		}
@@ -233,5 +230,22 @@ public class Tools {
 			result = result.substring(lastEquals + 1);
 		}
 		return result;
+	}
+
+	public static void showErrorMessage(final Activity activity,
+			final String message) {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				final AlertDialog.Builder builder = new AlertDialog.Builder(
+						activity);
+				builder.setTitle(activity.getString(R.string.error));
+				builder.setMessage(message);
+				builder.setIcon(android.R.drawable.ic_dialog_alert);
+				builder
+						.setPositiveButton(activity.getString(R.string.ok),
+								null);
+				builder.show();
+			}
+		});
 	}
 }
