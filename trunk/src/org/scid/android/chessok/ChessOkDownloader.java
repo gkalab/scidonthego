@@ -90,8 +90,14 @@ public class ChessOkDownloader {
 									} else {
 										link.setDescription(link.getLink());
 									}
+									// fix wrong PGN links on chessOK site
+									String linkString = link.getLink();
+									int saveId = linkString.lastIndexOf("saveid=");
+									if (saveId > 0 && linkString.substring(saveId).contains("pgn/")) {
+										linkString = linkString.replaceAll("getpgn.php.*action=save&saveid=", "");
+									}
 									link.setLink("http://chessok.com/"
-											+ link.getLink());
+											+ linkString);
 									linkList.add(link);
 								} else {
 									lastDescription = link.getDescription();
