@@ -541,7 +541,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				.getString("currentScidFile", "");
 		if (currentScidFile.length() > 0) {
 			this.getScidAppContext().setCurrentFileName(
-					getFullScidFileName(currentScidFile));
+					Tools.getFullScidFileName(currentScidFile));
 		}
 
 		gameTextListener.clear();
@@ -631,86 +631,92 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case RESULT_SETTINGS:
-			readPrefs();
-			String theme = settings.getString("colorTheme", "0");
-			ColorTheme.instance().setTheme(settings, Integer.parseInt(theme));
-			cb.setColors();
-			ctrl.setGameMode(gameMode);
-			break;
-		case RESULT_EDITBOARD:
-			if (resultCode == RESULT_OK) {
-				try {
-					String fen = data.getAction();
-					ctrl.setFENOrPGN(fen);
-				} catch (ChessParseError e) {
+		if (data != null) {
+			switch (requestCode) {
+			case RESULT_SETTINGS:
+				readPrefs();
+				String theme = settings.getString("colorTheme", "0");
+				ColorTheme.instance().setTheme(settings,
+						Integer.parseInt(theme));
+				cb.setColors();
+				ctrl.setGameMode(gameMode);
+				break;
+			case RESULT_EDITBOARD:
+				if (resultCode == RESULT_OK) {
+					try {
+						String fen = data.getAction();
+						ctrl.setFENOrPGN(fen);
+					} catch (ChessParseError e) {
+					}
 				}
-			}
-			break;
-		case RESULT_SEARCH:
-			if (resultCode == RESULT_OK) {
-				Cursor cursor = this.getScidAppContext().getGamesCursor();
-				if (cursor == null) {
-					cursor = this.getCursor();
-				}
-				if (cursor != null) {
-					startManagingCursor(cursor);
-					setPgnFromCursor(cursor);
-				}
-			}
-			break;
-		case RESULT_GAMELIST:
-			if (resultCode == RESULT_OK) {
-				try {
-					int gameNo = Integer.parseInt(data.getAction());
+				break;
+			case RESULT_SEARCH:
+				if (resultCode == RESULT_OK) {
 					Cursor cursor = this.getScidAppContext().getGamesCursor();
 					if (cursor == null) {
 						cursor = this.getCursor();
 					}
-					if (cursor != null && cursor.moveToPosition(gameNo)) {
+					if (cursor != null) {
 						startManagingCursor(cursor);
 						setPgnFromCursor(cursor);
 					}
-				} catch (NumberFormatException nfe) {
-					Toast.makeText(getApplicationContext(),
-							R.string.invalid_number_format, Toast.LENGTH_SHORT)
-							.show();
 				}
-			}
-			break;
-		case RESULT_PGN_FILE_IMPORT:
-			// the result of the file dialog for the pgn import
-			if (resultCode == RESULT_OK) {
-				String pgnFileName = data.getAction();
-				if (pgnFileName != null) {
-					Tools.importPgn(this, getFullScidFileName(pgnFileName),
-							false, RESULT_PGN_IMPORT);
+				break;
+			case RESULT_GAMELIST:
+				if (resultCode == RESULT_OK) {
+					try {
+						int gameNo = Integer.parseInt(data.getAction());
+						Cursor cursor = this.getScidAppContext()
+								.getGamesCursor();
+						if (cursor == null) {
+							cursor = this.getCursor();
+						}
+						if (cursor != null && cursor.moveToPosition(gameNo)) {
+							startManagingCursor(cursor);
+							setPgnFromCursor(cursor);
+						}
+					} catch (NumberFormatException nfe) {
+						Toast.makeText(getApplicationContext(),
+								R.string.invalid_number_format,
+								Toast.LENGTH_SHORT).show();
+					}
 				}
-			}
-			break;
-		case RESULT_TWIC_IMPORT:
-			// the result of the file dialog for the pgn import after TWIC
-			// download
-			// twic import has it's own result to delete the pgn file after
-			// successful import
-			if (resultCode == RESULT_OK) {
-				String pgnFileName = data.getAction();
-				if (pgnFileName != null) {
-					Tools.importPgn(this, getFullScidFileName(pgnFileName),
-							true, RESULT_PGN_IMPORT);
+				break;
+			case RESULT_PGN_FILE_IMPORT:
+				// the result of the file dialog for the pgn import
+				if (resultCode == RESULT_OK) {
+					String pgnFileName = data.getAction();
+					if (pgnFileName != null) {
+						Tools.importPgn(this, Tools
+								.getFullScidFileName(pgnFileName), false,
+								RESULT_PGN_IMPORT);
+					}
 				}
-			}
-			break;
-		case RESULT_PGN_IMPORT:
-			// the result after importing the pgn file
-			if (resultCode == RESULT_OK) {
-				String pgnFileName = data.getAction();
-				if (pgnFileName != null) {
-					new File(pgnFileName).delete();
+				break;
+			case RESULT_TWIC_IMPORT:
+				// the result of the file dialog for the pgn import after TWIC
+				// download
+				// twic import has it's own result to delete the pgn file after
+				// successful import
+				if (resultCode == RESULT_OK) {
+					String pgnFileName = data.getAction();
+					if (pgnFileName != null) {
+						Tools.importPgn(this, Tools
+								.getFullScidFileName(pgnFileName), true,
+								RESULT_PGN_IMPORT);
+					}
 				}
+				break;
+			case RESULT_PGN_IMPORT:
+				// the result after importing the pgn file
+				if (resultCode == RESULT_OK) {
+					String pgnFileName = data.getAction();
+					if (pgnFileName != null) {
+						new File(pgnFileName).delete();
+					}
+				}
+				break;
 			}
-			break;
 		}
 	}
 
@@ -1087,7 +1093,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								editor.putString("currentScidFile", scidFile);
 								editor.commit();
 								getScidAppContext().setCurrentFileName(
-										getFullScidFileName(scidFile));
+										Tools.getFullScidFileName(scidFile));
 							}
 							Cursor cursor = getCursor();
 							if (cursor.moveToPosition(gameNo)
@@ -1200,8 +1206,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									.getExternalStorageDirectory()
 									+ File.separator + SCID_DIRECTORY,
 									pgnFileName));
-							Tools.importPgn(ScidAndroidActivity.this,
-									getFullScidFileName(pgnFileName), true,
+							Tools.importPgn(ScidAndroidActivity.this, Tools
+									.getFullScidFileName(pgnFileName), true,
 									RESULT_PGN_IMPORT);
 
 						} else {
@@ -1227,7 +1233,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
-		String scidFileName = getFullScidFileName(currentScidFile);
+		String scidFileName = Tools.getFullScidFileName(currentScidFile);
 		Cursor cursor = getContentResolver().query(
 				Uri.parse("content://org.scid.database.scidprovider/games"),
 				null, scidFileName, null, null);
@@ -1236,19 +1242,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 		startManagingCursor(cursor);
 		return cursor;
-	}
-
-	private String getFullScidFileName(final String fileName) {
-		String pathName = getFullFileName(fileName);
-		String scidFileName = pathName.substring(0, pathName.indexOf("."));
-		return scidFileName;
-	}
-
-	private String getFullFileName(final String fileName) {
-		String sep = File.separator;
-		String pathName = Environment.getExternalStorageDirectory() + sep
-				+ SCID_DIRECTORY + sep + fileName;
-		return pathName;
 	}
 
 	@Override

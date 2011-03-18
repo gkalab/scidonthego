@@ -2,6 +2,7 @@ package org.scid.android.chessok;
 
 import org.scid.android.Link;
 import org.scid.android.R;
+import org.scid.android.Tools;
 import org.scid.android.R.id;
 import org.scid.android.R.layout;
 
@@ -35,7 +36,12 @@ public class LinkListArrayAdapter extends ArrayAdapter<Link> {
 			TextView title = (TextView) view.findViewById(R.id.item_title);
 			TextView details = (TextView) view.findViewById(R.id.item_details);
 			if (title != null) {
-				title.setText(item.getDescription());
+				String description = item.getDescription();
+				String fileName = Tools.getFileNameFromUrl(item.getLink());
+				if (fileName != null) {
+					description += " (" + fileName + ")";
+				}
+				title.setText(Html.fromHtml(description));
 			}
 			if (details != null) {
 				String text = item.getLink();

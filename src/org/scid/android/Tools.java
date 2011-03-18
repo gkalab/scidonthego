@@ -112,9 +112,8 @@ public class Tools {
 									+ File.separator + fileName);
 					}
 				} else {
-					int lastPathSep = path.lastIndexOf("/");
-					if (lastPathSep > 0 && path.length() > lastPathSep + 1) {
-						fileName = path.substring(lastPathSep + 1);
+					fileName = getFileNameFromUrl(path);
+					if (fileName != null) {
 						result = new File(Environment
 								.getExternalStorageDirectory()
 								+ File.separator
@@ -156,10 +155,9 @@ public class Tools {
 		}
 		return result;
 	}
-	
-	
-	public static void importPgn(final Activity activity, String baseName, final boolean deletePgnAfterImport,
-			final int resultId) {
+
+	public static void importPgn(final Activity activity, String baseName,
+			final boolean deletePgnAfterImport, final int resultId) {
 		final String pgnFileName = baseName + ".pgn";
 		String scidFileName = baseName + ".si4";
 		File scidFile = new File(scidFileName);
@@ -167,31 +165,38 @@ public class Tools {
 			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
 					activity).create();
 			fileExistsDialog.setTitle("Database exists");
-			String message = String.format(
-					activity.getString(R.string.pgn_import_db_exists), scidFile
-							.getName());
+			String message = String.format(activity
+					.getString(R.string.pgn_import_db_exists), scidFile
+					.getName());
 			fileExistsDialog.setMessage(message);
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
 			fileExistsDialog.setButton(activity.getString(R.string.ok),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							startPgnImport(activity, pgnFileName, deletePgnAfterImport, resultId);
+							startPgnImport(activity, pgnFileName,
+									deletePgnAfterImport, resultId);
 						}
 					});
 			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							Toast.makeText(activity.getApplicationContext(),
-									activity.getString(R.string.pgn_import_cancel),
-									Toast.LENGTH_SHORT).show();
+							Toast
+									.makeText(
+											activity.getApplicationContext(),
+											activity
+													.getString(R.string.pgn_import_cancel),
+											Toast.LENGTH_SHORT).show();
 						}
 					});
 			fileExistsDialog.show();
 		} else {
-			startPgnImport(activity, pgnFileName, deletePgnAfterImport, resultId);
+			startPgnImport(activity, pgnFileName, deletePgnAfterImport,
+					resultId);
 		}
 	}
-	private static void startPgnImport(Activity activity, String pgnFileName, boolean deletePgnAfterImport, final int resultId) {
+
+	private static void startPgnImport(Activity activity, String pgnFileName,
+			boolean deletePgnAfterImport, final int resultId) {
 		Intent i = new Intent(activity, ImportPgnActivity.class);
 		i.setAction(pgnFileName);
 		if (deletePgnAfterImport) {
@@ -201,5 +206,32 @@ public class Tools {
 		}
 	}
 
+	public static String getFullScidFileName(final String fileName) {
+		String pathName = getFullFileName(fileName);
+		int pos = pathName.lastIndexOf(".");
+		if (pos > 0) {
+			pathName = pathName.substring(0, pathName.indexOf("."));
+		}
+		return pathName;
+	}
 
+	private static String getFullFileName(final String fileName) {
+		String sep = File.separator;
+		String pathName = Environment.getExternalStorageDirectory() + sep
+				+ ScidAndroidActivity.SCID_DIRECTORY + sep + fileName;
+		return pathName;
+	}
+
+	public static String getFileNameFromUrl(String path) {
+		String result = null;
+		int lastPathSep = path.lastIndexOf("/");
+		if (lastPathSep > 0 && path.length() > lastPathSep + 1) {
+			result = path.substring(lastPathSep + 1);
+		}
+		int lastEquals = result.lastIndexOf("=");
+		if (lastEquals > 0 && result.length() > lastEquals + 1) {
+			result = result.substring(lastEquals + 1);
+		}
+		return result;
+	}
 }

@@ -8,8 +8,10 @@ import org.scid.android.R;
 import org.scid.android.ScidAndroidActivity;
 import org.scid.android.Tools;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -24,11 +26,12 @@ public class PgnLinkListActivity extends ListActivity {
 	private ProgressDialog progressDlg;
 	final static int PROGRESS_DIALOG = 0;
 	static private final int RESULT_PGN_IMPORT = 5;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		LinkList linkList = (LinkList)this.getIntent().getSerializableExtra("linklist");
+		LinkList linkList = (LinkList) this.getIntent().getSerializableExtra(
+				"linklist");
 		final PgnLinkListActivity chessOkList = this;
 		this.progressDlg = ProgressDialog.show(this,
 				getString(R.string.get_chessok_information),
@@ -38,8 +41,9 @@ public class PgnLinkListActivity extends ListActivity {
 
 	protected void showList(final List<Link> linkList) {
 		progressDlg.dismiss();
-		final ArrayAdapter<Link> aa = new LinkListArrayAdapter(this, R.id.item_title);
-		for (Link link:linkList) {
+		final ArrayAdapter<Link> aa = new LinkListArrayAdapter(this,
+				R.id.item_title);
+		for (Link link : linkList) {
 			aa.add(link);
 		}
 		setListAdapter(aa);
@@ -51,50 +55,69 @@ public class PgnLinkListActivity extends ListActivity {
 				Link item = aa.getItem(pos);
 				File pgnFile = Tools.downloadFile(item.getLink());
 				if (pgnFile != null) {
-					String pgnFileName = pgnFile.getName();
-					Log.d("SCID", "moving downloaded file from "
-							+ pgnFile.getAbsolutePath() + " to "
-							+ Environment.getExternalStorageDirectory()
-							+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
-							+ File.separator + pgnFileName);
-					// move to scid directory and rename to ... name +
-					// ".pgn"
-					pgnFile.renameTo(new File(Environment
-							.getExternalStorageDirectory()
-							+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
-							pgnFileName));
-					Tools.importPgn(PgnLinkListActivity.this,
-							getFullScidFileName(pgnFileName), true,
-							RESULT_PGN_IMPORT);
+					if (pgnFile.length() == 0) {
+						pgnFile.delete();
+						final AlertDialog.Builder builder = new AlertDialog.Builder(
+								PgnLinkListActivity.this);
+						builder.setTitle(getString(R.string.error));
+						builder
+								.setMessage(getString(R.string.download_error_file_empty));
+						builder.setIcon(android.R.drawable.ic_dialog_alert);
+						builder.setPositiveButton(getString(R.string.ok), null);
+						builder.show();
+					} else {
+						String pgnFileName = pgnFile.getName();
+						Log.d("SCID", "moving downloaded file from "
+								+ pgnFile.getAbsolutePath() + " to "
+								+ Environment.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY
+								+ File.separator + pgnFileName);
+						// move to scid directory and rename to ... name +
+						// ".pgn"
+						pgnFile.renameTo(new File(Environment
+								.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY,
+								pgnFileName));
+						Tools.importPgn(PgnLinkListActivity.this, Tools
+								.getFullScidFileName(pgnFileName), true,
+								RESULT_PGN_IMPORT);
+					}
 
 				} else {
-					Toast.makeText(getApplicationContext(),
-							getText(R.string.download_error),
-							Toast.LENGTH_LONG).show();
+					Toast
+							.makeText(getApplicationContext(),
+									getText(R.string.download_error),
+									Toast.LENGTH_LONG).show();
 				}
 			}
 		});
-		// TODO: process RESULT_PGN_IMPORT --> remove pgn after successful download
 	}
-	// TODO: move to Tools
-	private String getFullScidFileName(final String fileName) {
-		String pathName = getFullFileName(fileName);
-		String scidFileName = pathName.substring(0, pathName.indexOf("."));
-		return scidFileName;
-	}
-	// TODO: move to Tools
-	private String getFullFileName(final String fileName) {
-		String sep = File.separator;
-		String pathName = Environment.getExternalStorageDirectory() + sep
-				+ ScidAndroidActivity.SCID_DIRECTORY + sep + fileName;
-		return pathName;
-	}
+
 	@Override
 	protected void onPause() {
 		super.onPause();
 		// need to distroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case RESULT_PGN_IMPORT:
+			if (resultCode == RESULT_OK) {
+				// delete file if import was successful
+				if (data != null) {
+					String pgnFileName = data.getAction();
+					if (pgnFileName != null) {
+						new File(pgnFileName).delete();
+					}
+				}
+			}
+			break;
 		}
 	}
 }

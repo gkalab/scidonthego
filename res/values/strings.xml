@@ -132,6 +132,7 @@ GNU GPL v2\n\
         <item>AND (Restrict filter)</item>
     </string-array>
     <string name="eco_none">no ECO</string>
+    <string name="error">Error</string>
     <string name="study_mode_enabled">study mode enabled</string>
     <string name="study_mode_disabled">study mode turned off</string>
     <string name="filter_no_games">No games found. Filter is reset.</string>
@@ -150,7 +151,8 @@ GNU GPL v2\n\
     <string name="pgn_import_failure">There where errors during the PGN import.</string>
     <string name="pgn_import_cancel">Import canceled.</string>
     <string name="pgn_import_db_exists">There is already a database with the same name (%s).\nDo you want to continue to import and delete all the previous data in this database?</string>
-    <string name="download_error">Error downloading file. Please check you internet connection.</string>
+    <string name="download_error">Error downloading file. Please check your internet connection.</string>
+    <string name="download_error_file_empty">The file downloaded was empty. Please try again later or contact the site hosting the link.</string>
     <string name="gamelist">Game List</string>
     <string name="gamelist_filter">Game List - Filter:</string>
     <string name="gamelist_loading">Loading game information.</string>
