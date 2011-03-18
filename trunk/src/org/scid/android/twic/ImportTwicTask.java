@@ -1,9 +1,10 @@
 package org.scid.android.twic;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.scid.android.R;
-import org.scid.android.R.string;
+import org.scid.android.Tools;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -23,9 +24,16 @@ public class ImportTwicTask extends AsyncTask {
 		this.progressDlg = (ProgressDialog) params[1];
 		String zipUrl = (String) params[2];
 		TwicDownloader downloader = new TwicDownloader();
-		File pgnFile = downloader.getPgnFromZipUrl(Environment
-				.getExternalStorageDirectory()
-				+ File.separator + "scid", zipUrl);
+		File pgnFile = null;
+		try {
+			pgnFile = downloader.getPgnFromZipUrl(Environment
+					.getExternalStorageDirectory()
+					+ File.separator + "scid", zipUrl);
+		} catch (IOException e) {
+			Tools.showErrorMessage(activity, activity
+					.getText(R.string.download_error)
+					+ " (" + e.getMessage() + ")");
+		}
 		if (pgnFile != null) {
 			result = pgnFile.getName();
 		}

@@ -1,10 +1,12 @@
 package org.scid.android;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.scid.android.chessok.ImportChessOkActivity;
+import org.scid.android.chessok.PgnLinkListActivity;
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.ChessParseError;
 import org.scid.android.gamelogic.Move;
@@ -1183,7 +1185,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String urlString = input.getText().toString().trim();
-						File pgnFile = Tools.downloadFile(urlString);
+						File pgnFile=null;
+						try {
+							pgnFile = Tools.downloadFile(urlString);
+						} catch (IOException e) {
+							Tools.showErrorMessage(ScidAndroidActivity.this,
+									getText(R.string.download_error) + " ("
+											+ e.getMessage() + ")");
+						}
 						if (pgnFile != null) {
 							String pgnFileName = pgnFile.getName();
 							if (!pgnFileName.endsWith(".pgn")) {

@@ -1,6 +1,7 @@
 package org.scid.android.chessok;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.scid.android.Link;
@@ -8,7 +9,6 @@ import org.scid.android.R;
 import org.scid.android.ScidAndroidActivity;
 import org.scid.android.Tools;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -53,18 +53,19 @@ public class PgnLinkListActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
 				Link item = aa.getItem(pos);
-				File pgnFile = Tools.downloadFile(item.getLink());
+				File pgnFile = null;
+				try {
+					pgnFile = Tools.downloadFile(item.getLink());
+				} catch (IOException e) {
+					Tools.showErrorMessage(PgnLinkListActivity.this,
+							getText(R.string.download_error) + " ("
+									+ e.getMessage() + ")");
+				}
 				if (pgnFile != null) {
 					if (pgnFile.length() == 0) {
 						pgnFile.delete();
-						final AlertDialog.Builder builder = new AlertDialog.Builder(
-								PgnLinkListActivity.this);
-						builder.setTitle(getString(R.string.error));
-						builder
-								.setMessage(getString(R.string.download_error_file_empty));
-						builder.setIcon(android.R.drawable.ic_dialog_alert);
-						builder.setPositiveButton(getString(R.string.ok), null);
-						builder.show();
+						Tools.showErrorMessage(PgnLinkListActivity.this,
+								getString(R.string.download_error_file_empty));
 					} else {
 						String pgnFileName = pgnFile.getName();
 						Log.d("SCID", "moving downloaded file from "
@@ -92,6 +93,7 @@ public class PgnLinkListActivity extends ListActivity {
 									Toast.LENGTH_LONG).show();
 				}
 			}
+
 		});
 	}
 
