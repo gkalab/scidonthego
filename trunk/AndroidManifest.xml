@@ -46,17 +46,22 @@
             android:configChanges="orientation">
         </activity>
         <activity
-            android:name="ImportTwicActivity"
+            android:name=".twic.ImportTwicActivity"
             android:label="TWIC Import"
             android:configChanges="orientation">
         </activity>
         <activity
-            android:name="ImportChessOkActivity"
+            android:name=".chessok.ImportChessOkActivity"
             android:label="ChessOK Import"
             android:configChanges="orientation">
         </activity>
         <activity
-            android:name="PgnLinkListActivity"
+            android:name=".chessok.PgnLinkListActivity"
+            android:label="ChessOK Import"
+            android:configChanges="orientation">
+        </activity>
+        <activity
+            android:name=".chessok.ChessOkLinkMapActivity"
             android:label="ChessOK Import"
             android:configChanges="orientation">
         </activity>

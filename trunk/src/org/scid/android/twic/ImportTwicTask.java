@@ -1,6 +1,9 @@
-package org.scid.android;
+package org.scid.android.twic;
 
 import java.io.File;
+
+import org.scid.android.R;
+import org.scid.android.R.string;
 
 import android.app.Activity;
 import android.app.ProgressDialog;

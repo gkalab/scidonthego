@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.scid.android.chessok.ImportChessOkActivity;
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.ChessParseError;
 import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.Position;
 import org.scid.android.gamelogic.TextIO;
+import org.scid.android.twic.ImportTwicActivity;
 import org.scid.database.ScidProviderMetaData;
 
 import android.app.Activity;
