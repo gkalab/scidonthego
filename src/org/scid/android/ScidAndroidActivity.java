@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scid.android.chessok.ImportChessOkActivity;
-import org.scid.android.chessok.PgnLinkListActivity;
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.ChessParseError;
 import org.scid.android.gamelogic.Move;
@@ -633,92 +632,88 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (data != null) {
-			switch (requestCode) {
-			case RESULT_SETTINGS:
-				readPrefs();
-				String theme = settings.getString("colorTheme", "0");
-				ColorTheme.instance().setTheme(settings,
-						Integer.parseInt(theme));
-				cb.setColors();
-				ctrl.setGameMode(gameMode);
-				break;
-			case RESULT_EDITBOARD:
-				if (resultCode == RESULT_OK) {
-					try {
-						String fen = data.getAction();
-						ctrl.setFENOrPGN(fen);
-					} catch (ChessParseError e) {
-					}
+		switch (requestCode) {
+		case RESULT_SETTINGS:
+			readPrefs();
+			String theme = settings.getString("colorTheme", "0");
+			ColorTheme.instance().setTheme(settings, Integer.parseInt(theme));
+			cb.setColors();
+			ctrl.setGameMode(gameMode);
+			break;
+		case RESULT_EDITBOARD:
+			if (resultCode == RESULT_OK && data != null) {
+				try {
+					String fen = data.getAction();
+					ctrl.setFENOrPGN(fen);
+				} catch (ChessParseError e) {
 				}
-				break;
-			case RESULT_SEARCH:
-				if (resultCode == RESULT_OK) {
+			}
+			break;
+		case RESULT_SEARCH:
+			if (resultCode == RESULT_OK) {
+				Cursor cursor = this.getScidAppContext().getGamesCursor();
+				if (cursor == null) {
+					cursor = this.getCursor();
+				}
+				if (cursor != null) {
+					startManagingCursor(cursor);
+					setPgnFromCursor(cursor);
+				}
+			}
+			break;
+		case RESULT_GAMELIST:
+			if (resultCode == RESULT_OK && data != null) {
+				try {
+					int gameNo = Integer.parseInt(data.getAction());
 					Cursor cursor = this.getScidAppContext().getGamesCursor();
 					if (cursor == null) {
 						cursor = this.getCursor();
 					}
-					if (cursor != null) {
+					if (cursor != null && cursor.moveToPosition(gameNo)) {
 						startManagingCursor(cursor);
 						setPgnFromCursor(cursor);
 					}
+				} catch (NumberFormatException nfe) {
+					Toast.makeText(getApplicationContext(),
+							R.string.invalid_number_format, Toast.LENGTH_SHORT)
+							.show();
 				}
-				break;
-			case RESULT_GAMELIST:
-				if (resultCode == RESULT_OK) {
-					try {
-						int gameNo = Integer.parseInt(data.getAction());
-						Cursor cursor = this.getScidAppContext()
-								.getGamesCursor();
-						if (cursor == null) {
-							cursor = this.getCursor();
-						}
-						if (cursor != null && cursor.moveToPosition(gameNo)) {
-							startManagingCursor(cursor);
-							setPgnFromCursor(cursor);
-						}
-					} catch (NumberFormatException nfe) {
-						Toast.makeText(getApplicationContext(),
-								R.string.invalid_number_format,
-								Toast.LENGTH_SHORT).show();
-					}
-				}
-				break;
-			case RESULT_PGN_FILE_IMPORT:
-				// the result of the file dialog for the pgn import
-				if (resultCode == RESULT_OK) {
-					String pgnFileName = data.getAction();
-					if (pgnFileName != null) {
-						Tools.importPgn(this, Tools
-								.getFullScidFileName(pgnFileName), false,
-								RESULT_PGN_IMPORT);
-					}
-				}
-				break;
-			case RESULT_TWIC_IMPORT:
-				// the result of the file dialog for the pgn import after TWIC
-				// download
-				// twic import has it's own result to delete the pgn file after
-				// successful import
-				if (resultCode == RESULT_OK) {
-					String pgnFileName = data.getAction();
-					if (pgnFileName != null) {
-						Tools.importPgn(this, Tools
-								.getFullScidFileName(pgnFileName), true,
-								RESULT_PGN_IMPORT);
-					}
-				}
-				break;
-			case RESULT_PGN_IMPORT:
-				// the result after importing the pgn file
-				if (resultCode == RESULT_OK) {
-					String pgnFileName = data.getAction();
-					if (pgnFileName != null) {
-						new File(pgnFileName).delete();
-					}
-				}
-				break;
 			}
+			break;
+		case RESULT_PGN_FILE_IMPORT:
+			// the result of the file dialog for the pgn import
+			if (resultCode == RESULT_OK && data != null) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					Tools.importPgn(this, Tools
+							.getFullScidFileName(pgnFileName), false,
+							RESULT_PGN_IMPORT);
+				}
+			}
+			break;
+		case RESULT_TWIC_IMPORT:
+			// the result of the file dialog for the pgn import after TWIC
+			// download
+			// twic import has it's own result to delete the pgn file after
+			// successful import
+			if (resultCode == RESULT_OK && data != null) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					Tools.importPgn(this, Tools
+							.getFullScidFileName(pgnFileName), true,
+							RESULT_PGN_IMPORT);
+				}
+			}
+			break;
+		case RESULT_PGN_IMPORT:
+			// the result after importing the pgn file
+			if (resultCode == RESULT_OK && data != null) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					new File(pgnFileName).delete();
+				}
+			}
+			break;
 		}
 	}
 
@@ -1185,7 +1180,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String urlString = input.getText().toString().trim();
-						File pgnFile=null;
+						File pgnFile = null;
 						try {
 							pgnFile = Tools.downloadFile(urlString);
 						} catch (IOException e) {
