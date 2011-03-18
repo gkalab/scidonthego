@@ -3,20 +3,51 @@ package org.scid.android;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.os.Environment;
 import android.util.Log;
 
 public class Tools {
+	private static Matcher matcherTag;
+	private static Matcher matcherLink;
+	private static final String HTML_A_TAG_PATTERN = "(?i)<a([^>]+)>(.+?)</a>";
+	private static final String HTML_A_HREF_TAG_PATTERN = "\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))";
+	private static Pattern patternTag = Pattern.compile(HTML_A_TAG_PATTERN);
+	private static Pattern patternLink = Pattern.compile(HTML_A_HREF_TAG_PATTERN);
+
+	/**
+	 * Extract links from html using regular expressions
+	 * 
+	 * @param html
+	 *            html content for validation
+	 * @return List of links
+	 */
+	public static List<String> getLinks(final String html) {
+		List<String> result = new ArrayList<String>();
+		matcherTag = patternTag.matcher(html);
+		while (matcherTag.find()) {
+			String href = matcherTag.group(1); // href
+			matcherLink = patternLink.matcher(href);
+			while (matcherLink.find()) {
+				String link = matcherLink.group(1); // link
+				result.add(link);
+			}
+		}
+		return result;
+	}
+	
+	
 	public static final String[] findFilesInDirectory(String dirName,
 			final String extension) {
 		File extDir = Environment.getExternalStorageDirectory();
@@ -70,6 +101,16 @@ public class Tools {
 									+ File.separator
 									+ ScidAndroidActivity.SCID_DIRECTORY
 									+ File.separator + fileName);
+					}
+				} else {
+					int lastPathSep = path.lastIndexOf("/");
+					if (lastPathSep > 0 && path.length() > lastPathSep + 1) {
+						fileName = path.substring(lastPathSep + 1);
+						result = new File(Environment
+								.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY
+								+ File.separator + fileName);
 					}
 				}
 				Log.d("SCID", "fileName: " + result);
