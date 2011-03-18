@@ -1,8 +1,6 @@
 package org.scid.android;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +27,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
+import android.text.InputType;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -683,17 +682,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (resultCode == RESULT_OK) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					importPgn(getFullScidFileName(pgnFileName), false);
+					Tools.importPgn(this, getFullScidFileName(pgnFileName),
+							false, RESULT_PGN_IMPORT);
 				}
 			}
 			break;
 		case RESULT_TWIC_IMPORT:
-			// the result of the file dialog for the pgn import after TWIC download
-			// twic import has it's own result to delete the pgn file after successful import
+			// the result of the file dialog for the pgn import after TWIC
+			// download
+			// twic import has it's own result to delete the pgn file after
+			// successful import
 			if (resultCode == RESULT_OK) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					importPgn(getFullScidFileName(pgnFileName), true);
+					Tools.importPgn(this, getFullScidFileName(pgnFileName),
+							true, RESULT_PGN_IMPORT);
 				}
 			}
 			break;
@@ -1107,8 +1110,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			actions.add(IMPORT_PGN_FILE);
 			lst.add(getString(R.string.import_twic));
 			actions.add(IMPORT_TWIC);
-			// lst.add(getString(R.string.import_chessok));
-			// actions.add(IMPORT_CHESSOK);
+			lst.add(getString(R.string.import_chessok));
+			actions.add(IMPORT_CHESSOK);
 			lst.add(getString(R.string.import_url));
 			actions.add(IMPORT_URL);
 			final List<Integer> finalActions = actions;
@@ -1127,7 +1130,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								break;
 							}
 							case IMPORT_CHESSOK: {
-								// TODO
+								importChessOk();
 								break;
 							}
 							case IMPORT_URL:
@@ -1156,10 +1159,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		startActivityForResult(i, RESULT_TWIC_IMPORT);
 	}
 
+	private void importChessOk() {
+		Intent i = new Intent(ScidAndroidActivity.this,
+				ImportChessOkActivity.class);
+		startActivityForResult(i, RESULT_TWIC_IMPORT);
+	}
+
 	private void importUrl() {
 		final AlertDialog.Builder alert = new AlertDialog.Builder(this);
 		final EditText input = new EditText(this);
 		alert.setView(input);
+		input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
 		input.setText("http://");
 		alert.setPositiveButton(getText(R.string.ok),
 				new DialogInterface.OnClickListener() {
@@ -1167,7 +1177,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						String urlString = input.getText().toString().trim();
 						File pgnFile = Tools.downloadFile(urlString);
 						if (pgnFile != null) {
-							// TODO
 							String pgnFileName = pgnFile.getName();
 							if (!pgnFileName.endsWith(".pgn")) {
 								// replace suffix with .pgn
@@ -1189,7 +1198,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									.getExternalStorageDirectory()
 									+ File.separator + SCID_DIRECTORY,
 									pgnFileName));
-							importPgn(getFullScidFileName(pgnFileName), true);
+							Tools.importPgn(ScidAndroidActivity.this,
+									getFullScidFileName(pgnFileName), true,
+									RESULT_PGN_IMPORT);
 
 						} else {
 							Toast.makeText(getApplicationContext(),
@@ -1206,49 +1217,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					}
 				});
 		alert.show();
-	}
-
-	private void startPgnImport(String pgnFileName, boolean deletePgnAfterImport) {
-		Intent i = new Intent(ScidAndroidActivity.this, ImportPgnActivity.class);
-		i.setAction(pgnFileName);
-		if (deletePgnAfterImport) {
-			startActivityForResult(i, RESULT_PGN_IMPORT);
-		} else {
-			startActivity(i);
-		}
-	}
-
-	private void importPgn(String baseName, final boolean deletePgnAfterImport) {
-		final String pgnFileName = baseName + ".pgn";
-		String scidFileName = baseName + ".si4";
-		File scidFile = new File(scidFileName);
-		if (scidFile.exists()) {
-			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
-					ScidAndroidActivity.this).create();
-			fileExistsDialog.setTitle("Database exists");
-			String message = String.format(
-					getString(R.string.pgn_import_db_exists), scidFile
-							.getName());
-			fileExistsDialog.setMessage(message);
-			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
-			fileExistsDialog.setButton(getString(R.string.ok),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							startPgnImport(pgnFileName, deletePgnAfterImport);
-						}
-					});
-			fileExistsDialog.setButton2(getString(R.string.cancel),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							Toast.makeText(getApplicationContext(),
-									getString(R.string.pgn_import_cancel),
-									Toast.LENGTH_SHORT).show();
-						}
-					});
-			fileExistsDialog.show();
-		} else {
-			startPgnImport(pgnFileName, deletePgnAfterImport);
-		}
 	}
 
 	private Cursor getCursor() {

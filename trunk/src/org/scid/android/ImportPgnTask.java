@@ -41,14 +41,10 @@ public class ImportPgnTask extends AsyncTask {
 		String resultText = (String) result;
 		if (resultText.equals("")) {
 			Toast.makeText(activity.getApplicationContext(),
-					activity.getString(R.string.pgn_import_success),
+					String.format(activity.getString(R.string.pgn_import_success),pgnFileName),
 					Toast.LENGTH_LONG).show();
-			if (pgnFileName != null) {
 				activity.setResult(Activity.RESULT_OK, (new Intent())
 						.setAction(pgnFileName));
-			} else {
-				activity.setResult(Activity.RESULT_OK);
-			}
 			activity.finish();
 		} else {
 			Toast.makeText(activity.getApplicationContext(),

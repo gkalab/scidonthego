@@ -126,11 +126,10 @@ public class TwicDownloader {
 				data = stringBuffer.toString();
 				reader.close();
 			}
-			List<String> links = Tools.getLinks(data);
-			for (String link : links) {
-				String stripped = link.replaceAll("\"", "");
-				if (stripped.endsWith("g.zip")) {
-					linkList.add(stripped);
+			List<Link> links = Tools.getLinks(data);
+			for (Link link : links) {
+				if (link.getLink().endsWith("g.zip")) {
+					linkList.add(link.getLink());
 				}
 			}
 		} catch (IOException e1) {
