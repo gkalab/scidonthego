@@ -3,12 +3,6 @@
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<PreferenceCategory
 		android:title="User Interface">
-		<CheckBoxPreference
-			android:key="oneTouchMoves"
-			android:title="One Touch Moves"
-			android:summary="Touching a square that corresponds to one unique move makes that move immediately"
-			android:defaultValue="false">
-		</CheckBoxPreference>
         <ListPreference
             android:key="moveDisplay"
             android:title="Move List"
