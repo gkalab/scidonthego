@@ -1,11 +1,10 @@
-package org.scid.android;
+package org.scid.android.chessok;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.scid.android.Link;
+import org.scid.android.Tools;
 
 import android.util.Log;
 
@@ -22,8 +23,9 @@ public class ChessOkDownloader {
 
 	private static String CHESSOK_SITE = "http://chessok.com/?page_id=139";
 
-	public Map<String, List<Link>> parseChessOkSite() {
-		final Map<String, List<Link>> resultMap = new LinkedHashMap<String, List<Link>>();
+	public Map<String, Map<String, List<Link>>> parseChessOkSite() {
+		final Map<String, Map<String, List<Link>>> resultMap = new LinkedHashMap<String, Map<String, List<Link>>>();
+		Map<String, List<Link>> currentMap = new LinkedHashMap<String, List<Link>>();
 		String data = "";
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpGet request = new HttpGet(CHESSOK_SITE);
@@ -49,9 +51,9 @@ public class ChessOkDownloader {
 			String html = "";
 			final String[] lines = data.split("\n");
 			boolean start = false;
-			final Map<Integer, String> titleMap = new HashMap<Integer, String>();
 			int level = 0;
 			String currentTitle = "";
+			String mainTitle = "";
 			for (int i = 0; i < lines.length; i++) {
 				final String line = lines[i];
 				if (line.contains("class=\"recent_broadcasts\"")) {
@@ -67,8 +69,11 @@ public class ChessOkDownloader {
 									.indexOf("id=") + 4);
 							titleString = titleString.substring(0, titleString
 									.indexOf('"'));
-							titleMap.put(level, titleString);
-							currentTitle = this.getTitleFromMap(titleMap);
+							if (level == 2) {
+								currentTitle = titleString;
+							} else if (level == 1) {
+								mainTitle = titleString;
+							}
 						}
 						html = "";
 						level += 1;
@@ -85,16 +90,23 @@ public class ChessOkDownloader {
 									} else {
 										link.setDescription(link.getLink());
 									}
-									link.setLink("http://chessok.com/"+link.getLink());
+									link.setLink("http://chessok.com/"
+											+ link.getLink());
 									linkList.add(link);
 								} else {
 									lastDescription = link.getDescription();
 								}
 							}
-							resultMap.put(currentTitle, linkList);
+							if (!resultMap.containsKey(mainTitle)) {
+								currentMap = new LinkedHashMap<String, List<Link>>();
+								resultMap.put(mainTitle, currentMap);
+							} 
+							else {
+								currentMap = resultMap.get(mainTitle);
+							}
+							currentMap.put(currentTitle, linkList);
 						}
 						level -= 1;
-						titleMap.put(level, "");
 						html = "";
 					} else {
 						html += line + "\n";
@@ -107,22 +119,5 @@ public class ChessOkDownloader {
 			data = e1.getMessage();
 		}
 		return resultMap;
-	}
-
-	private String getTitleFromMap(final Map<Integer, String> titleMap) {
-		String title = "";
-		String part = "";
-		int level = 1;
-		while (part != null) {
-			part = titleMap.get(level);
-			if (part != null) {
-				if (title.length() > 0) {
-					title += " - ";
-				}
-				title += part.trim();
-			}
-			level += 1;
-		}
-		return title;
 	}
 }

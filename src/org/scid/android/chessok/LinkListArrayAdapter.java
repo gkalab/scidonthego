@@ -1,4 +1,9 @@
-package org.scid.android;
+package org.scid.android.chessok;
+
+import org.scid.android.Link;
+import org.scid.android.R;
+import org.scid.android.R.id;
+import org.scid.android.R.layout;
 
 import android.content.Context;
 import android.text.Html;

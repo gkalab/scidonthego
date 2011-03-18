@@ -1,4 +1,4 @@
-package org.scid.android;
+package org.scid.android.twic;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,6 +22,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.scid.android.Link;
+import org.scid.android.Tools;
 
 import android.util.Log;
 

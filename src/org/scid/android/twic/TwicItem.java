@@ -1,4 +1,4 @@
-package org.scid.android;
+package org.scid.android.twic;
 
 
 public class TwicItem {

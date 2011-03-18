@@ -1,7 +1,12 @@
-package org.scid.android;
+package org.scid.android.chessok;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
+
+import org.scid.android.Link;
+import org.scid.android.R;
+import org.scid.android.ScidAndroidActivity;
+import org.scid.android.Tools;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -23,23 +28,19 @@ public class PgnLinkListActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		ArrayList<String> linkList = this.getIntent().getStringArrayListExtra(
-				"linklist");
-		ArrayList<String> linkDescription = this.getIntent()
-				.getStringArrayListExtra("linkdescription");
+		LinkList linkList = (LinkList)this.getIntent().getSerializableExtra("linklist");
 		final PgnLinkListActivity chessOkList = this;
 		this.progressDlg = ProgressDialog.show(this,
 				getString(R.string.get_chessok_information),
 				getString(R.string.downloading), true, false);
-		chessOkList.showList(linkList, linkDescription);
+		chessOkList.showList(linkList.getLinkList());
 	}
 
-	protected void showList(final ArrayList<String> linkList,
-			ArrayList<String> linkDescription) {
+	protected void showList(final List<Link> linkList) {
 		progressDlg.dismiss();
 		final ArrayAdapter<Link> aa = new LinkListArrayAdapter(this, R.id.item_title);
-		for (int i=0;i<linkList.size();i++) {
-			aa.add(new Link(linkList.get(i), linkDescription.get(i)));
+		for (Link link:linkList) {
+			aa.add(link);
 		}
 		setListAdapter(aa);
 		ListView lv = getListView();
