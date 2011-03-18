@@ -14,8 +14,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -32,12 +30,6 @@ public class TwicDownloader {
 	private static String TWIC_SITE = "http://www.chess.co.uk/twic/twic";
 	private Set<String> linkList = new HashSet<String>();
 	private static final int BUFFER = 2048;
-	private Matcher matcherTag;
-	private Matcher matcherLink;
-	private static final String HTML_A_TAG_PATTERN = "(?i)<a([^>]+)>(.+?)</a>";
-	private static final String HTML_A_HREF_TAG_PATTERN = "\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))";
-	private Pattern patternTag = Pattern.compile(HTML_A_TAG_PATTERN);
-	private Pattern patternLink = Pattern.compile(HTML_A_HREF_TAG_PATTERN);
 
 	public File getCurrentTwic(String directory) {
 		parseTwicSite();
@@ -120,21 +112,21 @@ public class TwicDownloader {
 				response.getEntity().writeTo(ostream);
 				data = ostream.toString();
 			} else {
-				String result = "";
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(response.getEntity().getContent()));
+				StringBuffer stringBuffer = new StringBuffer();
 				String line = null;
 				int noLinks = 0;
-				while (noLinks < 10 && (line = reader.readLine()) != null) {
-					result += line + "\n";
+				while (noLinks < 20 && (line = reader.readLine()) != null) {
+					stringBuffer.append(line + "\n");
 					if (line.contains("g.zip")) {
 						noLinks++;
 					}
 				}
-				data = result;
+				data = stringBuffer.toString();
 				reader.close();
 			}
-			List<String> links = getLinks(data);
+			List<String> links = Tools.getLinks(data);
 			for (String link : links) {
 				String stripped = link.replaceAll("\"", "");
 				if (stripped.endsWith("g.zip")) {
@@ -145,27 +137,6 @@ public class TwicDownloader {
 			Log.e("SCID", e1.getMessage(), e1);
 			data = e1.getMessage();
 		}
-	}
-
-	/**
-	 * Extract links from html using regular expressions
-	 * 
-	 * @param html
-	 *            html content for validation
-	 * @return List of links
-	 */
-	private List<String> getLinks(final String html) {
-		List<String> result = new ArrayList<String>();
-		matcherTag = patternTag.matcher(html);
-		while (matcherTag.find()) {
-			String href = matcherTag.group(1); // href
-			matcherLink = patternLink.matcher(href);
-			while (matcherLink.find()) {
-				String link = matcherLink.group(1); // link
-				result.add(link);
-			}
-		}
-		return result;
 	}
 
 }
