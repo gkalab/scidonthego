@@ -15,8 +15,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 public class Tools {
 	private static Matcher matcherTag;
@@ -24,7 +29,8 @@ public class Tools {
 	private static final String HTML_A_TAG_PATTERN = "(?i)<a([^>]+)>(.+?)</a>";
 	private static final String HTML_A_HREF_TAG_PATTERN = "\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))";
 	private static Pattern patternTag = Pattern.compile(HTML_A_TAG_PATTERN);
-	private static Pattern patternLink = Pattern.compile(HTML_A_HREF_TAG_PATTERN);
+	private static Pattern patternLink = Pattern
+			.compile(HTML_A_HREF_TAG_PATTERN);
 
 	/**
 	 * Extract links from html using regular expressions
@@ -33,21 +39,24 @@ public class Tools {
 	 *            html content for validation
 	 * @return List of links
 	 */
-	public static List<String> getLinks(final String html) {
-		List<String> result = new ArrayList<String>();
+	public static List<Link> getLinks(final String html) {
+		List<Link> result = new ArrayList<Link>();
 		matcherTag = patternTag.matcher(html);
 		while (matcherTag.find()) {
+			String anchor = matcherTag.group(0);
+			final String description = anchor.substring(
+					anchor.indexOf(">") + 1, anchor.lastIndexOf("<"));
 			String href = matcherTag.group(1); // href
 			matcherLink = patternLink.matcher(href);
 			while (matcherLink.find()) {
-				String link = matcherLink.group(1); // link
+				final Link link = new Link(matcherLink.group(1).replaceAll(
+						"\"", ""), description); // link
 				result.add(link);
 			}
 		}
 		return result;
 	}
-	
-	
+
 	public static final String[] findFilesInDirectory(String dirName,
 			final String extension) {
 		File extDir = Environment.getExternalStorageDirectory();
@@ -147,4 +156,50 @@ public class Tools {
 		}
 		return result;
 	}
+	
+	
+	public static void importPgn(final Activity activity, String baseName, final boolean deletePgnAfterImport,
+			final int resultId) {
+		final String pgnFileName = baseName + ".pgn";
+		String scidFileName = baseName + ".si4";
+		File scidFile = new File(scidFileName);
+		if (scidFile.exists()) {
+			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
+					activity).create();
+			fileExistsDialog.setTitle("Database exists");
+			String message = String.format(
+					activity.getString(R.string.pgn_import_db_exists), scidFile
+							.getName());
+			fileExistsDialog.setMessage(message);
+			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
+			fileExistsDialog.setButton(activity.getString(R.string.ok),
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							startPgnImport(activity, pgnFileName, deletePgnAfterImport, resultId);
+						}
+					});
+			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							Toast.makeText(activity.getApplicationContext(),
+									activity.getString(R.string.pgn_import_cancel),
+									Toast.LENGTH_SHORT).show();
+						}
+					});
+			fileExistsDialog.show();
+		} else {
+			startPgnImport(activity, pgnFileName, deletePgnAfterImport, resultId);
+		}
+	}
+	private static void startPgnImport(Activity activity, String pgnFileName, boolean deletePgnAfterImport, final int resultId) {
+		Intent i = new Intent(activity, ImportPgnActivity.class);
+		i.setAction(pgnFileName);
+		if (deletePgnAfterImport) {
+			activity.startActivityForResult(i, resultId);
+		} else {
+			activity.startActivity(i);
+		}
+	}
+
+
 }

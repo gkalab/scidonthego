@@ -9,7 +9,7 @@
         android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:name=".ScidApplication"
-        android:debuggable="false">
+        android:debuggable="true">
         <activity
             android:name=".ScidAndroidActivity"
             android:label="@string/app_name"
@@ -48,6 +48,16 @@
         <activity
             android:name="ImportTwicActivity"
             android:label="TWIC Import"
+            android:configChanges="orientation">
+        </activity>
+        <activity
+            android:name="ImportChessOkActivity"
+            android:label="ChessOK Import"
+            android:configChanges="orientation">
+        </activity>
+        <activity
+            android:name="PgnLinkListActivity"
+            android:label="ChessOK Import"
             android:configChanges="orientation">
         </activity>
         <activity
