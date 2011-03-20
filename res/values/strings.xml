@@ -157,4 +157,6 @@ GNU GPL v2\n\
     <string name="gamelist_filter">Game List - Filter:</string>
     <string name="gamelist_loading">Loading game information.</string>
     <string name="url">URL</string>
+    <string name="invalid_move">Invalid move %1$s-%2$s</string>
+    <string name="wrong_move">Wrong move %1$s-%2$s</string>
 </resources>

@@ -528,7 +528,11 @@ public class ChessController {
 				}
 				if (m.promoteTo == promoteTo) {
 					String strMove = TextIO.moveToString(pos, m, false);
-					game.processString(strMove);
+					boolean isCorrect = game.processString(strMove, gameMode
+							.studyMode());
+					if (!isCorrect && this.gameMode.studyMode()) {
+						gui.reportInvalidMove(m);
+					}
 					return true;
 				}
 			}
@@ -642,13 +646,13 @@ public class ChessController {
 	private final boolean findValidDrawClaim() {
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
-		game.processString("draw accept");
+		game.processString("draw accept", false);
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
-		game.processString("draw rep");
+		game.processString("draw rep", false);
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
-		game.processString("draw 50");
+		game.processString("draw 50", false);
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
 		return false;
@@ -656,7 +660,7 @@ public class ChessController {
 
 	public final void resignGame() {
 		if (game.getGameState() == GameState.ALIVE) {
-			game.processString("resign");
+			game.processString("resign", false);
 			updateGUI();
 		}
 	}

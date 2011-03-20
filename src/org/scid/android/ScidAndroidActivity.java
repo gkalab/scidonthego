@@ -100,7 +100,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					public void onSharedPreferenceChanged(
 							SharedPreferences sharedPreferences, String key) {
 						readPrefs();
-						ctrl.setGameMode(gameMode);
+						setGameMode();
 					}
 				});
 
@@ -504,6 +504,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		maxNumArrows = Integer.parseInt(tmp);
 		mShowBookHints = settings.getBoolean("bookHints", false);
 		inStudyMode = settings.getBoolean("inStudyMode", false);
+		gameMode = new GameMode(settings.getInt("gameMode",
+				GameMode.TWO_PLAYERS));
 
 		ctrl.setTimeLimit(300000, 60, 0);
 
@@ -623,11 +625,24 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		editor.commit();
 		updateThinkingInfo();
 		moveListUpdated();
+		if (inStudyMode) {
+			gameMode = new GameMode(GameMode.STUDY_MODE);
+		} else {
+			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+		}
+		setGameMode();
 		Toast.makeText(
 				getApplicationContext(),
 				inStudyMode ? R.string.study_mode_enabled
 						: R.string.study_mode_disabled, Toast.LENGTH_SHORT)
 				.show();
+	}
+
+	private void setGameMode() {
+		ctrl.setGameMode(gameMode);
+		Editor editor = settings.edit();
+		editor.putInt("gameMode", gameMode.getMode());
+		editor.commit();
 	}
 
 	@Override
@@ -638,7 +653,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			String theme = settings.getString("colorTheme", "0");
 			ColorTheme.instance().setTheme(settings, Integer.parseInt(theme));
 			cb.setColors();
-			ctrl.setGameMode(gameMode);
+			setGameMode();
 			break;
 		case RESULT_EDITBOARD:
 			if (resultCode == RESULT_OK && data != null) {
@@ -1259,8 +1274,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void reportInvalidMove(Move m) {
-		String msg = String.format("Invalid move %s-%s", TextIO
-				.squareToString(m.from), TextIO.squareToString(m.to));
+		String msg = "";
+		if (this.inStudyMode) {
+			msg = String.format(getString(R.string.wrong_move), TextIO
+					.squareToString(m.from), TextIO.squareToString(m.to));
+		} else {
+			msg = String.format(getString(R.string.invalid_move), TextIO
+					.squareToString(m.from), TextIO.squareToString(m.to));
+		}
 		Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 	}
 
