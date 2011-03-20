@@ -6,7 +6,6 @@ import java.util.Vector;
 
 import org.scid.android.Link;
 import org.scid.android.R;
-import org.scid.android.R.string;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -72,7 +71,7 @@ public class ImportChessOkActivity extends ListActivity {
 				String item = aa.getItem(pos);
 				Intent intent = new Intent(ImportChessOkActivity.this,
 						ChessOkLinkMapActivity.class);
-				
+
 				intent.putExtra("linkmap", new LinkMap(linkMap.get(item)));
 				startActivity(intent);
 			}
@@ -83,7 +82,7 @@ public class ImportChessOkActivity extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
 		}

@@ -207,7 +207,7 @@ public class GameListActivity extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progress != null) {
 			progress.dismiss();
 		}

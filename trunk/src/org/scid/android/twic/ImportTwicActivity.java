@@ -1,7 +1,6 @@
 package org.scid.android.twic;
 
 import org.scid.android.R;
-import org.scid.android.R.string;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -63,7 +62,8 @@ public class ImportTwicActivity extends ListActivity {
 					long id) {
 				TwicItem item = aa.getItem(pos);
 				progressDlg = ProgressDialog.show(ImportTwicActivity.this,
-						getString(R.string.twic_downloading), getString(R.string.downloading), true, false);
+						getString(R.string.twic_downloading),
+						getString(R.string.downloading), true, false);
 				new ImportTwicTask().execute(ImportTwicActivity.this,
 						progressDlg, item.getLink());
 			}
@@ -74,7 +74,7 @@ public class ImportTwicActivity extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
 		}

@@ -100,7 +100,7 @@ public class PgnLinkListActivity extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
 		}

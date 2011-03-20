@@ -81,8 +81,7 @@ public class SearchCurrentBoardActivity extends Activity {
 			String[] search = { "" + filterOperation, this.fen, "" + searchType };
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
 					"Searching...", true, false);
-			new SearchTask().execute(this, fileName, search,
-					progressDlg);
+			new SearchTask().execute(this, fileName, search, progressDlg);
 		} else {
 			setResult(RESULT_OK);
 			finish();
@@ -92,7 +91,7 @@ public class SearchCurrentBoardActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
 		}
