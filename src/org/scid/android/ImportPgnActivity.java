@@ -20,8 +20,7 @@ public class ImportPgnActivity extends Activity {
 			TextView view = (TextView) findViewById(R.id.importResult);
 			this.progressDlg = ProgressDialog.show(view.getContext(), "Import",
 					"Importing...", true, false);
-			new ImportPgnTask().execute(this, pgnFileName,
-					progressDlg);
+			new ImportPgnTask().execute(this, pgnFileName, progressDlg);
 		} else {
 			setResult(RESULT_OK);
 			finish();
@@ -36,7 +35,7 @@ public class ImportPgnActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// need to distroy progress dialog in case user turns device
+		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
 		}
