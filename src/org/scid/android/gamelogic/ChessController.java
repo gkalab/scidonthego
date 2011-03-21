@@ -254,8 +254,10 @@ public class ChessController {
 	}
 
 	/** Set game mode. */
-	public final void setGameMode(GameMode newMode) {
+	public final boolean setGameMode(GameMode newMode) {
+		boolean changed = false;
 		if (!gameMode.equals(newMode)) {
+			changed = true;
 			if (newMode.humansTurn(game.currPos().whiteMove))
 				ss.searchResultWanted = false;
 			gameMode = newMode;
@@ -266,6 +268,7 @@ public class ChessController {
 			updateComputeThreads(true);
 			updateGUI();
 		}
+		return changed;
 	}
 
 	public final void prefsChanged() {

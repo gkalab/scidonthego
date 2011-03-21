@@ -639,10 +639,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void setGameMode() {
-		ctrl.setGameMode(gameMode);
-		Editor editor = settings.edit();
-		editor.putInt("gameMode", gameMode.getMode());
-		editor.commit();
+		if (ctrl.setGameMode(gameMode)) {
+			Editor editor = settings.edit();
+			editor.putInt("gameMode", gameMode.getMode());
+			editor.commit();
+		}
 	}
 
 	@Override
