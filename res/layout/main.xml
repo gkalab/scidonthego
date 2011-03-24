@@ -23,53 +23,45 @@
             android:layout_gravity="center_vertical"
             android:id="@+id/moveindicator">
         </view>
-        <LinearLayout
-	        xmlns:android="http://schemas.android.com/apk/res/android"
-	        android:orientation="horizontal"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:gravity="right">
-	        <ImageButton
-	            android:id="@+id/previous_game"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:layout_weight="1"
-	            android:longClickable="true"
-	            android:onClick="onPreviousGameClick"
-	            android:src="@drawable/previous_game" />
-	        <ImageButton
-	            android:id="@+id/next_game"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:layout_weight="1"
-	            android:longClickable="true"
-	            android:onClick="onNextGameClick"
-	            android:src="@drawable/next_game" />
-	        <ImageButton
-	            android:id="@+id/flip_board"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:layout_weight="1"
-	            android:onClick="onFlipBoardClick"
-	            android:src="@drawable/flip" />
-	        <ImageButton
-	            android:id="@+id/previous_move"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:layout_weight="1"
-	            android:longClickable="true"
-	            android:onClick="onPreviousMoveClick"
-	            android:src="@drawable/previous" />
-	        <ImageButton
-	            android:id="@+id/next_move"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:layout_weight="1"
-	            android:longClickable="true"
-	            android:onClick="onNextMoveClick"
-	            android:src="@drawable/next" 
-	            android:layout_gravity="right" />
-	    </LinearLayout>
+        <ImageButton
+            android:id="@+id/previous_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onPreviousGameClick"
+            android:src="@drawable/previous_game" />
+        <ImageButton
+            android:id="@+id/next_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onNextGameClick"
+            android:src="@drawable/next_game" />
+        <ImageButton
+            android:id="@+id/flip_board"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onFlipBoardClick"
+            android:src="@drawable/flip" />
+        <ImageButton
+            android:id="@+id/previous_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onPreviousMoveClick"
+            android:src="@drawable/previous" />
+        <ImageButton
+            android:id="@+id/next_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onNextMoveClick"
+            android:src="@drawable/next" />
     </LinearLayout>
     <TextView
         android:id="@+id/status"
