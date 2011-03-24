@@ -534,6 +534,7 @@ public class ChessController {
 					boolean isCorrect = game.processString(strMove, gameMode
 							.studyMode());
 					if (!isCorrect && this.gameMode.studyMode()) {
+						gui.setSelection(-1);
 						gui.reportInvalidMove(m);
 					}
 					return true;
