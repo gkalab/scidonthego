@@ -72,7 +72,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	SharedPreferences settings;
 
-	private float scrollSensitivity = 2;
+	private float scrollSensitivity = 3;
 	private boolean invertScrollDirection = false;
 
 	public static final String SCID_DIRECTORY = "scid";
