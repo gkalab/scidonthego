@@ -7,6 +7,7 @@ import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.MoveGen;
 import org.scid.android.gamelogic.Piece;
 import org.scid.android.gamelogic.Position;
+import org.scid.android.gamelogic.UndoInfo;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -15,18 +16,23 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class ChessBoard extends View {
 	Position pos;
+	AnimInfo anim = new AnimInfo();
+	private Handler handlerTimer = new Handler();
 
 	private int fromSelectedSquare;
 	int selectedSquare;
 	float cursorX, cursorY;
 	boolean cursorVisible;
 	protected int x0, y0, sqSize;
+	private int pieceXDelta, pieceYDelta; // top/left pixel draw position
+											// relative to square
 	boolean flipped;
 	boolean oneTouchMoves;
 
@@ -40,6 +46,7 @@ public class ChessBoard extends View {
 	private Paint blackPiecePaint;
 	private ArrayList<Paint> moveMarkPaint;
 
+
 	public ChessBoard(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		pos = new Position();
@@ -48,6 +55,7 @@ public class ChessBoard extends View {
 		cursorX = cursorY = 0;
 		cursorVisible = false;
 		x0 = y0 = sqSize = 0;
+		pieceXDelta = pieceYDelta = -1;
 		flipped = false;
 		oneTouchMoves = false;
 
@@ -99,14 +107,179 @@ public class ChessBoard extends View {
 		invalidate();
 	}
 
+	final class AnimInfo {
+		AnimInfo() {
+			startTime = -1;
+		}
+
+		boolean paused;
+		long posHash; // Position the animation is valid for
+		long startTime; // Time in milliseconds when animation was started
+		long stopTime; // Time in milliseconds when animation should stop
+		long now; // Current time in milliseconds
+		int piece1, from1, to1, hide1;
+		int piece2, from2, to2, hide2;
+
+		public final boolean updateState() {
+			now = System.currentTimeMillis();
+			return animActive();
+		}
+
+		private final boolean animActive() {
+			if (paused || (startTime < 0) || (now >= stopTime)
+					|| (posHash != pos.zobristHash()))
+				return false;
+			return true;
+		}
+
+		public final boolean squareHidden(int sq) {
+			if (!animActive())
+				return false;
+			return (sq == hide1) || (sq == hide2);
+		}
+
+		public final void draw(Canvas canvas) {
+			if (!animActive())
+				return;
+			double animState = (now - startTime)
+					/ (double) (stopTime - startTime);
+			drawAnimPiece(canvas, piece2, from2, to2, animState);
+			drawAnimPiece(canvas, piece1, from1, to1, animState);
+			long now2 = System.currentTimeMillis();
+			long delay = 20 - (now2 - now);
+			// System.out.printf("delay:%d\n", delay);
+			if (delay < 1)
+				delay = 1;
+			handlerTimer.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					invalidate();
+				}
+			}, delay);
+		}
+
+		private void drawAnimPiece(Canvas canvas, int piece, int from, int to,
+				double animState) {
+			if (piece == Piece.EMPTY)
+				return;
+			final int xCrd1 = getXCrd(Position.getX(from));
+			final int yCrd1 = getYCrd(Position.getY(from));
+			final int xCrd2 = getXCrd(Position.getX(to));
+			final int yCrd2 = getYCrd(Position.getY(to));
+			final int xCrd = xCrd1
+					+ (int) Math.round((xCrd2 - xCrd1) * animState);
+			final int yCrd = yCrd1
+					+ (int) Math.round((yCrd2 - yCrd1) * animState);
+			drawPiece(canvas, xCrd, yCrd, piece);
+		}
+	}
+
+	/**
+	 * Set up move animation. The animation will start the next time setPosition
+	 * is called.
+	 * 
+	 * @param sourcePos
+	 *            The source position for the animation.
+	 * @param move
+	 *            The move leading to the target position.
+	 * @param forward
+	 *            True if forward direction, false for undo move.
+	 */
+	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
+		anim.startTime = -1;
+		anim.paused = true; // Animation starts at next position update
+		if (forward) {
+			// The animation will be played when pos == targetPos
+			Position targetPos = new Position(sourcePos);
+			UndoInfo ui = new UndoInfo();
+			targetPos.makeMove(move, ui);
+			anim.posHash = targetPos.zobristHash();
+		} else {
+			anim.posHash = sourcePos.zobristHash();
+		}
+		int animTime; // Animation duration in milliseconds.
+		{
+			int dx = Position.getX(move.to) - Position.getX(move.from);
+			int dy = Position.getY(move.to) - Position.getY(move.from);
+			double dist = Math.sqrt(dx * dx + dy * dy);
+			double t = Math.sqrt(dist) * 100;
+			animTime = (int) Math.round(t);
+		}
+		if (animTime > 0) {
+			anim.startTime = System.currentTimeMillis();
+			anim.stopTime = anim.startTime + animTime;
+			anim.piece2 = Piece.EMPTY;
+			anim.from2 = -1;
+			anim.to2 = -1;
+			anim.hide2 = -1;
+			if (forward) {
+				int p = sourcePos.getPiece(move.from);
+				anim.piece1 = p;
+				anim.from1 = move.from;
+				anim.to1 = move.to;
+				anim.hide1 = anim.to1;
+				int p2 = sourcePos.getPiece(move.to);
+				if (p2 != Piece.EMPTY) { // capture
+					anim.piece2 = p2;
+					anim.from2 = move.to;
+					anim.to2 = move.to;
+				} else if ((p == Piece.WKING) || (p == Piece.BKING)) {
+					boolean wtm = Piece.isWhite(p);
+					if (move.to == move.from + 2) { // O-O
+						anim.piece2 = wtm ? Piece.WROOK : Piece.BROOK;
+						anim.from2 = move.to + 1;
+						anim.to2 = move.to - 1;
+						anim.hide2 = anim.to2;
+					} else if (move.to == move.from - 2) { // O-O-O
+						anim.piece2 = wtm ? Piece.WROOK : Piece.BROOK;
+						anim.from2 = move.to - 2;
+						anim.to2 = move.to + 1;
+						anim.hide2 = anim.to2;
+					}
+				}
+			} else {
+				int p = sourcePos.getPiece(move.from);
+				anim.piece1 = p;
+				if (move.promoteTo != Piece.EMPTY)
+					anim.piece1 = Piece.isWhite(anim.piece1) ? Piece.WPAWN
+							: Piece.BPAWN;
+				anim.from1 = move.to;
+				anim.to1 = move.from;
+				anim.hide1 = anim.to1;
+				if ((p == Piece.WKING) || (p == Piece.BKING)) {
+					boolean wtm = Piece.isWhite(p);
+					if (move.to == move.from + 2) { // O-O
+						anim.piece2 = wtm ? Piece.WROOK : Piece.BROOK;
+						anim.from2 = move.to - 1;
+						anim.to2 = move.to + 1;
+						anim.hide2 = anim.to2;
+					} else if (move.to == move.from - 2) { // O-O-O
+						anim.piece2 = wtm ? Piece.WROOK : Piece.BROOK;
+						anim.from2 = move.to + 1;
+						anim.to2 = move.to - 2;
+						anim.hide2 = anim.to2;
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Set the board to a given state.
 	 * 
 	 * @param pos
 	 */
 	final public void setPosition(Position pos) {
+		boolean doInvalidate = false;
+		if (anim.paused = true) {
+			anim.paused = false;
+			doInvalidate = true;
+		}
 		if (!this.pos.equals(pos)) {
 			this.pos = new Position(pos);
+			doInvalidate = true;
+		}
+		if (doInvalidate) {
 			invalidate();
 		}
 	}
@@ -164,6 +337,7 @@ public class ChessBoard extends View {
 		int sqSizeW = getSqSizeW(width);
 		int sqSizeH = getSqSizeH(height);
 		int sqSize = Math.min(sqSizeW, sqSizeH);
+		pieceXDelta = pieceYDelta = -1;
 		if (height > width) {
 			int p = getMaxHeightPercentage();
 			height = Math.min(getHeight(sqSize), height * p / 100);
@@ -188,9 +362,12 @@ public class ChessBoard extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+		boolean animActive = anim.updateState();
 		final int width = getWidth();
 		final int height = getHeight();
 		sqSize = Math.min(getSqSizeW(width), getSqSizeH(height));
+		blackPiecePaint.setTextSize(sqSize);
+		whitePiecePaint.setTextSize(sqSize);
 		computeOrigin(width, height);
 		for (int x = 0; x < 8; x++) {
 			for (int y = 0; y < 8; y++) {
@@ -203,12 +380,14 @@ public class ChessBoard extends View {
 								paint);
 
 				int sq = Position.getSquare(x, y);
-				int p = pos.getPiece(sq);
-				drawPiece(canvas, xCrd + sqSize / 2, yCrd + sqSize / 2, p);
+				if (!animActive || !anim.squareHidden(sq)) {
+					int p = pos.getPiece(sq);
+					drawPiece(canvas, xCrd, yCrd, p);
+				}
 			}
 		}
 		drawExtraSquares(canvas);
-		if (fromSelectedSquare != -1) {
+		if (!animActive && fromSelectedSquare != -1) {
 			int selX = getXFromSq(fromSelectedSquare);
 			int selY = getYFromSq(fromSelectedSquare);
 			selectedSquarePaint.setStrokeWidth(sqSize / (float) 24);
@@ -217,7 +396,7 @@ public class ChessBoard extends View {
 			canvas.drawRect(x0, y0, x0 + sqSize, y0 + sqSize,
 					selectedSquarePaint);
 		}
-		if (selectedSquare != -1) {
+		if (!animActive && selectedSquare != -1) {
 			int selX = getXFromSq(selectedSquare);
 			int selY = getYFromSq(selectedSquare);
 			selectedSquarePaint.setStrokeWidth(sqSize / (float) 24);
@@ -236,7 +415,10 @@ public class ChessBoard extends View {
 					.drawRect(x0, y0, x0 + sqSize, y0 + sqSize,
 							cursorSquarePaint);
 		}
-		drawMoveHints(canvas);
+		if (!animActive) {
+			drawMoveHints(canvas);
+		}
+		anim.draw(canvas);
 	}
 
 	private final void drawMoveHints(Canvas canvas) {
@@ -291,60 +473,73 @@ public class ChessBoard extends View {
 	}
 
 	protected final void drawPiece(Canvas canvas, int xCrd, int yCrd, int p) {
-		char c = 0;
+		String psb, psw;
 		switch (p) {
 		default:
 		case Piece.EMPTY:
-			c = 0;
+			psb = null;
+			psw = null;
 			break;
 		case Piece.WKING:
-			c = 'H';
+			psb = "H";
+			psw = "k";
 			break;
 		case Piece.WQUEEN:
-			c = 'I';
+			psb = "I";
+			psw = "l";
 			break;
 		case Piece.WROOK:
-			c = 'J';
+			psb = "J";
+			psw = "m";
 			break;
 		case Piece.WBISHOP:
-			c = 'K';
+			psb = "K";
+			psw = "n";
 			break;
 		case Piece.WKNIGHT:
-			c = 'L';
+			psb = "L";
+			psw = "o";
 			break;
 		case Piece.WPAWN:
-			c = 'M';
+			psb = "M";
+			psw = "p";
 			break;
 		case Piece.BKING:
-			c = 'N';
+			psb = "N";
+			psw = "q";
 			break;
 		case Piece.BQUEEN:
-			c = 'O';
+			psb = "O";
+			psw = "r";
 			break;
 		case Piece.BROOK:
-			c = 'P';
+			psb = "P";
+			psw = "s";
 			break;
 		case Piece.BBISHOP:
-			c = 'Q';
+			psb = "Q";
+			psw = "t";
 			break;
 		case Piece.BKNIGHT:
-			c = 'R';
+			psb = "R";
+			psw = "u";
 			break;
 		case Piece.BPAWN:
-			c = 'S';
+			psb = "S";
+			psw = "v";
 			break;
 		}
-		if (c != 0) {
-			String psb = Character.toString(c);
-			String psw = Character.toString((char) (c + 'k' - 'H'));
-			blackPiecePaint.setTextSize(sqSize);
-			whitePiecePaint.setTextSize(sqSize);
-			Rect bounds = new Rect();
-			blackPiecePaint.getTextBounds("H", 0, 1, bounds);
-			int xCent = bounds.centerX();
-			int yCent = bounds.centerY();
-			canvas.drawText(psw, xCrd - xCent, yCrd - yCent, whitePiecePaint);
-			canvas.drawText(psb, xCrd - xCent, yCrd - yCent, blackPiecePaint);
+		if (psb != null) {
+			if (pieceXDelta < 0) {
+				Rect bounds = new Rect();
+				blackPiecePaint.getTextBounds("H", 0, 1, bounds);
+				pieceXDelta = (sqSize - (bounds.left + bounds.right)) / 2;
+				pieceYDelta = (sqSize - (bounds.top + bounds.bottom)) / 2;
+			}
+			xCrd += pieceXDelta;
+			yCrd += pieceYDelta;
+			canvas.drawText(psw, xCrd, yCrd, whitePiecePaint);
+			canvas.drawText(psb, xCrd, yCrd, blackPiecePaint);
 		}
 	}
 

@@ -221,7 +221,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	public void onNextMoveClick(View view) {
 		if (ctrl.canRedoMove()) {
-			ctrl.redoMove();
+			ctrl.redoMove(false);
 		}
 	}
 
@@ -1313,5 +1313,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public boolean onSearchRequested() {
 		showDialog(SEARCH_DIALOG);
 		return true;
+	}
+	
+	/** Report a move made that is a candidate for GUI animation. */
+	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
+		if (gameMode.studyMode() && (move != null))
+			cb.setAnimMove(sourcePos, move, forward);
 	}
 }

@@ -46,6 +46,9 @@ public interface GUIInterface {
 	/** Report remaining thinking time to GUI. */
 	public void setGameInformation(String white, String black, String gameNo);
 
+	/** Report a move made that is a candidate for GUI animation. */
+	public void setAnimMove(Position sourcePos, Move move, boolean forward);
+
 	public ScidApplication getScidAppContext();
 
 	public void setFromSelection(int fromSq);
