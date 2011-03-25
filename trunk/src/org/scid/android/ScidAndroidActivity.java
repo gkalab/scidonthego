@@ -170,6 +170,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				if (moveNo > 0) {
 					ctrl.gotoHalfMove(moveNo);
 				}
+				if (inStudyMode) {
+					// auto-flip board to the side which has the move
+					boardFlipped = !cb.pos.whiteMove;
+					cb.setFlipped(boardFlipped);
+				}
 				saveGameState();
 			} catch (ChessParseError e) {
 				Toast.makeText(getApplicationContext(), e.getMessage(),
@@ -1299,7 +1304,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void setGameInformation(String white, String black, String gameNo) {
-		flipBoardForPlayerNames(white, black);
+		if (!inStudyMode) {
+			flipBoardForPlayerNames(white, black);
+		}
 		whitePlayer.setText(white);
 		blackPlayer.setText(black);
 		this.gameNo.setText(gameNo);
@@ -1314,7 +1321,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		showDialog(SEARCH_DIALOG);
 		return true;
 	}
-	
+
 	/** Report a move made that is a candidate for GUI animation. */
 	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
 		if (gameMode.studyMode() && (move != null))
