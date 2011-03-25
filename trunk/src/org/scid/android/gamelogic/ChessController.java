@@ -398,7 +398,7 @@ public class ChessController {
 		return game.canRedoMove();
 	}
 
-	public final void redoMove() {
+	public final void redoMove(boolean animate) {
 		if (canRedoMove()) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
@@ -406,6 +406,9 @@ public class ChessController {
 			redoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
+			if (animate) {
+				setAnimMove(game.prevPos(), game.getLastMove(), true);
+			}
 			updateGUI();
 		}
 	}
@@ -481,6 +484,9 @@ public class ChessController {
 				stopComputerThinking();
 				updateComputeThreads(true);
 				updateGUI();
+				if (gameMode.studyMode()) {
+					redoMove(true);
+				}
 			} else {
 				gui.setSelection(-1);
 			}
@@ -536,6 +542,7 @@ public class ChessController {
 					if (!isCorrect && this.gameMode.studyMode()) {
 						gui.setSelection(-1);
 						gui.reportInvalidMove(m);
+						return false;
 					}
 					return true;
 				}
@@ -667,5 +674,9 @@ public class ChessController {
 			game.processString("resign", false);
 			updateGUI();
 		}
+	}
+
+	private void setAnimMove(Position sourcePos, Move move, boolean forward) {
+		gui.setAnimMove(sourcePos, move, forward);
 	}
 }
