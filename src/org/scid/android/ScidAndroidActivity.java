@@ -48,6 +48,7 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,6 +65,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private boolean boardFlipped = false;
 	private boolean autoSwapSides = false;
 
+	private RatingBar favoriteRating;
 	private TextView status;
 	private ScrollView moveListScroll;
 	private TextView moveList;
@@ -160,13 +162,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						cursor
 								.getInt(cursor
 										.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
-		this
-				.getScidAppContext()
-				.setFavorite(
-						Boolean
-								.parseBoolean(cursor
-										.getString(cursor
-												.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE))));
+		boolean isFavorite = Boolean
+				.parseBoolean(cursor
+						.getString(cursor
+								.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
+		this.getScidAppContext().setFavorite(isFavorite);
+		setFavoriteRating();
 
 		Editor editor = settings.edit();
 		editor.putInt("currentGameNo", this.getScidAppContext()
@@ -193,6 +194,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				Toast.makeText(getApplicationContext(), e.getMessage(),
 						Toast.LENGTH_SHORT).show();
 			}
+		}
+	}
+
+	private void setFavoriteRating() {
+		if (this.getScidAppContext().isFavorite()) {
+			favoriteRating.setRating(1.0f);
+		} else {
+			favoriteRating.setRating(0.0f);
 		}
 	}
 
@@ -299,6 +308,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		updateThinkingInfo();
 		setStatusString(statusStr);
 		moveListUpdated();
+		setFavoriteRating();
 	}
 
 	private final void initUI(boolean initTitle) {
@@ -313,6 +323,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			blackPlayer = (TextView) findViewById(R.id.black_player);
 			gameNo = (TextView) findViewById(R.id.gameNo);
 		}
+		favoriteRating = (RatingBar) findViewById(R.id.favorite);
 		status = (TextView) findViewById(R.id.status);
 		moveListScroll = (ScrollView) findViewById(R.id.scrollView);
 		moveList = (TextView) findViewById(R.id.moveList);
@@ -1014,6 +1025,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									if (updated > 0) {
 										message = getString(R.string.add_favorites_success);
 										getScidAppContext().setFavorite(true);
+										setFavoriteRating();
 									} else {
 										message = getString(R.string.add_favorites_failure);
 									}
@@ -1030,6 +1042,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									if (updated > 0) {
 										message = getString(R.string.remove_favorites_success);
 										getScidAppContext().setFavorite(false);
+										setFavoriteRating();
 									} else {
 										message = getString(R.string.remove_favorites_failure);
 									}

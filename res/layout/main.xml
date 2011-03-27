@@ -14,12 +14,18 @@
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
+        <RatingBar android:id="@+id/favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:numStars="1"
+            android:stepSize="1.0"
+            style="?android:attr/ratingBarStyleSmall" />
         <view
             class="org.scid.android.MoveIndicator"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_weight="1"
-            android:layout_marginLeft="15dp"
+            android:layout_marginLeft="5dp"
             android:layout_gravity="center_vertical"
             android:id="@+id/moveindicator">
         </view>
