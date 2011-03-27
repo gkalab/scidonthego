@@ -124,11 +124,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		byte[] data = null;
 		if (savedInstanceState != null) {
 			data = savedInstanceState.getByteArray("gameState");
+			getScidAppContext().setFavorite(
+					savedInstanceState.getBoolean("isFavorite"));
 		} else {
 			String dataStr = settings.getString("gameState", null);
 			if (dataStr != null) {
 				data = strToByteArr(dataStr);
 			}
+			getScidAppContext().setFavorite(
+					settings.getBoolean("isFavorite", false));
 		}
 		if (data != null) {
 			ctrl.fromByteArray(data);
@@ -137,6 +141,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ctrl.setGuiPaused(true);
 		ctrl.setGuiPaused(false);
 		ctrl.startGame();
+		setFavoriteRating();
 	}
 
 	public void onNextGameClick(View view) {
@@ -488,6 +493,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			byte[] data = ctrl.toByteArray();
 			outState.putByteArray("gameState", data);
 		}
+		outState.putBoolean("isFavorite", getScidAppContext().isFavorite());
 	}
 
 	@Override
@@ -512,6 +518,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		Editor editor = settings.edit();
 		String dataStr = byteArrToString(data);
 		editor.putString("gameState", dataStr);
+		editor.putBoolean("isFavorite", getScidAppContext().isFavorite());
 		editor.commit();
 	}
 
