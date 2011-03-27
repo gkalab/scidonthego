@@ -159,4 +159,11 @@ GNU GPL v2\n\
     <string name="url">URL</string>
     <string name="invalid_move">Invalid move %1$s-%2$s</string>
     <string name="wrong_move">Wrong move %1$s-%2$s</string>
+    <string name="add_favorites">Add to Favorites</string>
+    <string name="remove_favorites">Remove from Favorites</string>
+    <string name="add_favorites_success">Game added to Favorites.</string>
+    <string name="add_favorites_failure">Error adding game to Favorites!</string>
+    <string name="remove_favorites_success">Game removed from Favorites.</string>
+    <string name="remove_favorites_failure">Error removing game from Favorites!</string>
+    <string name="favorites">Favorites</string>
 </resources>

@@ -10,8 +10,11 @@ public class DataBase {
 	/** Create a new scid database. */
 	public final native void create(String fileName);
 
-	/** Load a game from a scid file and set it as the current game. */
-	public final native void loadGame(String fileName, int gameNo,
+	/** 
+	 * Load a game from a scid file and set it as the current game. 
+	 * Return true if the game is in Favorites.
+	 */
+	public final native boolean loadGame(String fileName, int gameNo,
 			boolean onlyHeaders);
 
 	/**
@@ -75,7 +78,14 @@ public class DataBase {
 	public void callback(int progress) {
 		Log.d("GAME", "Processed up to game number: " + progress);
 	}
-	
+
 	/** Import a pgn file and create a scid database. */
 	public final native String importPgn(String fileName);
+
+	/** Set the favorite flag on a game. */
+	public final native void setFavorite(String fileName, int gameNo,
+			boolean isFavorite);
+	
+	/** Return true if the game is marked as favorite. */
+	public final native boolean isFavorite(String fileName, int gameNo);
 }

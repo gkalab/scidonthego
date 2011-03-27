@@ -10,8 +10,9 @@ public class ScidApplication extends Application {
 	private Cursor gamesCursor = null;
 	private String currentFileName = "";
 	private Position position = null;
-	private int currentGameNo;
+	private int currentGameNo = -1;
 	private int noGames;
+	private boolean isFavorite = false;
 
 	public Position getPosition() {
 		return position;
@@ -58,5 +59,13 @@ public class ScidApplication extends Application {
 				this.noGames = count;
 			}
 		}
+	}
+
+	public boolean isFavorite() {
+		return this.isFavorite;
+	}
+
+	public void setFavorite(boolean isFavorite) {
+		this.isFavorite = isFavorite;
 	}
 }
