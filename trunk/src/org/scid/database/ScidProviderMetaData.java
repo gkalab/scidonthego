@@ -33,5 +33,6 @@ public class ScidProviderMetaData {
 		public static final String SUMMARY = "summary";
 		public static final String DETAILS = "details";
 		public static final String CURRENT_PLY = "current_ply";
+		public static final String IS_FAVORITE = "is_favorite";
 	}
 }

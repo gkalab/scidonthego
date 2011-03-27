@@ -17,6 +17,7 @@ import org.scid.database.ScidProviderMetaData;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -154,7 +155,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void setPgnFromCursor(Cursor cursor) {
 		this.getScidAppContext().setCurrentGameNo(
-				cursor.getInt(cursor.getColumnIndex("_id")));
+				cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
+		this
+				.getScidAppContext()
+				.setFavorite(
+						Boolean
+								.parseBoolean(cursor
+										.getString(cursor
+												.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE))));
+
 		Editor editor = settings.edit();
 		editor.putInt("currentGameNo", this.getScidAppContext()
 				.getCurrentGameNo());
@@ -903,6 +912,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int RESET_FILTER = 0;
 			final int SEARCH_CURRENT_BOARD = 1;
 			final int SEARCH_HEADER = 2;
+			final int SHOW_FAVORITES = 3;
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
 			lst.add(getString(R.string.reset_filter));
@@ -911,6 +921,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			actions.add(SEARCH_CURRENT_BOARD);
 			lst.add(getString(R.string.search_header));
 			actions.add(SEARCH_HEADER);
+			lst.add(getString(R.string.favorites));
+			actions.add(SHOW_FAVORITES);
 			final List<Integer> finalActions = actions;
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.search);
@@ -946,6 +958,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								startActivityForResult(i, RESULT_SEARCH);
 								break;
 							}
+							case SHOW_FAVORITES: {
+								// TODO
+								Intent i = new Intent(ScidAndroidActivity.this,
+										GameListActivity.class);
+								startActivityForResult(i, RESULT_GAMELIST);
+								break;
+							}
 							}
 						}
 					});
@@ -958,9 +977,22 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int PASTE = 2;
 			final int REMOVE_VARIATION = 3;
 			final int EDIT_BOARD = 4;
+			final int ADD_FAVORITES = 5;
+			final int REMOVE_FAVORITES = 6;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
+			// check if "add to favorites" or "remove from favorites" is needed
+			if (getScidAppContext().getCurrentGameNo() >= 0) {
+				if (!getScidAppContext().isFavorite()) {
+					lst.add(getString(R.string.add_favorites));
+					actions.add(ADD_FAVORITES);
+				} else {
+					lst.add(getString(R.string.remove_favorites));
+					actions.add(REMOVE_FAVORITES);
+				}
+			}
+
 			lst.add(getString(R.string.edit_board));
 			actions.add(EDIT_BOARD);
 			lst.add(getString(R.string.copy_game));
@@ -980,6 +1012,38 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
+							case ADD_FAVORITES: {
+								if (getScidAppContext().getCurrentFileName()
+										.length() > 0) {
+									int updated = setFavorite(true);
+									String message;
+									if (updated > 0) {
+										message = getString(R.string.add_favorites_success);
+										getScidAppContext().setFavorite(true);
+									} else {
+										message = getString(R.string.add_favorites_failure);
+									}
+									Toast.makeText(getApplicationContext(),
+											message, Toast.LENGTH_SHORT).show();
+								}
+								break;
+							}
+							case REMOVE_FAVORITES: {
+								if (getScidAppContext().getCurrentFileName()
+										.length() > 0) {
+									int updated = setFavorite(false);
+									String message;
+									if (updated > 0) {
+										message = getString(R.string.remove_favorites_success);
+										getScidAppContext().setFavorite(false);
+									} else {
+										message = getString(R.string.remove_favorites_failure);
+									}
+									Toast.makeText(getApplicationContext(),
+											message, Toast.LENGTH_SHORT).show();
+								}
+								break;
+							}
 							case EDIT_BOARD: {
 								Intent i = new Intent(ScidAndroidActivity.this,
 										EditBoard.class);
@@ -1018,6 +1082,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								ctrl.removeVariation();
 								break;
 							}
+						}
+
+						private int setFavorite(boolean isFavorite) {
+							ContentValues values = new ContentValues();
+							values.put("isFavorite", isFavorite);
+							int updated = getContentResolver()
+									.update(
+											Uri
+													.parse("content://org.scid.database.scidprovider/games/"
+															+ getScidAppContext()
+																	.getCurrentGameNo()),
+											values,
+											getScidAppContext()
+													.getCurrentFileName(), null);
+							return updated;
 						}
 					});
 			AlertDialog alert = builder.create();

@@ -53,7 +53,8 @@ public class ScidCursor extends AbstractCursor {
 			ScidProviderMetaData.ScidMetaData.PGN,
 			ScidProviderMetaData.ScidMetaData.SUMMARY,
 			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
-			ScidProviderMetaData.ScidMetaData.DETAILS };
+			ScidProviderMetaData.ScidMetaData.DETAILS,
+			ScidProviderMetaData.ScidMetaData.IS_FAVORITE };
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
@@ -199,7 +200,7 @@ public class ScidCursor extends AbstractCursor {
 		}
 	}
 
-	private void setGameInfo(int gameNo) {
+	private void setGameInfo(int gameNo, boolean isFavorite) {
 		this.gameInfo = new GameInfo();
 		gameInfo.setEvent(this.db.getEvent());
 		if (gameInfo.getEvent().equals("?")) {
@@ -228,6 +229,7 @@ public class ScidCursor extends AbstractCursor {
 		gameInfo.setResult(this.db.getResult());
 		gameInfo.setPgn(loadPGN ? this.db.getPGN() : null);
 		gameInfo.setId(gameNo);
+		gameInfo.setFavorite(isFavorite);
 	}
 
 	/**
@@ -244,8 +246,8 @@ public class ScidCursor extends AbstractCursor {
 		}
 		int gameNo = startPosition + newPosition;
 		boolean onlyHeaders = !loadPGN;
-		this.db.loadGame(fileName, gameNo, onlyHeaders);
-		setGameInfo(gameNo);
+		boolean isFavorite = this.db.loadGame(fileName, gameNo, onlyHeaders);
+		setGameInfo(gameNo, isFavorite);
 		return true;
 	}
 
@@ -254,8 +256,9 @@ public class ScidCursor extends AbstractCursor {
 				startPosition + newPosition);
 		if (gameNo >= 0) {
 			boolean onlyHeaders = !loadPGN;
-			this.db.loadGame(fileName, gameNo, onlyHeaders);
-			setGameInfo(gameNo);
+			boolean isFavorite = this.db
+					.loadGame(fileName, gameNo, onlyHeaders);
+			setGameInfo(gameNo, isFavorite);
 			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
 					startPosition + newPosition));
 			return true;
@@ -303,7 +306,15 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public String getString(int position) {
 		if (this.gameInfo != null) {
-			return this.gameInfo.getColumn(projection[position]);
+			int column = projection[position];
+			if (column == getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)) {
+				// TODO remove this hack
+				// always re-opens the index file!
+				// --> therefore isFavorite cannot be used in the game list because of performance issue
+				return "" + db.isFavorite(fileName, this.gameInfo.getId());
+			} else {
+				return this.gameInfo.getColumn(column);
+			}
 		}
 		return null;
 	}
@@ -318,7 +329,9 @@ public class ScidCursor extends AbstractCursor {
 
 	@Override
 	public Bundle respond(Bundle extras) {
-		this.loadPGN = extras.getBoolean("loadPGN");
+		if (extras.containsKey("loadPGN")) {
+			this.loadPGN = extras.getBoolean("loadPGN");
+		}
 		return null;
 	}
 

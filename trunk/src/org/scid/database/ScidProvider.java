@@ -9,6 +9,8 @@ import android.database.Cursor;
 import android.net.Uri;
 
 public class ScidProvider extends ContentProvider {
+	private DataBase db = new DataBase();
+
 	private static final int BOARDSEARCH_SELECTION_ARGS_LENGTH = 3;
 	// Provide a mechanism to identify all the incoming uri patterns.
 	private static final UriMatcher sUriMatcher;
@@ -110,11 +112,34 @@ public class ScidProvider extends ContentProvider {
 				selectionArgs, singleGame);
 	}
 
+	/**
+	 * Update a game in the scid database. The last path segment must specify
+	 * the real game number in the database (not the one in the current filter)
+	 * 
+	 * currently only sets the favorite flag of a game
+	 */
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
-		// TODO Auto-generated method stub
-		return 0;
+		int result = 0;
+		switch (sUriMatcher.match(uri)) {
+		case INCOMING_SINGLE_GAME_URI_INDICATOR:
+			if (selection == null) {
+				throw new IllegalArgumentException(
+						"The scid file name must be specified as the selection.");
+			}
+			int gameNo = new Integer(uri.getLastPathSegment());
+			// save favorite flag
+			if (values.containsKey("isFavorite")) {
+				db.setFavorite(selection, gameNo, values
+						.getAsBoolean("isFavorite"));
+				result = 1;
+			}
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+		return result;
 	}
 
 }
