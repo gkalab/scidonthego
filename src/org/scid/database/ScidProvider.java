@@ -17,6 +17,8 @@ public class ScidProvider extends ContentProvider {
 	private static final int INCOMING_GAME_COLLECTION_URI_INDICATOR = 1;
 
 	private static final int INCOMING_SINGLE_GAME_URI_INDICATOR = 2;
+
+	private static final int GET_FAVORITES_SELECTION_ARGS_LENGTH = 0;
 	static {
 		sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 		sUriMatcher.addURI(ScidProviderMetaData.AUTHORITY, "games",
@@ -74,6 +76,8 @@ public class ScidProvider extends ContentProvider {
 			} else if (selectionArgs.length > BOARDSEARCH_SELECTION_ARGS_LENGTH) {
 				result = searchHeader(selection, projection, 0, selectionArgs,
 						false);
+			} else if (selectionArgs.length == GET_FAVORITES_SELECTION_ARGS_LENGTH) {
+				result = getFavorites(selection, projection);
 			}
 			break;
 		case INCOMING_SINGLE_GAME_URI_INDICATOR:
@@ -97,6 +101,10 @@ public class ScidProvider extends ContentProvider {
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 		return result;
+	}
+
+	private Cursor getFavorites(String selection, String[] projection) {
+		return new ScidCursor(selection, projection);
 	}
 
 	private Cursor searchBoard(String selection, String[] projection,

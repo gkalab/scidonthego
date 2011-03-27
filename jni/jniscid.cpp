@@ -335,9 +335,11 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 
         sourceIndex.SetFileName(sourceFileName);
         if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+            // TODO: leaks jstrings here
             return (*env).NewIntArray(0);
         }
         if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
+            // TODO: leaks jstrings here
             return (*env).NewIntArray(0);
         }
         int noGames = sourceIndex.GetNumGames();
@@ -389,12 +391,14 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             if (pos.ReadFromFEN (fen) != OK) {
                 if (pos.ReadFromLongStr (fen) != OK) {
                     // invalid FEN
+                    // TODO: leaks jstrings here
                     return (*env).NewIntArray(0);
                 }
             }
             // ReadFromFEN checks that there is one king of each side, but it
             // does not check that the position is actually legal:
             if (! pos.IsLegal()) {
+                // TODO: leaks jstrings here
                return (*env).NewIntArray(0);
             }
             matSigT msig = matsig_Make (pos.GetMaterial());
@@ -818,18 +822,22 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     sourceIndex.SetFileName(sourceFileName);
     sourceNameBase.SetFileName(sourceFileName);
     if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+        // TODO: leaks jstrings here
         return (*env).NewIntArray(0);
     }
     if (sourceNameBase.ReadNameFile() != OK) {
+        // TODO: leaks jstrings here
         return (*env).NewIntArray(0);
     }
     if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
+        // TODO: leaks jstrings here
         return (*env).NewIntArray(0);
     }
     int noGames = sourceIndex.GetNumGames();
 
     if (noGames <= 0) {
         result = (*env).NewIntArray(0);
+        // TODO: leaks jstrings here
         return result;
     }
 
@@ -1445,5 +1453,90 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isFavorite
       cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     }
+    return result;
+}
+
+
+/*
+ * Class:     org_scid_database_DataBase
+ * Method:    getFavorites
+ */
+extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavorites
+        (JNIEnv *env, jobject obj, jstring fileName)
+{
+    jintArray result;
+    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    if (!sourceFileName) {
+      result = (*env).NewIntArray(0);
+      return result;
+    }
+    Index sourceIndex;
+
+    sourceIndex.SetFileName(sourceFileName);
+    if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
+        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        return (*env).NewIntArray(0);
+    }
+
+    int noGames = sourceIndex.GetNumGames();
+    if (noGames <= 0) {
+        result = (*env).NewIntArray(0);
+        sourceIndex.CloseIndexFile();
+        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        return result;
+    }
+
+    // initialize filter
+    jint *fill = new jint[noGames];
+    memset(fill, 0, sizeof(fill));
+
+    IndexEntry * ie;
+
+    // reset filter
+    for (int i=0; i < noGames; i++) {
+        fill[i] = 1;
+    }
+
+    // Here is the loop that searches on each game:
+    uint i=0;
+    for (; i < noGames; i++) {
+        // First, apply the filter operation:
+        // Skip any games not in the filter:
+        if (fill[i] == 0) {
+            continue;
+        }
+
+        ie = sourceIndex.FetchEntry (i);
+        if (ie->GetLength() == 0) {  // Skip games with no gamefile record
+            fill[i] = 0;
+            continue;
+        }
+
+        // skip games that have no user flag set
+        if (!ie->GetUserFlag()) {
+            fill[i] = 0;
+            continue;
+        }
+
+        // Update the filter value. Only change it
+        // to 1 if it is currently 0:
+        if (fill[i] == 0) {
+            fill[i] == 1; // set ply number to 1
+        }
+    }
+
+    result = (*env).NewIntArray(i);
+    if (i > 0) {
+        if (result == NULL) {
+            delete [] fill;
+            return NULL; // out of memory error thrown
+        }
+        (*env).SetIntArrayRegion(result, 0, i, fill);
+    }
+    delete [] fill;
+
+    // cleanup
+    sourceIndex.CloseIndexFile();
+    (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     return result;
 }

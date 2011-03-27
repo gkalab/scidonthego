@@ -41,6 +41,11 @@
             android:configChanges="orientation">
         </activity>
         <activity
+            android:name="FavoritesSearchActivity"
+            android:label="Favorites"
+            android:configChanges="orientation">
+        </activity>
+        <activity
             android:name="ImportPgnActivity"
             android:label="PGN Import"
             android:configChanges="orientation">

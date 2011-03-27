@@ -88,4 +88,7 @@ public class DataBase {
 	
 	/** Return true if the game is marked as favorite. */
 	public final native boolean isFavorite(String fileName, int gameNo);
+
+	/** Return the favorites as a filter. */
+	public final native int[] getFavorites(String fileName);
 }

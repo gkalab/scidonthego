@@ -42,6 +42,31 @@ public class ScidCursor extends AbstractCursor {
 		handleProjection(projection);
 	}
 
+	public ScidCursor(String fileName, String[] projection) {
+		super();
+		this.singleGame = false;
+		this.startPosition = 0;
+		init(fileName, projection, startPosition);
+		getFavorites(fileName);
+	}
+
+	public ScidCursor(String fileName, String[] projection, int startPosition,
+			String[] selectionArgs, boolean singleGame) {
+		super();
+		this.singleGame = singleGame;
+		init(fileName, projection, startPosition);
+		searchHeader(fileName, selectionArgs);
+	}
+
+	public ScidCursor(String fileName, String[] projection, int startPosition,
+			String filterOperation, String fen, int searchType,
+			boolean singleGame) {
+		super();
+		this.singleGame = singleGame;
+		init(fileName, projection, startPosition);
+		searchBoard(fileName, filterOperation, fen, searchType);
+	}
+
 	private final static String[] columns = new String[] { "_id",
 			ScidProviderMetaData.ScidMetaData.EVENT,
 			ScidProviderMetaData.ScidMetaData.SITE,
@@ -94,23 +119,6 @@ public class ScidCursor extends AbstractCursor {
 				break;
 			}
 		}
-	}
-
-	public ScidCursor(String fileName, String[] projection, int startPosition,
-			String filterOperation, String fen, int searchType,
-			boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchBoard(fileName, filterOperation, fen, searchType);
-	}
-
-	public ScidCursor(String fileName, String[] projection, int startPosition,
-			String[] selectionArgs, boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchHeader(fileName, selectionArgs);
 	}
 
 	private void searchHeader(String fileName, String[] selectionArgs) {
@@ -310,7 +318,8 @@ public class ScidCursor extends AbstractCursor {
 			if (column == getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)) {
 				// TODO remove this hack
 				// always re-opens the index file!
-				// --> therefore isFavorite cannot be used in the game list because of performance issue
+				// --> therefore isFavorite cannot be used in the game list
+				// because of performance issue
 				return "" + db.isFavorite(fileName, this.gameInfo.getId());
 			} else {
 				return this.gameInfo.getColumn(column);
@@ -335,4 +344,7 @@ public class ScidCursor extends AbstractCursor {
 		return null;
 	}
 
+	private void getFavorites(String fileName) {
+		filterMap.put(fileName, new Filter(db.getFavorites(fileName)));
+	}
 }

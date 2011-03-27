@@ -154,8 +154,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void setPgnFromCursor(Cursor cursor) {
-		this.getScidAppContext().setCurrentGameNo(
-				cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
+		this
+				.getScidAppContext()
+				.setCurrentGameNo(
+						cursor
+								.getInt(cursor
+										.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
 		this
 				.getScidAppContext()
 				.setFavorite(
@@ -689,6 +693,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					startManagingCursor(cursor);
 					setPgnFromCursor(cursor);
 				}
+			} else if (resultCode == RESULT_FIRST_USER) {
+				resetFilter();
 			}
 			break;
 		case RESULT_GAMELIST:
@@ -931,18 +937,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
 							case RESET_FILTER: {
-								final String fileName = getScidAppContext()
-										.getCurrentFileName();
-								if (fileName.length() != 0) {
-									Cursor cursor = getCursor();
-									if (cursor != null) {
-										cursor
-												.moveToPosition(getScidAppContext()
-														.getCurrentGameNo());
-									}
-								} else {
-									getScidAppContext().setGamesCursor(null);
-								}
+								resetFilter();
 								break;
 							}
 							case SEARCH_CURRENT_BOARD: {
@@ -959,10 +954,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								break;
 							}
 							case SHOW_FAVORITES: {
-								// TODO
 								Intent i = new Intent(ScidAndroidActivity.this,
-										GameListActivity.class);
-								startActivityForResult(i, RESULT_GAMELIST);
+										FavoritesSearchActivity.class);
+								startActivityForResult(i, RESULT_SEARCH);
 								break;
 							}
 							}
@@ -1250,6 +1244,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		}
 		return null;
+	}
+
+	private void resetFilter() {
+		final String fileName = getScidAppContext().getCurrentFileName();
+		if (fileName.length() != 0) {
+			Cursor cursor = getCursor();
+			if (cursor != null) {
+				cursor.moveToPosition(getScidAppContext().getCurrentGameNo());
+			}
+		} else {
+			getScidAppContext().setGamesCursor(null);
+		}
 	}
 
 	private void importPgnFile() {

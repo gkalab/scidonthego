@@ -47,6 +47,7 @@ public class SearchTask extends AsyncTask {
 			Toast.makeText(activity.getApplicationContext(),
 					activity.getString(R.string.filter_no_games),
 					Toast.LENGTH_LONG).show();
+			activity.setResult(Activity.RESULT_FIRST_USER); // reset the filter after returning
 		} else {
 			Toast.makeText(
 					activity.getApplicationContext(),
@@ -56,8 +57,8 @@ public class SearchTask extends AsyncTask {
 							+ activity
 									.getString(R.string.filter_numberof_games),
 					Toast.LENGTH_LONG).show();
+			activity.setResult(Activity.RESULT_OK);
 		}
-		activity.setResult(Activity.RESULT_OK);
 		activity.finish();
 	}
 
