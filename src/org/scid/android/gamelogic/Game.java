@@ -65,9 +65,9 @@ public class Game {
 			Position ret = new Position(currPos());
 			tree.goForward(-1);
 			return ret;
-	    } else {
-	    	return currPos();
-	    }
+		} else {
+			return currPos();
+		}
 	}
 
 	/**
@@ -221,6 +221,13 @@ public class Game {
 	/** Return true if there is a move to redo. */
 	public final boolean canRedoMove() {
 		int nVar = tree.variations().size();
+		if (nVar == 1) {
+			// check if last move is the null move
+			if (tree.variations().get(0).from == 0
+					&& tree.variations().get(0).to == 0) {
+				nVar = 0;
+			}
+		}
 		return nVar > 0;
 	}
 
