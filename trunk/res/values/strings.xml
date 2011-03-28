@@ -166,4 +166,5 @@ GNU GPL v2\n\
     <string name="remove_favorites_success">Game removed from Favorites.</string>
     <string name="remove_favorites_failure">Error removing game from Favorites!</string>
     <string name="favorites">Favorites</string>
+    <string name="end_of_variation">End of variation.\nNo more moves.</string>
 </resources>

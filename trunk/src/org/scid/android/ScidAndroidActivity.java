@@ -410,9 +410,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						if (ctrl.humansTurn()) {
 							int sq = cb.eventToSquare(e);
 							Move m = cb.mousePressed(sq);
-							if (m != null) {
-								ctrl.makeHumanMove(m);
-							}
+							makeHumanMove(m);
 						}
 					}
 				});
@@ -426,9 +424,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			public void onTrackballEvent(MotionEvent event) {
 				if (ctrl.humansTurn()) {
 					Move m = cb.handleTrackballEvent(event);
-					if (m != null) {
-						ctrl.makeHumanMove(m);
-					}
+					makeHumanMove(m);
 				}
 			}
 		});
@@ -490,6 +486,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				return true;
 			}
 		});
+	}
+
+	private void makeHumanMove(Move m) {
+		if (m != null) {
+			if (inStudyMode && !ctrl.canRedoMove()) {
+				Toast.makeText(getApplicationContext(),
+						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
+						.show();
+			} else {
+				ctrl.makeHumanMove(m);
+			}
+		}
 	}
 
 	@Override
