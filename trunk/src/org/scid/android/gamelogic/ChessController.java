@@ -305,26 +305,23 @@ public class ChessController {
 		return game.tree.toPGN(pgnOptions);
 	}
 
-	public final void setFENOrPGN(String fenPgn) throws ChessParseError {
+	public final void setPGN(String pgn) throws ChessParseError {
 		Game newGame = new Game(gameTextListener, timeControl, movesPerSession,
 				timeIncrement);
-		try {
-			Position pos = TextIO.readFEN(fenPgn);
-			newGame.setPos(pos);
-			setPlayerNames(newGame);
-		} catch (ChessParseError e) {
-			// Try read as PGN instead
-			// TODO: remove timings
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss.SSS");
-			df.setTimeZone(TimeZone.getTimeZone("UTC"));
-			Date d1 = new Date();
-			if (!newGame.readPGN(fenPgn, pgnOptions)) {
-				throw e;
-			}
-			Date d2 = new Date();
-			Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
-					+ df.format(d2));
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss.SSS");
+		df.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date d1 = new Date();
+		if (!newGame.readPGN(pgn, pgnOptions)) {
+			throw new ChessParseError();
 		}
+		Date d2 = new Date();
+		Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
+				+ df.format(d2));
+
+		update(newGame);
+	}
+
+	private void update(Game newGame) {
 		ss.searchResultWanted = false;
 		game = newGame;
 		gameTextListener.clear();
@@ -335,6 +332,20 @@ public class ChessController {
 		gui.setSelection(-1);
 		gui.setFromSelection(-1);
 		updateGUI();
+	}
+
+	public final void setFENOrPGN(String fenPgn) throws ChessParseError {
+		try {
+			Game newGame = new Game(gameTextListener, timeControl,
+					movesPerSession, timeIncrement);
+			Position pos = TextIO.readFEN(fenPgn);
+			newGame.setPos(pos);
+			setPlayerNames(newGame);
+			update(newGame);
+		} catch (ChessParseError e) {
+			// Try read as PGN instead
+			setPGN(fenPgn);
+		}
 	}
 
 	/** True if human's turn to make a move. (True in analysis mode.) */

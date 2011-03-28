@@ -161,6 +161,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void setPgnFromCursor(Cursor cursor) {
+		Log.d("SCID", "getting cursor");
 		this
 				.getScidAppContext()
 				.setCurrentGameNo(
@@ -171,6 +172,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				.parseBoolean(cursor
 						.getString(cursor
 								.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
+		Log.d("SCID", "isFavorite=" + isFavorite);
 		this.getScidAppContext().setFavorite(isFavorite);
 		setFavoriteRating();
 
@@ -178,11 +180,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		editor.putInt("currentGameNo", this.getScidAppContext()
 				.getCurrentGameNo());
 		editor.commit();
+		Log.d("SCID", "loading pgn for game "
+				+ this.getScidAppContext().getCurrentGameNo());
 		String pgn = cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.PGN));
+		Log.d("SCID", "pgn length=" + pgn.length());
 		if (pgn != null && pgn.length() > 0) {
 			try {
-				ctrl.setFENOrPGN(pgn);
+				ctrl.setPGN(pgn);
+				Log.d("SCID", "finished setPGN");
 				int moveNo = cursor
 						.getInt(cursor
 								.getColumnIndex(ScidProviderMetaData.ScidMetaData.CURRENT_PLY));
@@ -1081,7 +1087,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 								if (clipboard.hasText()) {
 									String fenPgn = clipboard.getText()
-											.toString();
+											.toString().replaceAll("\n|\r|\t",
+													" ");
 									try {
 										ctrl.setFENOrPGN(fenPgn);
 									} catch (ChessParseError e) {
