@@ -1,6 +1,10 @@
 package org.scid.android.chessok;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -67,6 +71,8 @@ public class PgnLinkListActivity extends ListActivity {
 						Tools.showErrorMessage(PgnLinkListActivity.this,
 								getString(R.string.download_error_file_empty));
 					} else {
+						Log.d("SCID", "replacing comments");
+						replacePgn(pgnFile.getAbsolutePath());
 						String pgnFileName = pgnFile.getName();
 						Log.d("SCID", "moving downloaded file from "
 								+ pgnFile.getAbsolutePath() + " to "
@@ -95,6 +101,33 @@ public class PgnLinkListActivity extends ListActivity {
 			}
 
 		});
+	}
+
+	private void replacePgn(final String fileName) {
+		try {
+			final FileInputStream f = new FileInputStream(fileName);
+			final byte b[] = new byte[f.available()];
+			f.read(b);
+			f.close();
+			final String pgn = ChessOkCommentReplacer.replace(new String(b));
+			BufferedWriter writer = null;
+			try {
+				writer = new BufferedWriter(new FileWriter(fileName));
+				writer.write(pgn);
+			} finally {
+				try {
+					if (writer != null) {
+						writer.close();
+					}
+				} catch (final IOException e) {
+				}
+			}
+
+		} catch (final FileNotFoundException e) {
+			Log.e("SCID", "replacing PGN comments: file not found", e);
+		} catch (final IOException e) {
+			Log.e("SCID", "IOException while replacing PGN comments", e);
+		}
 	}
 
 	@Override
