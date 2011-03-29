@@ -39,15 +39,17 @@
 \n\
 <b>Features</b>\n\
 * Browse Scid database files\n\
-* Search current board\n\
+* Header/current board search\n\
+* Favorites\n\
 * Copy/paste to/from clipboard\n\
 * Edit board\n\
 * Support for variations\n\
+* PGN import\n\
 \n\
 <b>Hints</b>\n\
 * Put all three files (*.si4, *.sg4, *.sn4) of a Scid database into the scid folder on your SD Card.\n\
 * Use the search button on your device to enter search menu.\n\
-* Long press chess board to activate copy/paste menu.\n\
+* Long press chess board to activate copy/paste, edit board and favorites menu.\n\
 * In edit board mode, long press chess board to activate edit menu.\n\
 * If the game contains multiple variations, scroll up/down on the chess board to \
 go to the previous/next variation.\n\
