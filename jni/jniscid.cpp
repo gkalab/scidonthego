@@ -34,7 +34,7 @@ const filterOpT FILTEROP_RESET = 0;
  * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders)
+                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
 {
     bool result = false;
 	static bool initialized = false;
@@ -53,14 +53,19 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
         stat(sourceFileName, &attrib);
         struct tm* modified = localtime((const time_t*)&(attrib.st_mtime));
         errorT err = 0;
-        if ((currFileName == 0) || (currModifiedTime == 0)
+        if (reloadIndex ||
+            (currFileName == 0) || (currModifiedTime == 0)
             || (strcmp(currFileName, sourceFileName) != 0)
-            || mktime(modified) != currModifiedTime)
+            // TODO: check why this does not work
+            //|| mktime(modified) != currModifiedTime
+        )
         	initialized = false;
     	if (!initialized) {
             if (currFileName != 0) {
+                LOGI("reloading index");
             	// cleanup
             	sourceIndex.CloseIndexFile();
+                sourceIndex.Clear();
             	sourceNameBase.Clear();
             	sourceGFile.Close();
             }
@@ -134,6 +139,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
         int result = sourceIndex.GetNumGames();
         // cleanup
         sourceIndex.CloseIndexFile();
+        sourceIndex.Clear();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
@@ -516,6 +522,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 
         // cleanup
         sourceIndex.CloseIndexFile();
+        sourceIndex.Clear();
         sourceGFile.Close();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         (*env).ReleaseStringUTFChars(position, fen);
@@ -1187,6 +1194,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 
     // cleanup
     sourceIndex.CloseIndexFile();
+    sourceIndex.Clear();
     sourceNameBase.Clear();
     sourceGFile.Close();
     (*env).ReleaseStringUTFChars(fileName, sourceFileName);
@@ -1379,6 +1387,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
         removeFile (baseName, ".err");
         gameFile->Close();
         idx->CloseIndexFile();
+        idx->Clear();
 
         // If there is a tree cache file for this database, it is out of date:
         removeFile (baseName, TREEFILE_SUFFIX);
@@ -1416,6 +1425,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
             iE.SetUserFlag(isFavorite);
             sourceIndex.WriteEntries(&iE, gameNo, 1);
             sourceIndex.CloseIndexFile();
+            sourceIndex.Clear();
         }
       cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
@@ -1449,6 +1459,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isFavorite
             }
             result = iE.GetUserFlag();
             sourceIndex.CloseIndexFile();
+            sourceIndex.Clear();
         }
       cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
@@ -1482,6 +1493,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
     if (noGames <= 0) {
         result = (*env).NewIntArray(0);
         sourceIndex.CloseIndexFile();
+        sourceIndex.Clear();
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
@@ -1537,6 +1549,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
 
     // cleanup
     sourceIndex.CloseIndexFile();
+    sourceIndex.Clear();
     (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     return result;
 }

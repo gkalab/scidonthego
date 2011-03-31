@@ -37,6 +37,8 @@ public class GameListActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		final boolean reloadGameList = Boolean.parseBoolean(this.getIntent()
+				.getAction());
 		fileName = ((ScidApplication) this.getApplicationContext())
 				.getCurrentFileName();
 		listAdapter = new GameListArrayAdapter(this, R.id.item_title);
@@ -46,7 +48,7 @@ public class GameListActivity extends ListActivity {
 		final GameListActivity gameList = this;
 		new Thread(new Runnable() {
 			public void run() {
-				readGameInformation();
+				readGameInformation(reloadGameList);
 				runOnUiThread(new Runnable() {
 					public void run() {
 						gameList.showList();
@@ -87,12 +89,13 @@ public class GameListActivity extends ListActivity {
 		}
 	}
 
-	private final void readGameInformation() {
+	private final void readGameInformation(boolean reloadGameList) {
 		if (!fileName.equals(lastFileName)) {
 			defaultItem = 0;
 		}
 		long modTime = new File(fileName).lastModified();
-		if ((modTime == lastModTime)
+		if (!reloadGameList
+				&& (modTime == lastModTime)
 				&& fileName.equals(lastFileName)
 				&& lastCursor != null
 				&& lastCursor
@@ -117,6 +120,7 @@ public class GameListActivity extends ListActivity {
 		gamesInFile.clear();
 		Cursor cursor = getCursor();
 		if (cursor != null) {
+			int lastPosition = cursor.getPosition();
 			// disable loading of PGN information in the cursor to speeding up
 			// the list view
 			setPgnLoading(cursor, false);
@@ -147,10 +151,10 @@ public class GameListActivity extends ListActivity {
 			int percent = -1;
 			if (cursor.moveToFirst()) {
 				int gameNo = 0;
-				addGameInfo(cursor);
+				addGameInfo(cursor, true);
 				while (gameNo < noGames && cursor.moveToNext()) {
 					gameNo++;
-					addGameInfo(cursor);
+					addGameInfo(cursor, false);
 					final int newPercent = (int) (gameNo * 100 / noGames);
 					if (newPercent > percent) {
 						percent = newPercent;
@@ -165,13 +169,23 @@ public class GameListActivity extends ListActivity {
 				}
 				// re-enable loading of PGN data in the cursor
 				setPgnLoading(cursor, true);
+				// move cursor to last known position before the list view was
+				// called
+				// because a return without selecting an entry would mess up the
+				// cursor position of the
+				// currently displayed game
+				cursor.moveToPosition(lastPosition);
 			}
 		}
 	}
 
 	private void setPgnLoading(Cursor cursor, boolean value) {
+		setCursorValue(cursor, "loadPGN", value);
+	}
+
+	private void setCursorValue(Cursor cursor, String key, boolean value) {
 		Bundle bundle = new Bundle();
-		bundle.putBoolean("loadPGN", value);
+		bundle.putBoolean(key, value);
 		cursor.respond(bundle);
 	}
 
@@ -179,12 +193,19 @@ public class GameListActivity extends ListActivity {
 		Cursor cursor = ((ScidApplication) this.getApplicationContext())
 				.getGamesCursor();
 		if (cursor != null) {
+			setCursorValue(cursor, "reloadIndex", true);
 			startManagingCursor(cursor);
 		}
 		return cursor;
 	}
 
-	private void addGameInfo(Cursor cursor) {
+	/**
+	 * @param cursor
+	 * @param retrieveFavoriteFromDb
+	 *            weird: the first entry in the cursor must retrieve the
+	 *            favorite information from the db directly
+	 */
+	private void addGameInfo(Cursor cursor, boolean retrieveFavoriteFromDb) {
 		final GameInfo info = new GameInfo();
 		info.setDetails(cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.DETAILS)));
@@ -196,6 +217,22 @@ public class GameListActivity extends ListActivity {
 						+ cursor
 								.getString(cursor
 										.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
+		boolean isFavorite;
+		if (retrieveFavoriteFromDb) {
+			isFavorite = Boolean
+					.parseBoolean(cursor
+							.getString(cursor
+									.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
+		} else {
+			isFavorite = cursor
+					.getInt(cursor
+							.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)) != 0;
+		}
+		if (isFavorite) {
+			info.setFavorite(1);
+		} else {
+			info.setFavorite(0);
+		}
 		gamesInFile.add(info);
 		runOnUiThread(new Runnable() {
 			public void run() {

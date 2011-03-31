@@ -64,6 +64,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private GameMode gameMode = new GameMode(GameMode.TWO_PLAYERS);
 	private boolean boardFlipped = false;
 	private boolean autoSwapSides = false;
+	private boolean reloadGameList = false;
 
 	private RatingBar favoriteRating;
 	private TextView status;
@@ -251,7 +252,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (cursor.isAfterLast()) {
 				cursor.moveToLast();
 			}
-			if (cursor.moveToPrevious()) {
+			if (cursor.getPosition() > 0 && cursor.moveToPrevious()) {
 				setPgnFromCursor(cursor);
 			}
 		}
@@ -657,7 +658,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		case R.id.item_gamelist: {
 			Intent i = new Intent(ScidAndroidActivity.this,
 					GameListActivity.class);
+			i.setAction("" + reloadGameList);
 			startActivityForResult(i, RESULT_GAMELIST);
+			reloadGameList = false;
 			return true;
 		}
 		case R.id.item_about: {
@@ -1047,6 +1050,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 										message = getString(R.string.add_favorites_success);
 										getScidAppContext().setFavorite(true);
 										setFavoriteRating();
+										reloadGameList = true;
 									} else {
 										message = getString(R.string.add_favorites_failure);
 									}
@@ -1064,6 +1068,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 										message = getString(R.string.remove_favorites_success);
 										getScidAppContext().setFavorite(false);
 										setFavoriteRating();
+										reloadGameList = true;
 									} else {
 										message = getString(R.string.remove_favorites_failure);
 									}
