@@ -11,7 +11,7 @@ public class GameInfo {
 	private String pgn = "";
 	private int id = -1;
 	private int currentPly = 0;
-	private boolean isFavorite = false;
+	private Boolean isFavorite = false;
 
 	public String toString() {
 		StringBuilder info = new StringBuilder();
@@ -66,7 +66,11 @@ public class GameInfo {
 		case 11:
 			return this.getDetails();
 		case 12:
-			return "" + isFavorite;
+			if (isFavorite) {
+				return "" + 1;
+			} else {
+				return "" + 0;
+			}
 		default:
 			return null;
 		}

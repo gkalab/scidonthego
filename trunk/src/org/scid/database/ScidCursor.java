@@ -25,6 +25,8 @@ public class ScidCursor extends AbstractCursor {
 
 	private boolean singleGame = false;
 
+	private boolean reloadIndex = true;
+
 	// TODO: check for thread safety
 	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
 
@@ -249,29 +251,34 @@ public class ScidCursor extends AbstractCursor {
 	 */
 	@Override
 	public boolean onMove(int oldPosition, int newPosition) {
+		boolean result = true;
 		if (filterMap.get(fileName) != null) {
-			return this.onFilterMove(oldPosition, newPosition);
+			result = this.onFilterMove(oldPosition, newPosition);
+		} else {
+			int gameNo = startPosition + newPosition;
+			boolean onlyHeaders = !loadPGN;
+			boolean isFavorite = this.db.loadGame(fileName, gameNo,
+					onlyHeaders, this.reloadIndex);
+			setGameInfo(gameNo, isFavorite);
 		}
-		int gameNo = startPosition + newPosition;
-		boolean onlyHeaders = !loadPGN;
-		boolean isFavorite = this.db.loadGame(fileName, gameNo, onlyHeaders);
-		setGameInfo(gameNo, isFavorite);
-		return true;
+		this.reloadIndex = false;
+		return result;
 	}
 
 	private boolean onFilterMove(int oldPosition, int newPosition) {
+		boolean result = false;
 		int gameNo = filterMap.get(fileName).getGameNo(
 				startPosition + newPosition);
 		if (gameNo >= 0) {
 			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = this.db
-					.loadGame(fileName, gameNo, onlyHeaders);
+			boolean isFavorite = this.db.loadGame(fileName, gameNo,
+					onlyHeaders, this.reloadIndex);
 			setGameInfo(gameNo, isFavorite);
 			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
 					startPosition + newPosition));
-			return true;
+			result = true;
 		}
-		return false;
+		return result;
 	}
 
 	@Override
@@ -340,6 +347,9 @@ public class ScidCursor extends AbstractCursor {
 	public Bundle respond(Bundle extras) {
 		if (extras.containsKey("loadPGN")) {
 			this.loadPGN = extras.getBoolean("loadPGN");
+		}
+		if (extras.containsKey("reloadIndex")) {
+			this.reloadIndex = extras.getBoolean("reloadIndex");
 		}
 		return null;
 	}

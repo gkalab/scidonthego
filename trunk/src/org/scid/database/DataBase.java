@@ -11,11 +11,12 @@ public class DataBase {
 	public final native void create(String fileName);
 
 	/** 
-	 * Load a game from a scid file and set it as the current game. 
+	 * Load a game from a scid file and set it as the current game.
+	 * If reloadIndex = true then reload the index file.
 	 * Return true if the game is in Favorites.
 	 */
 	public final native boolean loadGame(String fileName, int gameNo,
-			boolean onlyHeaders);
+			boolean onlyHeaders, boolean reloadIndex);
 
 	/**
 	 * Do a board search and return the found game numbers and plys in an int

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 public class GameListArrayAdapter extends ArrayAdapter<GameInfo> {
@@ -35,6 +36,11 @@ public class GameListArrayAdapter extends ArrayAdapter<GameInfo> {
 			if (details != null) {
 				String text = item.getDetails();
 				details.setText(Html.fromHtml(text));
+			}
+			RatingBar favorite = (RatingBar) view
+					.findViewById(R.id.item_favorite);
+			if (favorite != null) {
+				favorite.setRating(item.getFavorite());
 			}
 		}
 		return view;
