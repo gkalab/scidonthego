@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scid.android.PGNOptions;
+import org.scid.android.engine.ComputerPlayer;
 import org.scid.android.gamelogic.GameTree.Node;
 
 /**
@@ -13,13 +14,17 @@ import org.scid.android.gamelogic.GameTree.Node;
 public class Game {
 	boolean pendingDrawOffer;
 	GameTree tree;
+	private ComputerPlayer computerPlayer;
 	TimeControl timeController;
 	private boolean gamePaused;
+	private boolean addFirst;
 
 	PgnToken.PgnTokenReceiver gameTextListener;
 
-	public Game(PgnToken.PgnTokenReceiver gameTextListener, int timeControl,
+	public Game(ComputerPlayer computerPlayer,
+			PgnToken.PgnTokenReceiver gameTextListener, int timeControl,
 			int movesPerSession, int timeIncrement) {
+		this.computerPlayer = computerPlayer;
 		this.gameTextListener = gameTextListener;
 		tree = new GameTree(gameTextListener);
 		timeController = new TimeControl();
@@ -34,11 +39,19 @@ public class Game {
 		updateTimeControl(true);
 	}
 
+	public final void setComputerPlayer(ComputerPlayer computerPlayer) {
+		this.computerPlayer = computerPlayer;
+	}
+
 	public final void setGamePaused(boolean gamePaused) {
 		if (gamePaused != this.gamePaused) {
 			this.gamePaused = gamePaused;
 			updateTimeControl(false);
 		}
+	}
+
+	public final void setAddFirst(boolean addFirst) {
+		this.addFirst = addFirst;
 	}
 
 	final void setPos(Position pos) {
@@ -314,6 +327,8 @@ public class Game {
 
 	public final void newGame() {
 		tree = new GameTree(gameTextListener);
+		if (computerPlayer != null)
+			computerPlayer.clearTT();
 		timeController.reset();
 		pendingDrawOffer = false;
 		updateTimeControl(true);
@@ -348,9 +363,13 @@ public class Game {
 		if (drawCmd.startsWith("rep") || drawCmd.startsWith("50")) {
 			boolean rep = drawCmd.startsWith("rep");
 			Move m = null;
-			String ms = drawCmd.substring(drawCmd.indexOf(" ") + 1);
-			if (ms.length() > 0) {
-				m = TextIO.stringToMove(pos, ms);
+			String ms = null;
+			int firstSpace = drawCmd.indexOf(" ");
+			if (firstSpace >= 0) {
+				ms = drawCmd.substring(firstSpace + 1);
+				if (ms.length() > 0) {
+					m = TextIO.stringToMove(pos, ms);
+				}
 			}
 			boolean valid;
 			if (rep) {
