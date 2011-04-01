@@ -1,7 +1,9 @@
 package org.scid.android;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,7 +62,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private boolean mShowThinking;
 	private boolean mShowBookHints;
 	private int maxNumArrows;
-	private boolean inStudyMode = false;
 	private GameMode gameMode = new GameMode(GameMode.TWO_PLAYERS);
 	private boolean boardFlipped = false;
 	private boolean autoSwapSides = false;
@@ -86,6 +87,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
+	private String uciEngineFileName = "stockfish2.0";
 
 	/** Called when the activity is first created. */
 	@Override
@@ -96,7 +98,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (!scidFileDir.exists()) {
 			scidFileDir.mkdirs();
 		}
-
+		checkUciEngine();
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		settings
 				.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
@@ -143,6 +145,48 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ctrl.setGuiPaused(false);
 		ctrl.startGame();
 		setFavoriteRating();
+	}
+
+	private void checkUciEngine() {
+		// TODO Auto-generated method stub
+		// check if stockfish exists in /data/data/org.scid.android
+		File stockfish = new File("/data/data/org.scid.android/" + uciEngineFileName );
+		if (!stockfish.exists()) {
+			Log.d("SCID", "Stockfish is missing from data. Intializing...");
+			try {
+				InputStream istream = getAssets().open(uciEngineFileName);
+				FileOutputStream fout = new FileOutputStream(
+						"/data/data/org.scid.android/"+uciEngineFileName);
+				byte[] b = new byte[1024];
+				int noOfBytes = 0;
+				while ((noOfBytes = istream.read(b)) != -1) {
+					fout.write(b, 0, noOfBytes);
+				}
+				istream.close();
+				fout.close();
+				Log.d("SCID",
+						uciEngineFileName+" copied to /data/data/org.scid.android/");
+				try {
+					Process process = Runtime
+							.getRuntime()
+							.exec(
+									"/system/bin/chmod 744 /data/data/org.scid.android/"+uciEngineFileName);
+					try {
+						process.waitFor();
+						Log
+								.d("SCID",
+										"/system/bin/chmod 744 /data/data/org.scid.android/"+uciEngineFileName);
+					} catch (InterruptedException e) {
+						Log.e("SCID", e.getMessage(), e);
+					}
+				} catch (IOException e) {
+					Log.e("SCID", e.getMessage(), e);
+				}
+			} catch (IOException e) {
+				Log.e("SCID", e.getMessage(), e);
+			}
+		}
+
 	}
 
 	public void onNextGameClick(View view) {
@@ -196,7 +240,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				if (moveNo > 0) {
 					ctrl.gotoHalfMove(moveNo);
 				}
-				if (inStudyMode) {
+				if (gameMode.studyMode()) {
 					// auto-flip board to the side which has the move
 					boardFlipped = !cb.pos.whiteMove;
 					cb.setFlipped(boardFlipped);
@@ -491,7 +535,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void makeHumanMove(Move m) {
 		if (m != null) {
-			if (inStudyMode && !ctrl.canRedoMove()) {
+			if (gameMode.studyMode() && !ctrl.canRedoMove()) {
 				Toast.makeText(getApplicationContext(),
 						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
 						.show();
@@ -521,6 +565,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	protected void onPause() {
+		// TODO: stop uci engine
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
@@ -554,7 +599,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		String tmp = settings.getString("thinkingArrows", "6");
 		maxNumArrows = Integer.parseInt(tmp);
 		mShowBookHints = settings.getBoolean("bookHints", false);
-		inStudyMode = settings.getBoolean("inStudyMode", false);
 		gameMode = new GameMode(settings.getInt("gameMode",
 				GameMode.TWO_PLAYERS));
 
@@ -650,6 +694,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			setStudyMode();
 			return true;
 		}
+		case R.id.item_analysis_mode: {
+			setAnalysisMode();
+			return true;
+		}
 		case R.id.item_import_pgn: {
 			removeDialog(IMPORT_PGN_DIALOG);
 			showDialog(IMPORT_PGN_DIALOG);
@@ -672,22 +720,34 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void setStudyMode() {
-		inStudyMode = !inStudyMode;
-		Editor editor = settings.edit();
-		editor.putBoolean("inStudyMode", inStudyMode);
-		editor.commit();
+		if (gameMode.studyMode()) {
+			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+		} else {
+			gameMode = new GameMode(GameMode.STUDY_MODE);
+		}
 		updateThinkingInfo();
 		moveListUpdated();
-		if (inStudyMode) {
-			gameMode = new GameMode(GameMode.STUDY_MODE);
-		} else {
-			gameMode = new GameMode(GameMode.TWO_PLAYERS);
-		}
 		setGameMode();
 		Toast.makeText(
 				getApplicationContext(),
-				inStudyMode ? R.string.study_mode_enabled
+				gameMode.studyMode() ? R.string.study_mode_enabled
 						: R.string.study_mode_disabled, Toast.LENGTH_SHORT)
+				.show();
+	}
+
+	private void setAnalysisMode() {
+		if (gameMode.analysisMode()) {
+			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+		} else {
+			gameMode = new GameMode(GameMode.ANALYSIS);
+		}
+		updateThinkingInfo();
+		moveListUpdated();
+		setGameMode();
+		Toast.makeText(
+				getApplicationContext(),
+				gameMode.analysisMode() ? R.string.analysis_mode_enabled
+						: R.string.analysis_mode_disabled, Toast.LENGTH_SHORT)
 				.show();
 	}
 
@@ -824,9 +884,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void moveListUpdated() {
-		if (inStudyMode) {
+		if (gameMode.studyMode()) {
 			moveList.setText("");
-		} else {
+		} else if (!gameMode.analysisMode()) {
 			if (pgnOptions.view.allMoves) {
 				moveList.setText(gameTextListener.getSpannableData());
 			} else {
@@ -885,7 +945,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 			if (s.length() > 0) {
 				thinkingEmpty = false;
-				status.setText(s, TextView.BufferType.SPANNABLE);
+				moveList.setText(s, TextView.BufferType.SPANNABLE);
 			}
 		}
 		if (mShowBookHints && (bookInfoStr.length() > 0)) {
@@ -894,20 +954,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				s += "<br>";
 			}
 			s += "<b>Book:</b>" + bookInfoStr;
-			status.append(Html.fromHtml(s));
+			moveList.append(Html.fromHtml(s));
 			thinkingEmpty = false;
 		}
-		if (variantStr.indexOf(' ') >= 0 && !inStudyMode) {
+		if (variantStr.indexOf(' ') >= 0 && !gameMode.studyMode()) {
 			String s = "";
 			if (!thinkingEmpty) {
 				s += "<br>";
 			}
 			s += "<b>Var:</b> " + variantStr;
-			status.append(Html.fromHtml(s));
+			moveList.append(Html.fromHtml(s));
 		}
 
 		List<Move> hints = null;
-		if (!inStudyMode) {
+		if (!gameMode.studyMode()) {
 			if (mShowThinking || gameMode.analysisMode()) {
 				hints = pvMoves;
 			}
@@ -1406,7 +1466,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	@Override
 	public void reportInvalidMove(Move m) {
 		String msg = "";
-		if (this.inStudyMode) {
+		if (gameMode.studyMode()) {
 			msg = String.format(getString(R.string.wrong_move), TextIO
 					.squareToString(m.from), TextIO.squareToString(m.to));
 		} else {
@@ -1419,6 +1479,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	@Override
 	public void computerMoveMade() {
 		// do nothing
+		
 		// TODO: possibly re-enable sound
 	}
 
@@ -1429,7 +1490,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public void setGameInformation(String white, String black, String gameNo) {
-		if (!inStudyMode) {
+		if (!gameMode.studyMode()) {
 			flipBoardForPlayerNames(white, black);
 		}
 		whitePlayer.setText(white);

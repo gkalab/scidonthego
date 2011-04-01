@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import org.scid.android.GUIInterface;
 import org.scid.android.GameMode;
 import org.scid.android.PGNOptions;
+import org.scid.android.engine.ComputerPlayer;
 import org.scid.android.gamelogic.Game.GameState;
 
 import android.util.Log;
@@ -25,12 +26,15 @@ import android.util.Log;
  * @author petero
  */
 public class ChessController {
+	private ComputerPlayer computerPlayer = null;
 	private PgnToken.PgnTokenReceiver gameTextListener = null;
 	private String bookFileName = "";
 	private Game game;
 	private GUIInterface gui;
 	private GameMode gameMode;
 	private PGNOptions pgnOptions;
+	private Thread computerThread;
+	private Thread analysisThread;
 
 	private int timeControl;
 	private int movesPerSession;
@@ -53,6 +57,7 @@ public class ChessController {
 		private String pvStr = "";
 		private List<Move> pvMoves = null;
 		private List<Move> bookMoves = null;
+		private boolean whiteMove = true;
 
 		public final void clearSearchInfo() {
 			pvDepth = 0;
@@ -67,15 +72,16 @@ public class ChessController {
 			StringBuilder buf = new StringBuilder();
 			if (pvDepth > 0) {
 				buf.append(String.format("[%d] ", pvDepth));
-				if (pvUpperBound) {
-					buf.append("<=");
-				} else if (pvLowerBound) {
-					buf.append(">=");
+				boolean negateScore = !whiteMove;
+				if (pvUpperBound || pvLowerBound) {
+					boolean upper = pvUpperBound ^ negateScore;
+					buf.append(upper ? "<=" : ">=");
 				}
+				int score = negateScore ? -pvScore : pvScore;
 				if (pvIsMate) {
-					buf.append(String.format("m%d", pvScore));
+					buf.append(String.format("m%d", score));
 				} else {
-					buf.append(String.format("%.2f", pvScore / 100.0));
+					buf.append(String.format("%.2f", score / 100.0));
 				}
 				buf.append(pvStr);
 				buf.append("\n");
@@ -90,7 +96,7 @@ public class ChessController {
 			final SearchStatus localSS = ss;
 			gui.runOnUIThread(new Runnable() {
 				public void run() {
-					if (!localSS.searchResultWanted)
+					if (!localSS.searchResultWanted && (bookMoves != null))
 						return;
 					gui.setThinkingInfo(newPV, newBookInfo, pvMoves, bookMoves);
 				}
@@ -119,6 +125,7 @@ public class ChessController {
 			pvIsMate = isMate;
 			pvUpperBound = upperBound;
 			pvLowerBound = lowerBound;
+			whiteMove = pos.whiteMove;
 
 			StringBuilder buf = new StringBuilder();
 			Position tmpPos = new Position(pos);
@@ -146,6 +153,10 @@ public class ChessController {
 			bookMoves = moveList;
 			setSearchInfo();
 		}
+
+		public void prefsChanged() {
+			setSearchInfo();
+		}
 	}
 
 	SearchListener listener;
@@ -161,6 +172,14 @@ public class ChessController {
 	public final void setBookFileName(String bookFileName) {
 		if (!this.bookFileName.equals(bookFileName)) {
 			this.bookFileName = bookFileName;
+			if (computerPlayer != null) {
+				computerPlayer.setBookFileName(bookFileName);
+				if (analysisThread != null) {
+					stopAnalysis();
+					startAnalysis();
+				}
+				updateBookHints();
+			}
 		}
 	}
 
@@ -169,10 +188,9 @@ public class ChessController {
 			boolean analysis = gameMode.analysisMode();
 			if (!analysis && humansTurn()) {
 				ss = new SearchStatus();
-				// TODO: book hint
-				// Pair<String, ArrayList<Move>> bi =
-				// computerPlayer.getBookHints(game.currPos());
-				// listener.notifyBookInfo(bi.first, bi.second);
+				Pair<String, ArrayList<Move>> bi = computerPlayer
+						.getBookHints(game.currPos());
+				listener.notifyBookInfo(bi.first, bi.second);
 			}
 		}
 	}
@@ -188,27 +206,32 @@ public class ChessController {
 		stopComputerThinking();
 		stopAnalysis();
 		this.gameMode = gameMode;
-		game = new Game(gameTextListener, timeControl, movesPerSession,
-				timeIncrement);
+		if (computerPlayer == null) {
+			computerPlayer = new ComputerPlayer();
+			computerPlayer.setListener(listener);
+			computerPlayer.setBookFileName(bookFileName);
+		}
+		game = new Game(computerPlayer, gameTextListener, timeControl,
+				movesPerSession, timeIncrement);
 		setPlayerNames(game);
-		updateGamePaused();
+		updateGameMode();
 	}
 
 	public final void startGame() {
 		updateComputeThreads(true);
 		setSelection();
 		updateGUI();
-		updateGamePaused();
+		updateGameMode();
 	}
 
 	private boolean guiPaused = false;
 
 	public final void setGuiPaused(boolean paused) {
 		guiPaused = paused;
-		updateGamePaused();
+		updateGameMode();
 	}
 
-	private final void updateGamePaused() {
+	private final void updateGameMode() {
 		if (game != null) {
 			boolean gamePaused = gameMode.analysisMode()
 					|| (humansTurn() && guiPaused);
@@ -233,24 +256,107 @@ public class ChessController {
 			startComputerThinking();
 	}
 
-	private void startComputerThinking() {
-		// TODO Auto-generated method stub
-
+	private final synchronized void startComputerThinking() {
+		if (analysisThread != null)
+			return;
+		if (game.getGameState() != GameState.ALIVE)
+			return;
+		if (computerThread == null) {
+			ss = new SearchStatus();
+			final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+			final Game g = game;
+			final boolean haveDrawOffer = g.haveDrawOffer();
+			final Position currPos = new Position(g.currPos());
+			long now = System.currentTimeMillis();
+			final int wTime = game.timeController.getRemainingTime(true, now);
+			final int bTime = game.timeController.getRemainingTime(false, now);
+			final int inc = game.timeController.getIncrement();
+			final int movesToGo = game.timeController.getMovesToTC();
+			computerThread = new Thread(new Runnable() {
+				public void run() {
+					final String cmd = computerPlayer.doSearch(ph.first,
+							ph.second, currPos, haveDrawOffer, wTime, bTime,
+							inc, movesToGo);
+					final SearchStatus localSS = ss;
+					gui.runOnUIThread(new Runnable() {
+						public void run() {
+							synchronized (shutdownEngineLock) {
+								if (!localSS.searchResultWanted)
+									return;
+								Position oldPos = new Position(g.currPos());
+								g.processString(cmd, false);
+								updateGameMode();
+								gui.computerMoveMade();
+								listener.clearSearchInfo();
+								stopComputerThinking();
+								stopAnalysis(); // To force analysis to restart
+												// for new position
+								updateComputeThreads(true);
+								setSelection();
+								setAnimMove(oldPos, g.getLastMove(), true);
+								updateGUI();
+							}
+						}
+					});
+				}
+			});
+			listener.clearSearchInfo();
+			computerPlayer.shouldStop = false;
+			computerThread.start();
+			updateGUI();
+		}
 	}
 
-	private void startAnalysis() {
-		// TODO Auto-generated method stub
-
+	private final synchronized void startAnalysis() {
+		if (gameMode.analysisMode()) {
+			if (computerThread != null)
+				return;
+			if (analysisThread == null) {
+				ss = new SearchStatus();
+				final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+				final boolean haveDrawOffer = game.haveDrawOffer();
+				final Position currPos = new Position(game.currPos());
+				final boolean alive = game.tree.getGameState() == GameState.ALIVE;
+				analysisThread = new Thread(new Runnable() {
+					public void run() {
+						if (alive)
+							computerPlayer.analyze(ph.first, ph.second,
+									currPos, haveDrawOffer);
+					}
+				});
+				listener.clearSearchInfo();
+				computerPlayer.shouldStop = false;
+				analysisThread.start();
+				updateGUI();
+			}
+		}
 	}
 
-	private void stopComputerThinking() {
-		// TODO Auto-generated method stub
-
+	private final synchronized void stopAnalysis() {
+		if (analysisThread != null) {
+			computerPlayer.stopSearch();
+			try {
+				analysisThread.join();
+			} catch (InterruptedException ex) {
+				System.out.printf("Could not stop analysis thread%n");
+			}
+			analysisThread = null;
+			listener.clearSearchInfo();
+			updateGUI();
+		}
 	}
 
-	private void stopAnalysis() {
-		// TODO Auto-generated method stub
-
+	private final synchronized void stopComputerThinking() {
+		if (computerThread != null) {
+			computerPlayer.stopSearch();
+			try {
+				computerThread.join();
+			} catch (InterruptedException ex) {
+				System.out.printf("Could not stop computer thread%n");
+			}
+			computerThread = null;
+			updateGUI();
+		}
 	}
 
 	/** Set game mode. */
@@ -264,7 +370,7 @@ public class ChessController {
 			if (!gameMode.playerWhite() || !gameMode.playerBlack())
 				setPlayerNames(game); // If computer player involved, set player
 			// names
-			updateGamePaused();
+			updateGameMode();
 			updateComputeThreads(true);
 			updateGUI();
 		}
@@ -274,6 +380,7 @@ public class ChessController {
 	public final void prefsChanged() {
 		updateBookHints();
 		updateMoveList();
+		listener.prefsChanged();
 	}
 
 	private final void setPlayerNames(Game game) {
@@ -306,8 +413,8 @@ public class ChessController {
 	}
 
 	public final void setPGN(String pgn) throws ChessParseError {
-		Game newGame = new Game(gameTextListener, timeControl, movesPerSession,
-				timeIncrement);
+		Game newGame = new Game(null, gameTextListener, timeControl,
+				movesPerSession, timeIncrement);
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss.SSS");
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Date d1 = new Date();
@@ -324,10 +431,12 @@ public class ChessController {
 	private void update(Game newGame) {
 		ss.searchResultWanted = false;
 		game = newGame;
+		game.setComputerPlayer(computerPlayer);
 		gameTextListener.clear();
-		updateGamePaused();
+		updateGameMode();
 		stopAnalysis();
 		stopComputerThinking();
+		computerPlayer.clearTT();
 		updateComputeThreads(true);
 		gui.setSelection(-1);
 		gui.setFromSelection(-1);
@@ -336,7 +445,7 @@ public class ChessController {
 
 	public final void setFENOrPGN(String fenPgn) throws ChessParseError {
 		try {
-			Game newGame = new Game(gameTextListener, timeControl,
+			Game newGame = new Game(null, gameTextListener, timeControl,
 					movesPerSession, timeIncrement);
 			Position pos = TextIO.readFEN(fenPgn);
 			newGame.setPos(pos);
@@ -479,6 +588,7 @@ public class ChessController {
 			needUpdate = true;
 		}
 		if (needUpdate) {
+			ss.searchResultWanted = false;
 			stopAnalysis();
 			stopComputerThinking();
 			updateComputeThreads(true);
@@ -649,9 +759,21 @@ public class ChessController {
 	}
 
 	public final void stopSearch() {
+		if (computerThread != null) {
+			computerPlayer.stopSearch();
+		}
 	}
 
+	private Object shutdownEngineLock = new Object();
+
 	public final void shutdownEngine() {
+		synchronized (shutdownEngineLock) {
+			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+			ss.searchResultWanted = false;
+			stopComputerThinking();
+			stopAnalysis();
+			computerPlayer.shutdownEngine();
+		}
 	}
 
 	/**

@@ -135,8 +135,10 @@ GNU GPL v2\n\
     </string-array>
     <string name="eco_none">no ECO</string>
     <string name="error">Error</string>
-    <string name="study_mode_enabled">study mode enabled</string>
-    <string name="study_mode_disabled">study mode turned off</string>
+    <string name="study_mode_enabled">Study mode enabled</string>
+    <string name="study_mode_disabled">Study mode turned off</string>
+    <string name="analysis_mode_enabled">Analysis mode enabled</string>
+    <string name="analysis_mode_disabled">Analysis mode turned off</string>
     <string name="filter_no_games">No games found. Filter is reset.</string>
     <string name="filter_numberof_games">games in current filter</string>
     <string name="downloading">Downloading...</string>

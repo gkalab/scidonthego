@@ -16,14 +16,18 @@
         android:title="Study Mode On/Off">
     </item>
     <item
-        android:id="@+id/item_search"
-        android:title="Search"
-        android:icon="@drawable/ic_menu_search">
+        android:id="@+id/item_analysis_mode"
+        android:title="Analysis On/Off">
     </item>
     <item
         android:id="@+id/item_settings"
         android:title="Settings"
         android:icon="@drawable/ic_menu_preferences">
+    </item>
+    <item
+        android:id="@+id/item_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search">
     </item>
     <item
         android:id="@+id/item_import_pgn"
