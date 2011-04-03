@@ -764,7 +764,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
 			progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
-					"Initializing engine", "Please wait...", true, false);
+					getString(R.string.initializing_engine),
+					getString(R.string.please_wait), true, false);
 			new StartEngineTask().execute(this, progressDlg, ctrl);
 		} else {
 			onFinishStartAnalysis();
