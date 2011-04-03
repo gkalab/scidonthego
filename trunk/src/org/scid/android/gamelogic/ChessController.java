@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.scid.android.gamelogic;
 
 import java.text.DateFormat;
@@ -184,7 +179,7 @@ public class ChessController {
 	}
 
 	private final void updateBookHints() {
-		if (gameMode != null) {
+		if (computerPlayer != null && gameMode != null) {
 			boolean analysis = gameMode.analysisMode();
 			if (!analysis && humansTurn()) {
 				ss = new SearchStatus();
@@ -206,15 +201,20 @@ public class ChessController {
 		stopComputerThinking();
 		stopAnalysis();
 		this.gameMode = gameMode;
-		if (computerPlayer == null) {
-			computerPlayer = new ComputerPlayer();
-			computerPlayer.setListener(listener);
-			computerPlayer.setBookFileName(bookFileName);
-		}
 		game = new Game(computerPlayer, gameTextListener, timeControl,
 				movesPerSession, timeIncrement);
 		setPlayerNames(game);
 		updateGameMode();
+	}
+
+	public final void startEngine() {
+		if (computerPlayer == null) {
+			computerPlayer = new ComputerPlayer();
+			computerPlayer.setListener(listener);
+			computerPlayer.setBookFileName(bookFileName);
+			game.setComputerPlayer(computerPlayer);
+			gameTextListener.clear();
+		}
 	}
 
 	public final void startGame() {
@@ -250,7 +250,7 @@ public class ChessController {
 			listener.clearSearchInfo();
 			updateBookHints();
 		}
-		if (analysis)
+		if (analysis && this.computerPlayer != null)
 			startAnalysis();
 		if (computersTurn)
 			startComputerThinking();
@@ -290,7 +290,7 @@ public class ChessController {
 								listener.clearSearchInfo();
 								stopComputerThinking();
 								stopAnalysis(); // To force analysis to restart
-												// for new position
+								// for new position
 								updateComputeThreads(true);
 								setSelection();
 								setAnimMove(oldPos, g.getLastMove(), true);
@@ -338,7 +338,7 @@ public class ChessController {
 			try {
 				analysisThread.join();
 			} catch (InterruptedException ex) {
-				System.out.printf("Could not stop analysis thread%n");
+				Log.e("SCID", "Could not stop analysis thread");
 			}
 			analysisThread = null;
 			listener.clearSearchInfo();
@@ -352,7 +352,7 @@ public class ChessController {
 			try {
 				computerThread.join();
 			} catch (InterruptedException ex) {
-				System.out.printf("Could not stop computer thread%n");
+				Log.e("SCID", "Could not stop computer thread");
 			}
 			computerThread = null;
 			updateGUI();
@@ -424,23 +424,28 @@ public class ChessController {
 		Date d2 = new Date();
 		Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
 				+ df.format(d2));
-
-		update(newGame);
+		game = newGame;
+		updateGame();
 	}
 
-	private void update(Game newGame) {
+	public void updateGame() {
 		ss.searchResultWanted = false;
-		game = newGame;
 		game.setComputerPlayer(computerPlayer);
 		gameTextListener.clear();
 		updateGameMode();
 		stopAnalysis();
 		stopComputerThinking();
-		computerPlayer.clearTT();
-		updateComputeThreads(true);
+		if (computerPlayer != null) {
+			computerPlayer.clearTT();
+			updateComputeThreads(true);
+		}
 		gui.setSelection(-1);
 		gui.setFromSelection(-1);
 		updateGUI();
+	}
+
+	public boolean hasEngineStarted() {
+		return (computerPlayer != null);
 	}
 
 	public final void setFENOrPGN(String fenPgn) throws ChessParseError {
@@ -450,7 +455,8 @@ public class ChessController {
 			Position pos = TextIO.readFEN(fenPgn);
 			newGame.setPos(pos);
 			setPlayerNames(newGame);
-			update(newGame);
+			game = newGame;
+			updateGame();
 		} catch (ChessParseError e) {
 			// Try read as PGN instead
 			setPGN(fenPgn);
@@ -726,19 +732,21 @@ public class ChessController {
 	}
 
 	final private void updateMoveList() {
-		if (!gameTextListener.isUpToDate()) {
-			PGNOptions tmpOptions = new PGNOptions();
-			tmpOptions.exp.variations = pgnOptions.view.variations;
-			tmpOptions.exp.comments = pgnOptions.view.comments;
-			tmpOptions.exp.nag = pgnOptions.view.nag;
-			tmpOptions.exp.playerAction = false;
-			tmpOptions.exp.clockInfo = false;
-			tmpOptions.exp.moveNrAfterNag = false;
-			gameTextListener.clear();
-			game.tree.pgnTreeWalker(tmpOptions, gameTextListener);
+		if (game != null) {
+			if (!gameTextListener.isUpToDate()) {
+				PGNOptions tmpOptions = new PGNOptions();
+				tmpOptions.exp.variations = pgnOptions.view.variations;
+				tmpOptions.exp.comments = pgnOptions.view.comments;
+				tmpOptions.exp.nag = pgnOptions.view.nag;
+				tmpOptions.exp.playerAction = false;
+				tmpOptions.exp.clockInfo = false;
+				tmpOptions.exp.moveNrAfterNag = false;
+				gameTextListener.clear();
+				game.tree.pgnTreeWalker(tmpOptions, gameTextListener);
+			}
+			gameTextListener.setCurrent(game.tree.currentNode);
+			gui.moveListUpdated();
 		}
-		gameTextListener.setCurrent(game.tree.currentNode);
-		gui.moveListUpdated();
 	}
 
 	final private void setSelection() {
