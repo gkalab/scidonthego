@@ -28,6 +28,8 @@ import org.scid.android.gamelogic.Position;
 import org.scid.android.gamelogic.TextIO;
 import org.scid.android.gamelogic.UndoInfo;
 
+import android.util.Log;
+
 /**
  * Implements an opening book.
  * @author petero
@@ -99,13 +101,13 @@ public class Book {
         } catch (ChessParseError ex) {
             throw new RuntimeException();
         } catch (IOException ex) {
-            System.out.println("Can't read opening book resource");
+            Log.e("SCID", "Can't read opening book resource");
             throw new RuntimeException();
         }
         {
             long t1 = System.currentTimeMillis();
-            System.out.printf("Book moves:%d (parse time:%.3f)%n", numBookMoves,
-                    (t1 - t0) / 1000.0);
+            Log.i("SCID", String.format("Book moves:%d (parse time:%.3f)%n", numBookMoves,
+                    (t1 - t0) / 1000.0));
         }
     }
 
@@ -227,7 +229,7 @@ public class Book {
                     continue;
                 }
                 if (!addBookLine(line, binBook)) {
-                    System.out.printf("Book parse error, line:%d\n", lnr.getLineNumber());
+                    Log.e("SCID","Book parse error, line:%d" + lnr.getLineNumber());
                     throw new RuntimeException();
                 }
 //              System.out.printf("no:%d line:%s%n", lnr.getLineNumber(), line);

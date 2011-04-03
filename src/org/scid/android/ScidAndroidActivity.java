@@ -19,6 +19,7 @@ import org.scid.database.ScidProviderMetaData;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -87,7 +88,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
-	private String uciEngineFileName = "stockfish2.0";
+	private String uciEngineFileName = "stockfish1.9";
+	private ProgressDialog progressDlg;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -148,15 +150,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void checkUciEngine() {
-		// TODO Auto-generated method stub
-		// check if stockfish exists in /data/data/org.scid.android
-		File stockfish = new File("/data/data/org.scid.android/" + uciEngineFileName );
+		// check if engine exists in /data/data/org.scid.android
+		File stockfish = new File("/data/data/org.scid.android/"
+				+ uciEngineFileName);
 		if (!stockfish.exists()) {
-			Log.d("SCID", "Stockfish is missing from data. Intializing...");
+			Log.d("SCID", "Engine is missing from data. Intializing...");
 			try {
 				InputStream istream = getAssets().open(uciEngineFileName);
 				FileOutputStream fout = new FileOutputStream(
-						"/data/data/org.scid.android/"+uciEngineFileName);
+						"/data/data/org.scid.android/" + uciEngineFileName);
 				byte[] b = new byte[1024];
 				int noOfBytes = 0;
 				while ((noOfBytes = istream.read(b)) != -1) {
@@ -164,18 +166,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 				istream.close();
 				fout.close();
-				Log.d("SCID",
-						uciEngineFileName+" copied to /data/data/org.scid.android/");
+				Log.d("SCID", uciEngineFileName
+						+ " copied to /data/data/org.scid.android/");
 				try {
-					Process process = Runtime
-							.getRuntime()
-							.exec(
-									"/system/bin/chmod 744 /data/data/org.scid.android/"+uciEngineFileName);
+					Process process = Runtime.getRuntime().exec(
+							"/system/bin/chmod 744 /data/data/org.scid.android/"
+									+ uciEngineFileName);
 					try {
 						process.waitFor();
-						Log
-								.d("SCID",
-										"/system/bin/chmod 744 /data/data/org.scid.android/"+uciEngineFileName);
+						Log.d("SCID",
+								"/system/bin/chmod 744 /data/data/org.scid.android/"
+										+ uciEngineFileName);
 					} catch (InterruptedException e) {
 						Log.e("SCID", e.getMessage(), e);
 					}
@@ -565,7 +566,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	protected void onPause() {
-		// TODO: stop uci engine
+		if (progressDlg != null) {
+			progressDlg.dismiss();
+		}
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
@@ -601,7 +604,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		mShowBookHints = settings.getBoolean("bookHints", false);
 		gameMode = new GameMode(settings.getInt("gameMode",
 				GameMode.TWO_PLAYERS));
-
+		if (gameMode.analysisMode()) {
+			startAnalysis();
+		}
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
@@ -738,17 +743,40 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private void setAnalysisMode() {
 		if (gameMode.analysisMode()) {
 			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+			updateThinkingInfo();
+			moveListUpdated();
+			setGameMode();
+			showAnalysisModeInfo();
 		} else {
 			gameMode = new GameMode(GameMode.ANALYSIS);
+			startAnalysis();
 		}
-		updateThinkingInfo();
-		moveListUpdated();
-		setGameMode();
+	}
+
+	private void showAnalysisModeInfo() {
 		Toast.makeText(
 				getApplicationContext(),
 				gameMode.analysisMode() ? R.string.analysis_mode_enabled
 						: R.string.analysis_mode_disabled, Toast.LENGTH_SHORT)
 				.show();
+	}
+
+	private void startAnalysis() {
+		if (!ctrl.hasEngineStarted()) {
+			progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
+					"Initializing engine", "Please wait...", true, false);
+			new StartEngineTask().execute(this, progressDlg, ctrl);
+		} else {
+			onFinishStartAnalysis();
+		}
+	}
+
+	protected void onFinishStartAnalysis() {
+		updateThinkingInfo();
+		moveListUpdated();
+		setGameMode();
+		showAnalysisModeInfo();
+		ctrl.startGame();
 	}
 
 	private void setGameMode() {
@@ -1479,7 +1507,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	@Override
 	public void computerMoveMade() {
 		// do nothing
-		
+
 		// TODO: possibly re-enable sound
 	}
 
