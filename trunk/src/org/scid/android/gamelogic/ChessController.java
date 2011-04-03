@@ -229,6 +229,12 @@ public class ChessController {
 	public final void setGuiPaused(boolean paused) {
 		guiPaused = paused;
 		updateGameMode();
+		if (paused) {
+			stopAnalysis();
+			stopComputerThinking();
+		} else {
+			updateComputeThreads(true);
+		}
 	}
 
 	private final void updateGameMode() {
