@@ -15,7 +15,8 @@ public class StartEngineTask extends AsyncTask {
 		this.activity = (ScidAndroidActivity) params[0];
 		this.progressDlg = (ProgressDialog) params[1];
 		this.ctrl = (ChessController) params[2];
-		ctrl.startEngine();
+		String engineFileName = (String) params[3];
+		ctrl.startEngine(engineFileName);
 		return null;
 	}
 
