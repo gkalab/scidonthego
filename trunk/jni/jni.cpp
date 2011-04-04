@@ -1,5 +1,6 @@
 #include <string.h>
 #include <jni.h>
+#include <android/log.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -7,6 +8,12 @@
 #include <deque>
 #include <vector>
 #include <sys/time.h>
+#include <string>
+
+#define  LOG_TAG    "SCIDengine"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
 static int fdFromChild = -1;
 static int fdToChild = -1;
@@ -17,33 +24,41 @@ static int fdToChild = -1;
  * Signature: ()V
  */
 extern "C" JNIEXPORT void JNICALL Java_org_scid_android_engine_NativePipedProcess_startProcess
-		(JNIEnv* env, jobject obj)
+		(JNIEnv* env, jobject obj, jstring fileName)
 {
-	int fd1[2];		/* parent -> child */
-    int fd2[2];		/* child -> parent */
-    if (pipe(fd1) < 0)
-    	exit(1);
-    if (pipe(fd2) < 0)
-    	exit(1);
-    int childpid = fork();
-    if (childpid == -1) {
-        exit(1);
-    }
-    if (childpid == 0) {
-    	close(fd1[1]);
-    	close(fd2[0]);
-    	close(0); dup(fd1[0]); close(fd1[0]);
-    	close(1); dup(fd2[1]); close(fd2[1]);
-    	close(2); dup(1);
-    	nice(10);
-        execl("/data/data/org.scid.android/stockfish1.9", "stockfish", (char *) 0);
-    	_exit(0);
-    } else {
-    	close(fd1[0]);
-    	close(fd2[1]);
-    	fdFromChild = fd2[0];
-    	fdToChild = fd1[1];
-	    fcntl(fdFromChild, F_SETFL, O_NONBLOCK);
+    const char* fileNameStr = (*env).GetStringUTFChars(fileName, NULL);
+    if (fileNameStr) {
+        LOGI("startProcess called");
+        int fd1[2];		/* parent -> child */
+        int fd2[2];		/* child -> parent */
+        if (pipe(fd1) < 0)
+            exit(1);
+        if (pipe(fd2) < 0)
+            exit(1);
+        int childpid = fork();
+        if (childpid == -1) {
+            exit(1);
+        }
+        if (childpid == 0) {
+            close(fd1[1]);
+            close(fd2[0]);
+            close(0); dup(fd1[0]); close(fd1[0]);
+            close(1); dup(fd2[1]); close(fd2[1]);
+            close(2); dup(1);
+            nice(10);
+            std::string fName = "/data/data/org.scid.android/";
+            fName.append(fileNameStr);
+            LOGI(fName.c_str());
+            execl(fName.c_str(), fileNameStr, (char *) 0);
+            _exit(0);
+        } else {
+            close(fd1[0]);
+            close(fd2[1]);
+            fdFromChild = fd2[0];
+            fdToChild = fd1[1];
+            fcntl(fdFromChild, F_SETFL, O_NONBLOCK);
+        }
+    	(*env).ReleaseStringUTFChars(fileName, fileNameStr);
     }
 }
 

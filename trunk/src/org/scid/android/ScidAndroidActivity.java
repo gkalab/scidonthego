@@ -88,7 +88,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
-	private String uciEngineFileName = "stockfish1.9";
+	private String uciEngineFileName = "robbolito0085e4l"; // "stockfish1.9";
 	private ProgressDialog progressDlg;
 
 	/** Called when the activity is first created. */
@@ -766,7 +766,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
 					getString(R.string.initializing_engine),
 					getString(R.string.please_wait), true, false);
-			new StartEngineTask().execute(this, progressDlg, ctrl);
+			new StartEngineTask().execute(this, progressDlg, ctrl,
+					uciEngineFileName);
 		} else {
 			onFinishStartAnalysis();
 		}

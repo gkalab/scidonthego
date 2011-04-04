@@ -207,9 +207,9 @@ public class ChessController {
 		updateGameMode();
 	}
 
-	public final void startEngine() {
+	public final void startEngine(String engineFileName) {
 		if (computerPlayer == null) {
-			computerPlayer = new ComputerPlayer();
+			computerPlayer = new ComputerPlayer(engineFileName);
 			computerPlayer.setListener(listener);
 			computerPlayer.setBookFileName(bookFileName);
 			game.setComputerPlayer(computerPlayer);
@@ -786,7 +786,9 @@ public class ChessController {
 			ss.searchResultWanted = false;
 			stopComputerThinking();
 			stopAnalysis();
-			computerPlayer.shutdownEngine();
+			if (computerPlayer != null) {
+				computerPlayer.shutdownEngine();
+			}
 		}
 	}
 
