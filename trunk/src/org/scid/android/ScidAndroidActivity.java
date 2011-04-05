@@ -58,7 +58,6 @@ import android.widget.Toast;
 
 public class ScidAndroidActivity extends Activity implements GUIInterface {
 
-	// TODO: remove analysis info on turning device
 	private ChessBoard cb;
 	private ChessController ctrl = null;
 	private boolean mShowThinking;
@@ -546,8 +545,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				// display end of variation if there are no more moves
 				if (gameMode.studyMode() && !ctrl.canRedoMove()) {
 					Toast.makeText(getApplicationContext(),
-							getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
-							.show();
+							getText(R.string.end_of_variation),
+							Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
@@ -783,17 +782,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	protected void onFinishStartAnalysis() {
 		updateThinkingInfo();
 		moveListUpdated();
-		setGameMode();
-		showAnalysisModeInfo();
+		if (setGameMode()) {
+			showAnalysisModeInfo();
+		}
 		ctrl.startGame();
 	}
 
-	private void setGameMode() {
+	private boolean setGameMode() {
+		boolean changed = false;
 		if (ctrl.setGameMode(gameMode)) {
+			changed = true;
 			Editor editor = settings.edit();
 			editor.putInt("gameMode", gameMode.getMode());
 			editor.commit();
 		}
+		return changed;
 	}
 
 	@Override
