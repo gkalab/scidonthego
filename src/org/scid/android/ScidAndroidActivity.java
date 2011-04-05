@@ -58,6 +58,7 @@ import android.widget.Toast;
 
 public class ScidAndroidActivity extends Activity implements GUIInterface {
 
+	// TODO: remove analysis info on turning device
 	private ChessBoard cb;
 	private ChessController ctrl = null;
 	private boolean mShowThinking;
