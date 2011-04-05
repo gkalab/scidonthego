@@ -543,6 +543,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						.show();
 			} else {
 				ctrl.makeHumanMove(m);
+				// display end of variation if there are no more moves
+				if (gameMode.studyMode() && !ctrl.canRedoMove()) {
+					Toast.makeText(getApplicationContext(),
+							getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
+							.show();
+				}
 			}
 		}
 	}
