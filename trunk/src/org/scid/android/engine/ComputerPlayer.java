@@ -28,7 +28,7 @@ import android.util.Log;
 public class ComputerPlayer {
 	public static String engineName = "";
 
-	static NativePipedProcess npp = null;
+	static PipedProcess npp = null;
 	SearchListener listener;
 	int timeLimit;
 	Book book;
@@ -36,7 +36,7 @@ public class ComputerPlayer {
 
 	public ComputerPlayer(String enginefileName) {
 		if (npp == null) {
-			npp = new NativePipedProcess();
+			npp = new PipedProcess();
 			Log.d("SCID", "engine: initialize");
 			npp.initialize(enginefileName);
 			Log.d("SCID", "engine: write uci");
@@ -271,11 +271,12 @@ public class ComputerPlayer {
 					stopSent = true;
 				}
 				String s = npp.readLineFromProcess(timeout);
-				if (s.length() == 0)
+				if (s == null || s.length() == 0)
 					break;
 				String[] tokens = tokenize(s);
 				if (tokens[0].equals("info")) {
 					parseInfoCmd(tokens);
+					break;
 				} else if (tokens[0].equals("bestmove")) {
 					return tokens[1];
 				}
