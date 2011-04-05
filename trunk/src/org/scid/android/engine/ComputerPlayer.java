@@ -282,10 +282,12 @@ public class ComputerPlayer {
 				}
 				timeout = 0;
 			}
-			notifyGUI(pos);
-			try {
-				Thread.sleep(100); // 10 GUI updates per second is enough
-			} catch (InterruptedException e) {
+			if (!stopSent) {
+				notifyGUI(pos);
+				try {
+					Thread.sleep(100); // 10 GUI updates per second is enough
+				} catch (InterruptedException e) {
+				}
 			}
 		}
 	}
