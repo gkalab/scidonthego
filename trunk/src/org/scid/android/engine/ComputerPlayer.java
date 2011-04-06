@@ -90,21 +90,18 @@ public class ComputerPlayer {
 	}
 
 	private void readUCIOptions() {
-		int timeout = 1000;
 		long startTime = System.currentTimeMillis();
-		boolean engineReacted = false;
 		while (true) {
-			String s = npp.readLineFromProcess(timeout);
+			String s = npp.readLineFromProcess();
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				// do nothing
 			}
 			if (s != null && s.length() > 0) {
-				engineReacted = true;
 				Log.d("SCID", "read UCI option: " + s);
 				String[] tokens = tokenize(s);
-				if (tokens[0].equals("uciok"))
+				if (tokens[0].equals("uciok") || tokens[0].equals("info"))
 					break;
 				else if (tokens[0].equals("id")) {
 					if (tokens[1].equals("name")) {
@@ -116,8 +113,7 @@ public class ComputerPlayer {
 						}
 					}
 				}
-			} else if (!engineReacted
-					&& (System.currentTimeMillis() - startTime > 5000)) {
+			} else if (System.currentTimeMillis() - startTime > 15000) {
 				// no reaction from uci engine --> retry uci command
 				npp.writeLineToProcess("uci");
 				startTime = System.currentTimeMillis();
@@ -134,10 +130,20 @@ public class ComputerPlayer {
 	private final void syncReady() {
 		npp.writeLineToProcess("isready");
 		Log.d("SCID", "waiting for readyok");
+		long start = System.currentTimeMillis();
 		while (true) {
-			String s = npp.readLineFromProcess(1000);
-			if (s.equals("readyok"))
+			String s = npp.readLineFromProcess();
+			if (s != null && s.equals("readyok"))
 				break;
+			if ((System.currentTimeMillis() - start) > 5000) {
+				npp.writeLineToProcess("isready");
+				start = System.currentTimeMillis();
+			}
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				// do nothing
+			}
 		}
 		Log.d("SCID", "readyok received");
 	}
@@ -264,25 +270,29 @@ public class ComputerPlayer {
 		clearInfo();
 		boolean stopSent = false;
 		while (true) {
-			int timeout = 2000;
 			while (true) {
 				if (shouldStop && !stopSent) {
 					npp.writeLineToProcess("stop");
 					stopSent = true;
 				}
-				String s = npp.readLineFromProcess(timeout);
+				try {
+					Thread.sleep(10); // 10 GUI updates per second is enough
+				} catch (InterruptedException e) {
+				}
+				String s = npp.readLineFromProcess();
 				if (s == null || s.length() == 0)
 					break;
 				String[] tokens = tokenize(s);
 				if (tokens[0].equals("info")) {
-					parseInfoCmd(tokens);
+					if (!shouldStop) {
+						parseInfoCmd(tokens);
+					}
 					break;
 				} else if (tokens[0].equals("bestmove")) {
 					return tokens[1];
 				}
-				timeout = 0;
 			}
-			if (!stopSent) {
+			if (!stopSent && !shouldStop) {
 				notifyGUI(pos);
 				try {
 					Thread.sleep(100); // 10 GUI updates per second is enough
@@ -498,7 +508,7 @@ public class ComputerPlayer {
 	}
 
 	public final void stopSearch() {
-		shouldStop = true;
 		npp.writeLineToProcess("stop");
+		shouldStop = true;
 	}
 }

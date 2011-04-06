@@ -1008,11 +1008,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 		List<Move> hints = null;
 		if (!gameMode.studyMode()) {
-			if (mShowThinking || gameMode.analysisMode()) {
+			if (mShowThinking) {
 				hints = pvMoves;
-			}
-			if ((hints == null) && mShowBookHints) {
-				hints = bookMoves;
 			}
 			if ((variantMoves != null) && variantMoves.size() > 1) {
 				hints = variantMoves;
