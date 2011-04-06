@@ -342,7 +342,9 @@ public class ChessController {
 		if (analysisThread != null) {
 			computerPlayer.stopSearch();
 			try {
-				analysisThread.join();
+				if (analysisThread.isAlive()) {
+					analysisThread.join();
+				}
 			} catch (InterruptedException ex) {
 				Log.e("SCID", "Could not stop analysis thread");
 			}
