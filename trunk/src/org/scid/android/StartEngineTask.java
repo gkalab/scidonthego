@@ -22,7 +22,9 @@ public class StartEngineTask extends AsyncTask {
 
 	@Override
 	protected void onPostExecute(Object result) {
-		progressDlg.dismiss();
+		if (progressDlg != null) {
+			progressDlg.dismiss();
+		}
 		activity.onFinishStartAnalysis();
 	}
 }

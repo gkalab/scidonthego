@@ -55,16 +55,16 @@ public class PipedProcess {
 	 *         if no data available, or null if I/O error.
 	 * @throws IOException
 	 */
-	public final synchronized String readLineFromProcess(){
-		String ret=null;
+	public final synchronized String readLineFromProcess() {
+		String ret = null;
 		try {
 			ret = readFromProcess();
 		} catch (IOException e) {
 			Log.e("SCID", "Error reading from process");
 			e.printStackTrace();
 		}
-		if (ret!=null && ret.length() > 0) {
-			//Log.d("SCID", "Engine -> GUI: " + ret);
+		if (ret != null && ret.length() > 0) {
+			// Log.d("SCID", "Engine -> GUI: " + ret);
 		}
 		return ret;
 	}
@@ -75,7 +75,7 @@ public class PipedProcess {
 	 * @throws IOException
 	 */
 	public final synchronized void writeLineToProcess(String data) {
-		//Log.d("SCID", "GUI -> Engine: " + data);
+		// Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
 		} catch (IOException e) {

@@ -567,6 +567,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (ctrl != null) {
 			ctrl.setGuiPaused(false);
 		}
+		// TODO: check this
+		if (gameMode.analysisMode()) {
+			startAnalysis();
+		}
 		super.onResume();
 	}
 
@@ -578,6 +582,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
+			ctrl.shutdownEngine();
 		}
 		super.onPause();
 	}
@@ -748,8 +753,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void setAnalysisMode() {
 		if (gameMode.analysisMode()) {
+			ctrl.shutdownEngine();
 			gameMode = new GameMode(GameMode.TWO_PLAYERS);
-			updateThinkingInfo();
 			moveListUpdated();
 			setGameMode();
 			showAnalysisModeInfo();
@@ -769,9 +774,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
-			progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
-					getString(R.string.initializing_engine),
-					getString(R.string.please_wait), true, false);
+			/*
+			 * progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
+			 * getString(R.string.initializing_engine),
+			 * getString(R.string.please_wait), true, false);
+			 */
 			new StartEngineTask().execute(this, progressDlg, ctrl,
 					uciEngineFileName);
 		} else {
