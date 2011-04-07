@@ -269,6 +269,7 @@ public class ComputerPlayer {
 		// Monitor engine response
 		clearInfo();
 		boolean stopSent = false;
+		long start = System.currentTimeMillis();
 		while (true) {
 			while (true) {
 				if (shouldStop && !stopSent) {
@@ -280,8 +281,14 @@ public class ComputerPlayer {
 				} catch (InterruptedException e) {
 				}
 				String s = npp.readLineFromProcess();
-				if (s == null || s.length() == 0)
-					break;
+				if (s == null || s.length() == 0){
+					// if we don't receive any update from the engine for 10 seconds
+					if ((System.currentTimeMillis()-start)>10000){
+						shouldStop = true;
+						npp.writeLineToProcess("stop");
+						return null;
+					}
+					break;}
 				String[] tokens = tokenize(s);
 				if (tokens[0].equals("info")) {
 					if (!shouldStop) {
