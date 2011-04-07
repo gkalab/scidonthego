@@ -8,6 +8,8 @@ package org.scid.android.gamelogic;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import android.util.Log;
+
 /**
  * Stores the state of a chess position. All required state is stored, except
  * for all previous positions since the last capture or pawn move. That state is
@@ -156,7 +158,12 @@ public class Position {
 
 	/** Return piece occuping a square. */
 	public final int getPiece(int square) {
-		return squares[square];
+		if (square < 64) {
+			return squares[square];
+		} else {
+			Log.e("SCID", "square was:" + square);
+			return Piece.EMPTY;
+		}
 	}
 
 	/** Set a square to a piece value. */

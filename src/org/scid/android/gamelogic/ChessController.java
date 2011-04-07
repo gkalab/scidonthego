@@ -28,8 +28,7 @@ public class ChessController {
 	private GUIInterface gui;
 	private GameMode gameMode;
 	private PGNOptions pgnOptions;
-	private Thread computerThread;
-	private Thread analysisThread;
+	private AnalysisTask analysisTask;
 
 	private int timeControl;
 	private int movesPerSession;
@@ -169,7 +168,7 @@ public class ChessController {
 			this.bookFileName = bookFileName;
 			if (computerPlayer != null) {
 				computerPlayer.setBookFileName(bookFileName);
-				if (analysisThread != null) {
+				if (analysisTask != null) {
 					stopAnalysis();
 					startAnalysis();
 				}
@@ -198,7 +197,6 @@ public class ChessController {
 
 	public final void newGame(GameMode gameMode) {
 		ss.searchResultWanted = false;
-		stopComputerThinking();
 		stopAnalysis();
 		this.gameMode = gameMode;
 		game = new Game(computerPlayer, gameTextListener, timeControl,
@@ -231,7 +229,6 @@ public class ChessController {
 		updateGameMode();
 		if (paused) {
 			stopAnalysis();
-			stopComputerThinking();
 		} else {
 			updateComputeThreads(true);
 		}
@@ -247,122 +244,40 @@ public class ChessController {
 
 	private final void updateComputeThreads(boolean clearPV) {
 		boolean analysis = gameMode.analysisMode();
-		boolean computersTurn = !humansTurn();
 		if (!analysis)
 			stopAnalysis();
-		if (!computersTurn)
-			stopComputerThinking();
 		if (clearPV) {
 			listener.clearSearchInfo();
 			updateBookHints();
 		}
 		if (analysis && this.computerPlayer != null)
 			startAnalysis();
-		if (computersTurn)
-			startComputerThinking();
-	}
-
-	private final synchronized void startComputerThinking() {
-		if (analysisThread != null)
-			return;
-		if (game.getGameState() != GameState.ALIVE)
-			return;
-		if (computerThread == null) {
-			ss = new SearchStatus();
-			final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
-			final Game g = game;
-			final boolean haveDrawOffer = g.haveDrawOffer();
-			final Position currPos = new Position(g.currPos());
-			long now = System.currentTimeMillis();
-			final int wTime = game.timeController.getRemainingTime(true, now);
-			final int bTime = game.timeController.getRemainingTime(false, now);
-			final int inc = game.timeController.getIncrement();
-			final int movesToGo = game.timeController.getMovesToTC();
-			computerThread = new Thread(new Runnable() {
-				public void run() {
-					final String cmd = computerPlayer.doSearch(ph.first,
-							ph.second, currPos, haveDrawOffer, wTime, bTime,
-							inc, movesToGo);
-					final SearchStatus localSS = ss;
-					gui.runOnUIThread(new Runnable() {
-						public void run() {
-							synchronized (shutdownEngineLock) {
-								if (!localSS.searchResultWanted)
-									return;
-								Position oldPos = new Position(g.currPos());
-								g.processString(cmd, false);
-								updateGameMode();
-								gui.computerMoveMade();
-								listener.clearSearchInfo();
-								stopComputerThinking();
-								stopAnalysis(); // To force analysis to restart
-								// for new position
-								updateComputeThreads(true);
-								setSelection();
-								setAnimMove(oldPos, g.getLastMove(), true);
-								updateGUI();
-							}
-						}
-					});
-				}
-			});
-			listener.clearSearchInfo();
-			computerPlayer.shouldStop = false;
-			computerThread.start();
-			updateGUI();
-		}
 	}
 
 	private final synchronized void startAnalysis() {
 		if (gameMode.analysisMode()) {
-			if (computerThread != null)
-				return;
-			if (analysisThread == null) {
+			if (analysisTask == null) {
 				ss = new SearchStatus();
 				final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
 				final boolean haveDrawOffer = game.haveDrawOffer();
 				final Position currPos = new Position(game.currPos());
 				final boolean alive = game.tree.getGameState() == GameState.ALIVE;
-				analysisThread = new Thread(new Runnable() {
-					public void run() {
-						if (alive)
-							computerPlayer.analyze(ph.first, ph.second,
-									currPos, haveDrawOffer);
-					}
-				});
 				listener.clearSearchInfo();
-				computerPlayer.shouldStop = false;
-				analysisThread.start();
+				if (alive) {
+					analysisTask = (AnalysisTask) new AnalysisTask().execute(
+							computerPlayer.getEngine(), listener, ph.first,
+							ph.second, currPos, computerPlayer.isNewGame());
+				}
 				updateGUI();
 			}
 		}
 	}
 
 	private final synchronized void stopAnalysis() {
-		if (analysisThread != null) {
-			computerPlayer.stopSearch();
-			try {
-				if (analysisThread.isAlive()) {
-					analysisThread.join();
-				}
-			} catch (InterruptedException ex) {
-				Log.e("SCID", "Could not stop analysis thread");
-			}
-			analysisThread = null;
+		if (analysisTask != null) {
+			analysisTask.cancel(false);
+			analysisTask = null;
 			listener.clearSearchInfo();
-			updateGUI();
-		}
-	}
-
-	private final synchronized void stopComputerThinking() {
-		if (computerThread != null) {
-			computerPlayer.stopSearch();
-			try {
-				computerThread.join();
-			} catch (InterruptedException ex) {
-				Log.e("SCID", "Could not stop computer thread");
-			}
-			computerThread = null;
 			updateGUI();
 		}
 	}
@@ -442,7 +357,6 @@ public class ChessController {
 		gameTextListener.clear();
 		updateGameMode();
 		stopAnalysis();
-		stopComputerThinking();
 		if (computerPlayer != null) {
 			computerPlayer.clearTT();
 			updateComputeThreads(true);
@@ -508,7 +422,6 @@ public class ChessController {
 		if (game.getLastMove() != null) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			stopComputerThinking();
 			undoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
@@ -536,7 +449,6 @@ public class ChessController {
 		if (canRedoMove()) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			stopComputerThinking();
 			redoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
@@ -555,7 +467,6 @@ public class ChessController {
 		if (game.numVariations() > 1) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			stopComputerThinking();
 			game.changeVariation(delta);
 			updateComputeThreads(true);
 			setSelection();
@@ -567,7 +478,6 @@ public class ChessController {
 		if (game.numVariations() > 1) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			stopComputerThinking();
 			game.removeVariation();
 			updateComputeThreads(true);
 			setSelection();
@@ -604,7 +514,6 @@ public class ChessController {
 		if (needUpdate) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			stopComputerThinking();
 			updateComputeThreads(true);
 			setSelection();
 			updateGUI();
@@ -616,7 +525,6 @@ public class ChessController {
 			if (doMove(m)) {
 				ss.searchResultWanted = false;
 				stopAnalysis();
-				stopComputerThinking();
 				updateComputeThreads(true);
 				updateGUI();
 				if (gameMode.studyMode()) {
@@ -774,22 +682,16 @@ public class ChessController {
 					timeIncrement);
 	}
 
-	public final void stopSearch() {
-		if (computerThread != null) {
-			computerPlayer.stopSearch();
-		}
-	}
-
 	private Object shutdownEngineLock = new Object();
 
 	public final void shutdownEngine() {
 		synchronized (shutdownEngineLock) {
 			gameMode = new GameMode(GameMode.TWO_PLAYERS);
 			ss.searchResultWanted = false;
-			stopComputerThinking();
 			stopAnalysis();
 			if (computerPlayer != null) {
 				computerPlayer.shutdownEngine();
+				computerPlayer = null;
 			}
 		}
 	}
