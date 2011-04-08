@@ -686,7 +686,6 @@ public class ChessController {
 
 	public final void shutdownEngine() {
 		synchronized (shutdownEngineLock) {
-			gameMode = new GameMode(GameMode.TWO_PLAYERS);
 			ss.searchResultWanted = false;
 			stopAnalysis();
 			if (computerPlayer != null) {
