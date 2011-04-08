@@ -305,6 +305,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public void onNextMoveClick(View view) {
 		if (ctrl.canRedoMove()) {
 			ctrl.redoMove(false);
+		} else {
+			Toast.makeText(getApplicationContext(),
+					getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
+					.show();
 		}
 	}
 
@@ -765,8 +769,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
 			moveList.setText(R.string.initializing_engine);
-			new StartEngineTask().execute(this, ctrl,
-					uciEngineFileName);
+			new StartEngineTask().execute(this, ctrl, uciEngineFileName);
 		} else {
 			onFinishStartAnalysis();
 		}
