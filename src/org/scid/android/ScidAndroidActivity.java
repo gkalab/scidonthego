@@ -89,7 +89,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
 	private String uciEngineFileName = "robbolito0085e4l"; // "stockfish1.9";
-	private ProgressDialog progressDlg;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -567,7 +566,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (ctrl != null) {
 			ctrl.setGuiPaused(false);
 		}
-		// TODO: check this
 		if (gameMode.analysisMode()) {
 			startAnalysis();
 		}
@@ -576,9 +574,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	protected void onPause() {
-		if (progressDlg != null) {
-			progressDlg.dismiss();
-		}
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
@@ -615,9 +610,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		mShowBookHints = settings.getBoolean("bookHints", false);
 		gameMode = new GameMode(settings.getInt("gameMode",
 				GameMode.TWO_PLAYERS));
-		if (gameMode.analysisMode()) {
-			startAnalysis();
-		}
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
@@ -626,8 +618,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		int fontSize = Integer.parseInt(tmp);
 		status.setTextSize(fontSize);
 		moveList.setTextSize(fontSize);
-
-		updateThinkingInfo();
 
 		pgnOptions.view.variations = true;
 		pgnOptions.view.comments = true;
@@ -774,12 +764,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
-			/*
-			 * progressDlg = ProgressDialog.show(ScidAndroidActivity.this,
-			 * getString(R.string.initializing_engine),
-			 * getString(R.string.please_wait), true, false);
-			 */
-			new StartEngineTask().execute(this, progressDlg, ctrl,
+			moveList.setText(R.string.initializing_engine);
+			new StartEngineTask().execute(this, ctrl,
 					uciEngineFileName);
 		} else {
 			onFinishStartAnalysis();
@@ -787,12 +773,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	protected void onFinishStartAnalysis() {
-		updateThinkingInfo();
+		showAnalysisModeInfo();
 		moveListUpdated();
-		if (setGameMode()) {
-			showAnalysisModeInfo();
-		}
+		setGameMode();
 		ctrl.startGame();
+		updateThinkingInfo();
 	}
 
 	private boolean setGameMode() {

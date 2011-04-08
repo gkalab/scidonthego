@@ -19,6 +19,7 @@ public class PipedProcess {
 	/** Start process. */
 	public final void initialize(String fileName) {
 		if (!processAlive) {
+			Log.d("SCID", "process not alive, starting "+fileName);
 			startProcess(fileName);
 		}
 	}
@@ -90,14 +91,20 @@ public class PipedProcess {
 				"/data/data/org.scid.android/" + fileName);
 		builder.redirectErrorStream(true);
 		try {
+			Log.d("SCID", "starting process");
 			process = builder.start();
+			Log.d("SCID", "setting priority of started process");
 			android.os.Process
 					.setThreadPriority(android.os.Process.THREAD_PRIORITY_LESS_FAVORABLE);
-			OutputStream stdin = process.getOutputStream();
-			InputStream stdout = process.getInputStream();
-			reader = new BufferedReader(new InputStreamReader(stdout));
-			writer = new BufferedWriter(new OutputStreamWriter(stdin));
+			Log.d("SCID", "getting output stream");
+			OutputStream stdout = process.getOutputStream();
+			Log.d("SCID", "getting input stream");
+			InputStream stdin = process.getInputStream();
+			Log.d("SCID", "initializing readers");
+			reader = new BufferedReader(new InputStreamReader(stdin));
+			writer = new BufferedWriter(new OutputStreamWriter(stdout));
 			processAlive = true;
+			Log.d("SCID", "process is now alive");
 		} catch (IOException e) {
 			Log.e("SCID", "Error initializing engine " + fileName, e);
 		}
