@@ -136,6 +136,7 @@ public class ComputerPlayer {
 				if (s != null && s.equals("readyok"))
 					break;
 				if ((System.currentTimeMillis() - start) > 5000) {
+					Log.i("SCID", "no reaction from engine - retrying...");
 					npp.writeLineToProcess("isready");
 					start = System.currentTimeMillis();
 				}
@@ -185,5 +186,9 @@ public class ComputerPlayer {
 	public final Pair<String, ArrayList<Move>> getBookHints(Position pos) {
 		Pair<String, ArrayList<Move>> bi = book.getAllBookMoves(pos);
 		return new Pair<String, ArrayList<Move>>(bi.first, bi.second);
+	}
+
+	public void setNewGame(boolean isNew) {
+		newGame = isNew;
 	}
 }

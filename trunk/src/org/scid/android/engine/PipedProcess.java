@@ -19,7 +19,7 @@ public class PipedProcess {
 	/** Start process. */
 	public final void initialize(String fileName) {
 		if (!processAlive) {
-			Log.d("SCID", "process not alive, starting "+fileName);
+			Log.d("SCID", "process not alive, starting " + fileName);
 			startProcess(fileName);
 		}
 	}
@@ -65,7 +65,7 @@ public class PipedProcess {
 			e.printStackTrace();
 		}
 		if (ret != null && ret.length() > 0) {
-			// Log.d("SCID", "Engine -> GUI: " + ret);
+			Log.d("SCID", "Engine -> GUI: " + ret);
 		}
 		return ret;
 	}
@@ -76,7 +76,7 @@ public class PipedProcess {
 	 * @throws IOException
 	 */
 	public final synchronized void writeLineToProcess(String data) {
-		// Log.d("SCID", "GUI -> Engine: " + data);
+		Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
 		} catch (IOException e) {
@@ -93,9 +93,6 @@ public class PipedProcess {
 		try {
 			Log.d("SCID", "starting process");
 			process = builder.start();
-			Log.d("SCID", "setting priority of started process");
-			android.os.Process
-					.setThreadPriority(android.os.Process.THREAD_PRIORITY_LESS_FAVORABLE);
 			Log.d("SCID", "getting output stream");
 			OutputStream stdout = process.getOutputStream();
 			Log.d("SCID", "getting input stream");
