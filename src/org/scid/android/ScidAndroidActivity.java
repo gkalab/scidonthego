@@ -19,7 +19,6 @@ import org.scid.database.ScidProviderMetaData;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -913,7 +912,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	@Override
-	public void setStatusString(String str) {
+	public void setStatusString(final String str) {
 		status.setText(str);
 	}
 

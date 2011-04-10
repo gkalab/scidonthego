@@ -189,7 +189,7 @@ public class ChessController {
 		}
 	}
 
-	private final static class SearchStatus {
+	private final class SearchStatus {
 		boolean searchResultWanted = true;
 	}
 
@@ -259,7 +259,6 @@ public class ChessController {
 			if (analysisTask == null) {
 				ss = new SearchStatus();
 				final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
-				final boolean haveDrawOffer = game.haveDrawOffer();
 				final Position currPos = new Position(game.currPos());
 				final boolean alive = game.tree.getGameState() == GameState.ALIVE;
 				listener.clearSearchInfo();
@@ -267,6 +266,7 @@ public class ChessController {
 					analysisTask = (AnalysisTask) new AnalysisTask().execute(
 							computerPlayer.getEngine(), listener, ph.first,
 							ph.second, currPos, computerPlayer.isNewGame());
+					computerPlayer.setNewGame(false);
 				}
 				updateGUI();
 			}
@@ -275,10 +275,18 @@ public class ChessController {
 
 	private final synchronized void stopAnalysis() {
 		if (analysisTask != null) {
-			analysisTask.cancel(false);
-			analysisTask = null;
-			listener.clearSearchInfo();
-			updateGUI();
+			synchronized (analysisTask) {
+				analysisTask.cancel(false);
+				while (!analysisTask.isFinished()) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+					}
+				}
+				analysisTask = null;
+				listener.clearSearchInfo();
+				updateGUI();
+			}
 		}
 	}
 
@@ -422,6 +430,9 @@ public class ChessController {
 		if (game.getLastMove() != null) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
+			if (computerPlayer != null) {
+				computerPlayer.clearTT();
+			}
 			undoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();

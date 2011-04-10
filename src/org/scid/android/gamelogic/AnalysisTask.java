@@ -28,9 +28,17 @@ public class AnalysisTask extends AsyncTask {
 	private int seldepth = 0;
 	private int cpuload;
 	private SearchListener listener = null;
+	private boolean finished = false;
+	private boolean shouldStop = false;
+
+	public boolean isFinished() {
+		return finished;
+	}
 
 	@Override
 	protected Object doInBackground(Object... params) {
+		android.os.Process
+				.setThreadPriority(android.os.Process.THREAD_PRIORITY_LESS_FAVORABLE);
 		this.engine = (PipedProcess) params[0];
 		if (this.engine != null) {
 			this.listener = (SearchListener) params[1];
@@ -56,16 +64,16 @@ public class AnalysisTask extends AsyncTask {
 					posStr.append(TextIO.moveToUCIString(mList.get(i)));
 				}
 			}
-			if (newGame) {
-				newGame = false;
-				engine.writeLineToProcess("ucinewgame");
-				syncReady();
-			}
-			engine.writeLineToProcess("stop");
+			// TODO check ucinewgame
+			/*
+			 * if (newGame) { newGame = false;
+			 * engine.writeLineToProcess("ucinewgame"); syncReady(); }
+			 */
 			engine.writeLineToProcess(posStr.toString());
 			String goStr = String.format("go infinite");
 			engine.writeLineToProcess(goStr);
 			monitorEngine(currPos);
+			finished = true;
 		}
 		return null;
 	}
@@ -110,16 +118,34 @@ public class AnalysisTask extends AsyncTask {
 	private final void monitorEngine(Position pos) {
 		// Monitor engine response
 		clearInfo();
-		while (!isCancelled()) {
-			while (!isCancelled()) {
+		boolean stopSent = false;
+		boolean infoReceived = false;
+		while (true) {
+			while (true) {
+				if (isCancelled() && !shouldStop) {
+					shouldStop = true;
+				}
+				if (shouldStop && !stopSent && infoReceived) {
+					engine.writeLineToProcess("stop");
+					stopSent = true;
+				}
 				String s = engine.readLineFromProcess();
 				if (s == null || s.length() == 0) {
 					break;
 				}
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
 				String[] tokens = tokenize(s);
 				if (tokens[0].equals("info")) {
 					parseInfoCmd(tokens);
+					infoReceived = true;
 					break;
+				} else if (tokens[0].equals("bestmove")) {
+					Log.d("SCID", "bestmove received. shouldStop=" + shouldStop
+							+ ", stopSent=" + stopSent);
+					return;
 				}
 			}
 			if (!this.isCancelled()) {
