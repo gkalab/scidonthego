@@ -327,8 +327,6 @@ public class Game {
 
 	public final void newGame() {
 		tree = new GameTree(gameTextListener);
-		if (computerPlayer != null)
-			computerPlayer.clearTT();
 		timeController.reset();
 		pendingDrawOffer = false;
 		updateTimeControl(true);

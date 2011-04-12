@@ -45,7 +45,6 @@ public class AnalysisTask extends AsyncTask {
 			Position prevPos = (Position) params[2];
 			ArrayList<Move> mList = (ArrayList<Move>) params[3];
 			Position currPos = (Position) params[4];
-			boolean newGame = (Boolean) params[5];
 
 			// If no legal moves, there is nothing to analyze
 			ArrayList<Move> moves = new MoveGen().pseudoLegalMoves(currPos);
@@ -64,11 +63,6 @@ public class AnalysisTask extends AsyncTask {
 					posStr.append(TextIO.moveToUCIString(mList.get(i)));
 				}
 			}
-			// TODO check ucinewgame
-			/*
-			 * if (newGame) { newGame = false;
-			 * engine.writeLineToProcess("ucinewgame"); syncReady(); }
-			 */
 			engine.writeLineToProcess(posStr.toString());
 			String goStr = String.format("go infinite");
 			engine.writeLineToProcess(goStr);
@@ -76,28 +70,6 @@ public class AnalysisTask extends AsyncTask {
 			finished = true;
 		}
 		return null;
-	}
-
-	private final void syncReady() {
-		engine.writeLineToProcess("isready");
-		Log.d("SCID", "waiting for readyok");
-		long start = System.currentTimeMillis();
-		while (!this.isCancelled()) {
-			String s = engine.readLineFromProcess();
-			if (s != null && s.equals("readyok")) {
-				Log.d("SCID", "readyok received");
-				break;
-			}
-			if ((System.currentTimeMillis() - start) > 5000) {
-				engine.writeLineToProcess("isready");
-				start = System.currentTimeMillis();
-			}
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-				// do nothing
-			}
-		}
 	}
 
 	private final void clearInfo() {
