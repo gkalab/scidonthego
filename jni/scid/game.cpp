@@ -36,11 +36,14 @@
 
 // Piece letters translation
 int language = 0; // default to english
-//  0 = en, 1 = fr, 2 = es, 3 = de, 4 = it, 5 = ne, 6 = cz
-//  7 = hu, 8 = no, 9 = sw, 10 = ca
-const char * langPieces[] = { "", "PPKRQDRTBFNC", "PPKRQDRTBANC", "PBKKQDRTBLNS", 
+//  0 = en, 
+//  1 = fr, 2 = es, 3 = de, 4 = it, 5 = ne, 6 = cz
+//  7 = hu, 8 = no, 9 = sw, 10 = ca, 11 = fi, 12 = gr
+//  TODO Piece translations for greek
+const char * langPieces[] = { "", 
+"PPKRQDRTBFNC", "PPKRQDRTBANC", "PBKKQDRTBLNS", 
 "PPKRQDRTBANC", "PpKKQDRTBLNP", "PPKKQDRVBSNJ",
-"PGKKQVRBBFNH", "PBKKQDRTBLNS", "PBKKQDRTBLNS", "PPKRQDRTBANC" };
+"PGKKQVRBBFNH", "PBKKQDRTBLNS", "PBKKQDRTBLNS", "PPKRQDRTBANC", "PSKKQDRTBLNR", "" };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // transPieces():
@@ -1992,6 +1995,8 @@ Game::GetPartialMoveList (DString * outStr, uint plyCount)
             CurrentPos->MakeSANString(&(m->moveData),
                                       m->san, SAN_CHECKTEST);
         }
+		  // add one space for indenting to work out right
+        outStr->Append (" ");
         outStr->Append (m->san);
         MoveForward();
     }
@@ -2138,8 +2143,7 @@ Game::WriteComment (TextBuffer * tb, const char * preStr,
       s = (char *) comment;
     }
 
-    if (s[0] == '\0')
-      return;
+    if (s[0] != '\0') {
 
     if (IsColorFormat()) {
         tb->PrintString ("<c_");
@@ -2160,6 +2164,9 @@ Game::WriteComment (TextBuffer * tb, const char * preStr,
         tb->PrintString (postStr);
     }
 
+        if (IsColorFormat()) { tb->PrintString ("</c>"); }
+    }
+
     if (PgnStyle & PGN_STYLE_STRIP_MARKS) {
 #ifdef WINCE
         my_Tcl_Free((char*) s);
@@ -2167,8 +2174,6 @@ Game::WriteComment (TextBuffer * tb, const char * preStr,
         delete[] s;
 #endif
     }
-
-    if (IsColorFormat()) { tb->PrintString ("</c>"); }
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2258,6 +2263,7 @@ Game::WriteMoveList (TextBuffer *tb, uint plyCount,
 
     while (CurrentMove->marker != END_MARKER) {
         moveT *m = CurrentMove;
+        bool commentLine = false;
 
         // If the move being printed is the game's "current move" then
         // set the current PGN position accordingly:
@@ -2493,10 +2499,8 @@ Game::WriteMoveList (TextBuffer *tb, uint plyCount,
 
                 if ((PgnStyle & PGN_STYLE_INDENT_COMMENTS) && VarDepth == 0) {
                     if (IsColorFormat()) {
-                        tb->PrintString ("</ip1>");
-                        // Modification to remove extra lines
-                        if (CurrentPos->GetToMove() == WHITE)
-                          tb->PrintString ("<br>");
+                        tb->PrintString ("</ip1><br>");
+                        commentLine = true;
                     } else {
                         tb->SetIndent (tb->GetIndent() - 4); tb->Indent();
                     }
@@ -2551,7 +2555,9 @@ Game::WriteMoveList (TextBuffer *tb, uint plyCount,
             }
             if (IsColorFormat()  &&  VarDepth == 0) { tb->PrintString ("<var>"); }
             if ((PgnStyle & PGN_STYLE_INDENT_VARS) && IsColorFormat()) {
+                if ( !commentLine ) {
                 tb->PrintString ("<br>");
+            }
             }
             for (uint i=0; i < m->numVariations; i++) {
                 if (PgnStyle & PGN_STYLE_INDENT_VARS) {
@@ -2778,6 +2784,14 @@ Game::WritePGN (TextBuffer * tb, uint stopLocation)
             eco_ToExtendedString (EcoCode, ecoStr);
             tb->PrintString (ecoStr);
         }
+        for (uint i=0; i < NumTags; i++) {
+			if( !strcmp(TagList[i].tag, "Annotator"))
+			{
+				sprintf (temp, " (%s)", TagList[i].value);
+                tb->PrintString (temp);
+			}
+		}
+
         tb->PrintString (newline);
 
         // Print FEN if non-standard start:
@@ -3998,7 +4012,8 @@ Game::DecodeStart (ByteBuffer * buf)
     if (err != OK) { return err; }
 
     // First the tags: just skip them for speed.
-    NumTags = 0;
+    //--// removed due to Gerds Hints
+	 //--// NumTags = 0;
     err = skipTags (buf);
     if (err != OK) { return err; }
 

@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 static uint hashVal [16][64];
 static uint stdStartHash = 0;
@@ -30,6 +31,11 @@ static uint stdStartPawnHash = 0;
 // HASH and UNHASH are identical: XOR the hash value for a (piece,square).
 #define HASH(h,p,sq)    (h) ^= hashVal[(p)][(sq)]
 #define UNHASH(h,p,sq)  (h) ^= hashVal[(p)][(sq)]
+
+Position::Position(const Position& p)
+{
+	memcpy (this, &p, sizeof(Position));
+}
 
 inline void
 Position::AddHash (pieceT p, squareT sq)
@@ -564,8 +570,7 @@ Position::Init (void)
     // Setting up a valid board is left to StdStart() or Clear().
     Board [COLOR_SQUARE] = EMPTY;
     Board [NULL_SQUARE] = END_OF_BOARD;
-    LegalMoves = NULL;
-    SANStrings = NULL;
+    LegalMoves.Clear();
     StrictCastling = true;
 
     // Make sure all tables used for move generation, hashing,
@@ -602,17 +607,22 @@ Position::Clear (void)
     HalfMoveClock = 0;
     Hash = 0;
     PawnHash = 0;
+    LegalMoves.Clear();
     return;
 }
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Position::StdStart():
-//      Set up the standard chess starting position.
+//      Set up the standard chess starting position. For performance the data is copied from a 
+//      template.
 //
+static Position *startPositionTemplate = NULL;
+
 void
 Position::StdStart (void)
 {
+    if( this == startPositionTemplate){
     Clear();
     Material[WK] = Material[BK] = 1;
     Material[WQ] = Material[BQ] = 1;
@@ -654,6 +664,14 @@ Position::StdStart (void)
     Board [NULL_SQUARE] = END_OF_BOARD;
     Hash = stdStartHash;
     PawnHash = stdStartPawnHash;
+    }
+    else {
+        if (startPositionTemplate == NULL){
+            startPositionTemplate = new Position();
+            startPositionTemplate->StdStart();
+        }
+        memcpy (this, startPositionTemplate, sizeof(Position));
+	}
     return;
 }
 
@@ -802,6 +820,12 @@ Position::GenerateMoves (MoveList * mlist, pieceT pieceType,
     bool genNonCaptures = (genType & GEN_NON_CAPS);
     bool capturesOnly = !genNonCaptures;
 
+    if (LegalMoves.Size() > 0 && pieceType == EMPTY && genType == GEN_ALL_MOVES) {
+        if(mlist != NULL)
+            memcpy (mlist, &LegalMoves, sizeof(MoveList));
+        return;
+    }
+
     uint mask = 0;
     if (pieceType != EMPTY) {
         mask = 1 << pieceType;
@@ -811,10 +835,8 @@ Position::GenerateMoves (MoveList * mlist, pieceT pieceType,
     }
 
     // Use the objects own move list if none was provided:
-    if (mlist == NULL) {
-        ClearLegalMoves();
-        mlist = LegalMoves;
-    }
+    if( mlist == NULL)
+        mlist = &LegalMoves;
     mlist->Clear();
 
     // Compute which pieces of the side to move are pinned to the king:
@@ -881,6 +903,9 @@ Position::GenerateMoves (MoveList * mlist, pieceT pieceType,
         bool castling = !numChecks;
         GenKingMoves (mlist, genType, castling);
     }
+
+    if (pieceType == EMPTY && genType == GEN_ALL_MOVES && mlist != NULL)
+        memcpy (&LegalMoves, mlist, sizeof(MoveList));
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -989,8 +1014,7 @@ Position::MatchLegalMove (MoveList * mlist, pieceT mask, squareT target)
     ASSERT (mask != PAWN  &&  mask != KING);
 
     if (mlist == NULL) {
-        ClearLegalMoves();
-        mlist = LegalMoves;
+        mlist = &LegalMoves;
     }
     mlist->Clear();
 
@@ -1830,6 +1854,7 @@ Position::DoSimpleMove (simpleMoveT * sm)
 
     HalfMoveClock++;
     PlyCounter++;
+    LegalMoves.Clear();
 
     // Check for a null (empty) move:
     if (isNullMove(sm)) {
@@ -1972,6 +1997,7 @@ Position::UndoSimpleMove (simpleMoveT * m)
     PlyCounter--;
     ToMove = color_Flip(ToMove);
     m->pieceNum = ListPos[to];
+    LegalMoves.Clear();
 
     // Check for a null move:
     if (isNullMove(m)) {
@@ -2058,6 +2084,8 @@ Position::RelocatePiece (squareT fromSq, squareT toSq)
 
     // If squares are identical, just return success:
     if (fromSq == toSq) { return OK; }
+
+    LegalMoves.Clear();
 
     pieceT piece = Board[fromSq];
     pieceT ptype = piece_Type(piece);
@@ -2223,6 +2251,7 @@ Position::MakeSANString (simpleMoveT * m, char * s, sanFlagT flag)
     // Now do the check or mate symbol:
     if (flag != SAN_NO_CHECKTEST) {
         // Now we make the move to test for check:
+        MoveList backup = LegalMoves;
         DoSimpleMove (m);
         if (CalcNumChecks (GetKingSquare()) > 0) {
             char ch = '+';
@@ -2234,6 +2263,7 @@ Position::MakeSANString (simpleMoveT * m, char * s, sanFlagT flag)
             *c++ = ch;
         }
         UndoSimpleMove (m);
+        LegalMoves = backup;
     }
     *c = 0;
 }
@@ -2301,8 +2331,8 @@ Position::ReadCoordMove (simpleMoveT * m, const char * str, bool reverse)
 
     GenerateMoves();
 
-    for (uint i=0; i < LegalMoves->Size(); i++) {
-        simpleMoveT * sm = LegalMoves->Get(i);
+    for (uint i=0; i < LegalMoves.Size(); i++) {
+        simpleMoveT * sm = LegalMoves.Get(i);
         if (sm->promote == promo) {
             if (sm->from == from  &&  sm->to == to) {
                 *m = *sm;
@@ -2609,18 +2639,16 @@ Position::ReadLine (const char * line)
 //      Calculate the SAN string for each move in the legal moves list.
 //
 void
-Position::CalcSANStrings (sanFlagT flag)
+Position::CalcSANStrings (sanListT *sanList, sanFlagT flag)
 {
-    if (SANStrings == NULL)  AllocSANStrings();
-    //if (SANStrings->current) return;
-
-    MoveList mlist;
-    GenerateMoves (&mlist);
-    for (ushort i=0; i < mlist.Size(); i++) {
-        MakeSANString (mlist.Get(i), SANStrings->list[i], flag);
+	if( LegalMoves.Size() == 0) {
+        GenerateMoves();
+	}
+    for (ushort i=0; i < LegalMoves.Size(); i++) {
+        MakeSANString (LegalMoves.Get(i), sanList->list[i], flag);
     }
-    SANStrings->num = mlist.Size();
-    SANStrings->current = true;
+    sanList->num = LegalMoves.Size();
+    sanList->current = true;
 }
 
 errorT
@@ -3239,36 +3267,7 @@ Position::Compare (Position * p)
 void
 Position::CopyFrom (Position * src)
 {
-    for (pieceT p=A1; p <= NS; p++) {
-        Board[p] = src->Board[p];
-    };
-    Count[WHITE] = src->Count[WHITE];
-    Count[BLACK] = src->Count[BLACK];
-    uint i;
-    for (i=0; i < 64; i++) { ListPos[i] = src->ListPos[i]; }
-    for (i=0; i < 16; i++) {
-        Material[i] = src->Material[i];
-        List[WHITE][i] = src->List[WHITE][i];
-        List[BLACK][i] = src->List[BLACK][i];
-        for (uint j=0; j < 8; j++) {
-            NumOnFyle[i][j] = src->NumOnFyle[i][j];
-            NumOnRank[i][j] = src->NumOnRank[i][j];
-        }
-        for (uint d=0; d < 15; d++) {
-            NumOnLeftDiag[i][d] = src->NumOnLeftDiag[i][d];
-            NumOnRightDiag[i][d] = src->NumOnRightDiag[i][d];
-        }
-        NumOnSquareColor[i][WHITE] = src->NumOnSquareColor[i][WHITE];
-        NumOnSquareColor[i][BLACK] = src->NumOnSquareColor[i][BLACK];
-    }
-    EPTarget = src->EPTarget;
-    ToMove = src->ToMove;
-    PlyCounter = src->PlyCounter;
-    HalfMoveClock = src->HalfMoveClock;
-    Castling = src->Castling;
-    Hash = src->Hash;
-    PawnHash = src->PawnHash;
-    return;
+    memcpy (this, src, sizeof(Position));
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3305,6 +3304,7 @@ Position::Random (const char * material)
     pieceT pieces [32];         // List of pieces excluding kings
     uint nPieces[2] = {0, 0};   // Number of pieces per side excluding kings.
     uint total = 0;             // Total number of pieces excluding kings.
+    LegalMoves.Clear();
 
     colorT side = WHITE;
 

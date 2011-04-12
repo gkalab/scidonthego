@@ -120,7 +120,7 @@ PgnParser::LogError (const char * errMessage, const char * text)
     NumErrors++;
 #ifdef WINCE
      if (ErrorFile != NULL) {
-        fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
+        //fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
         if (InFile != NULL) {
             printf ("%s:", InFile->GetFileName());
         }
@@ -129,7 +129,7 @@ PgnParser::LogError (const char * errMessage, const char * text)
      }
 #else
     if (ErrorFile != NULL) {
-        fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
+        //fprintf (ErrorFile, "%s%s [line %u]\n", errMessage, text, LineCounter);
         if (InFile != NULL) {
             fprintf (ErrorFile, "%s:", InFile->GetFileName());
         }

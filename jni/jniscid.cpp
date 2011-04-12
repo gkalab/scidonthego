@@ -599,7 +599,7 @@ matchGameHeader (IndexEntry * ie, NameBase * nb,
                  int diffeloMin, int diffeloMax,
                  ecoT ecoMin, ecoT ecoMax, bool ecoNone,
                  uint halfmovesMin, uint halfmovesMax,
-                 bool wToMove, bool bToMove)
+                 bool wToMove, bool bToMove, bool bAnnotaded)
 {
     // First, check the numeric ranges:
 
@@ -616,7 +616,6 @@ matchGameHeader (IndexEntry * ie, NameBase * nb,
         // This game ends with Black to move:
         if (! bToMove) { return false; }
     }
-
 
     dateT date = ie->GetDate();
     if (date < dateMin  ||  date > dateMax) { return false; }
@@ -651,6 +650,9 @@ matchGameHeader (IndexEntry * ie, NameBase * nb,
     // Last, we check the players
     if (mWhite != NULL  &&  !mWhite[ie->GetWhite()]) { return false; }
     if (mBlack != NULL  &&  !mBlack[ie->GetBlack()]) { return false; }
+
+	if (bAnnotaded && !(ie->GetCommentsFlag() || ie->GetVariationsFlag() || ie->GetNagsFlag()))
+		return false;
 
     // If we reach here, this game matches all criteria.
     return true;
@@ -871,6 +873,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     char * sEvent = NULL;
     char * sSite  = NULL;
     char * sRound = NULL;
+	char * sAnnotator = NULL;
 
     bool * mWhite = NULL;
     bool * mBlack = NULL;
@@ -895,7 +898,6 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     }
 
     bool results [NUM_RESULT_TYPES];
-    bool resultsF [NUM_RESULT_TYPES];  // Flipped results for ignore-colors.
     results[RESULT_White] = results[RESULT_Black] = true;
     results[RESULT_Draw] = results[RESULT_None] = true;
 
@@ -906,6 +908,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     wEloRange[1] = bEloRange[1] = MAX_ELO;
     dEloRange[0] = - (int)MAX_ELO;
     dEloRange[1] = MAX_ELO;
+
+	bool bAnnotated = false;
 
     bool * wTitles = NULL;
     bool * bTitles = NULL;
@@ -1034,12 +1038,6 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         }
     }
 
-    // Set up flipped results flags for ignore-colors option:
-    resultsF[RESULT_White] = results[RESULT_Black];
-    resultsF[RESULT_Draw]  = results[RESULT_Draw];
-    resultsF[RESULT_Black] = results[RESULT_White];
-    resultsF[RESULT_None]  = results[RESULT_None];
-
     // Swap rating difference values if necesary:
     if (dEloRange[0] > dEloRange[1]) {
         int x = dEloRange[0]; dEloRange[0] = dEloRange[1]; dEloRange[1] = x;
@@ -1137,7 +1135,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
                                  dEloRange[0], dEloRange[1],
                                  ecoRange[0], ecoRange[1], ecoNone,
                                  halfMoveRange[0], halfMoveRange[1],
-                                 wToMove, bToMove)) {
+                                 wToMove, bToMove, bAnnotated)) {
                 match = true;
             }
 
@@ -1146,13 +1144,13 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
             if (!match  &&  ignoreColors  &&
                 matchGameHeader (ie, &sourceNameBase, mBlack, mWhite,
                                  mEvent, mSite, mRound,
-                                 dateRange[0], dateRange[1], resultsF,
+                                 dateRange[0], dateRange[1], results,
                                  bEloRange[0], bEloRange[1],
                                  wEloRange[0], wEloRange[1],
                                  -dEloRange[1], -dEloRange[0],
                                  ecoRange[0], ecoRange[1], ecoNone,
                                  halfMoveRange[0], halfMoveRange[1],
-                                 bToMove, wToMove)) {
+                                 bToMove, wToMove, bAnnotated)) {
                 match = true;
             }
         }
