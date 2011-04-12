@@ -265,8 +265,7 @@ public class ChessController {
 				if (alive) {
 					analysisTask = (AnalysisTask) new AnalysisTask().execute(
 							computerPlayer.getEngine(), listener, ph.first,
-							ph.second, currPos, computerPlayer.isNewGame());
-					computerPlayer.setNewGame(false);
+							ph.second, currPos);
 				}
 				updateGUI();
 			}
@@ -366,7 +365,6 @@ public class ChessController {
 		updateGameMode();
 		stopAnalysis();
 		if (computerPlayer != null) {
-			computerPlayer.clearTT();
 			updateComputeThreads(true);
 		}
 		gui.setSelection(-1);
@@ -430,9 +428,6 @@ public class ChessController {
 		if (game.getLastMove() != null) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			if (computerPlayer != null) {
-				computerPlayer.clearTT();
-			}
 			undoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();

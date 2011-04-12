@@ -88,6 +88,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
 	private String uciEngineFileName = "robbolito0085e4l"; // "stockfish1.9";
+	private String lastEndOfVariation = null; // remember the last position a
+
+	// "end of variation" message
+	// was shown
 
 	/** Called when the activity is first created. */
 	@Override
@@ -201,6 +205,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (cursor.moveToNext()) {
 				setPgnFromCursor(cursor);
 			}
+			lastEndOfVariation = null;
 		}
 	}
 
@@ -298,6 +303,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (cursor.getPosition() > 0 && cursor.moveToPrevious()) {
 				setPgnFromCursor(cursor);
 			}
+			lastEndOfVariation = null;
 		}
 	}
 
@@ -305,14 +311,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (ctrl.canRedoMove()) {
 			ctrl.redoMove(false);
 		} else {
-			Toast.makeText(getApplicationContext(),
-					getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
-					.show();
+			String currentPosition = ctrl.getFEN();
+			if (lastEndOfVariation == null
+					|| !lastEndOfVariation.equals(currentPosition)) {
+				lastEndOfVariation = currentPosition;
+				Toast.makeText(getApplicationContext(),
+						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
+						.show();
+			}
 		}
 	}
 
 	public void onPreviousMoveClick(View view) {
 		ctrl.undoMove();
+		lastEndOfVariation = null;
 	}
 
 	public void onFlipBoardClick(View view) {
@@ -489,6 +501,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			@Override
 			public boolean onLongClick(View v) {
 				ctrl.gotoMove(999);
+				lastEndOfVariation = null;
 				return true;
 			}
 		});
@@ -497,6 +510,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			@Override
 			public boolean onLongClick(View v) {
 				ctrl.gotoMove(0);
+				lastEndOfVariation = null;
 				return true;
 			}
 		});

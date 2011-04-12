@@ -65,7 +65,7 @@ public class PipedProcess {
 			e.printStackTrace();
 		}
 		if (ret != null && ret.length() > 0) {
-			Log.d("SCID", "Engine -> GUI: " + ret);
+			// Log.d("SCID", "Engine -> GUI: " + ret);
 		}
 		return ret;
 	}
@@ -76,7 +76,7 @@ public class PipedProcess {
 	 * @throws IOException
 	 */
 	public final synchronized void writeLineToProcess(String data) {
-		Log.d("SCID", "GUI -> Engine: " + data);
+		// Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
 		} catch (IOException e) {

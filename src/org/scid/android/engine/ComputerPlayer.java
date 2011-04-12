@@ -29,7 +29,6 @@ public class ComputerPlayer {
 	SearchListener listener;
 	int timeLimit;
 	Book book;
-	private boolean newGame = false;
 
 	public ComputerPlayer(String enginefileName) {
 		if (npp == null) {
@@ -150,27 +149,8 @@ public class ComputerPlayer {
 		Log.d("SCID", "readyok received");
 	}
 
-	/** Clear transposition table. */
-	public final void clearTT() {
-		newGame = true;
-	}
-
-	public boolean isNewGame() {
-		return newGame;
-	}
-
 	public PipedProcess getEngine() {
 		return npp;
-	}
-
-	public final void maybeNewGame() {
-		if (newGame) {
-			newGame = false;
-			synchronized (npp) {
-				npp.writeLineToProcess("ucinewgame");
-			}
-			syncReady();
-		}
 	}
 
 	/** Stop the engine process. */
@@ -186,9 +166,5 @@ public class ComputerPlayer {
 	public final Pair<String, ArrayList<Move>> getBookHints(Position pos) {
 		Pair<String, ArrayList<Move>> bi = book.getAllBookMoves(pos);
 		return new Pair<String, ArrayList<Move>>(bi.first, bi.second);
-	}
-
-	public void setNewGame(boolean isNew) {
-		newGame = isNew;
 	}
 }
