@@ -155,7 +155,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		// check if engine exists in /data/data/org.scid.android
 		File stockfish = new File("/data/data/org.scid.android/"
 				+ uciEngineFileName);
-		if (!stockfish.exists()) {
+		if (stockfish.exists()) {
+			try {
+				String cmd[] = { "chmod", "744", stockfish.getAbsolutePath() };
+				Process process = Runtime.getRuntime().exec(cmd);
+				try {
+					process.waitFor();
+					Log.d("SCID", "chmod 744 /data/data/org.scid.android/"
+							+ uciEngineFileName);
+				} catch (InterruptedException e) {
+					Log.e("SCID", e.getMessage(), e);
+				}
+			} catch (IOException e) {
+				Log.e("SCID", e.getMessage(), e);
+			}
+		} else {
 			Log.d("SCID", "Engine is missing from data. Intializing...");
 			try {
 				InputStream istream = getAssets().open(uciEngineFileName);
@@ -171,14 +185,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				Log.d("SCID", uciEngineFileName
 						+ " copied to /data/data/org.scid.android/");
 				try {
-					Process process = Runtime.getRuntime().exec(
-							"/system/bin/chmod 744 /data/data/org.scid.android/"
-									+ uciEngineFileName);
+					String cmd[] = { "chmod", "744",
+							"/data/data/org.scid.android/" + uciEngineFileName };
+					Process process = Runtime.getRuntime().exec(cmd);
 					try {
 						process.waitFor();
-						Log.d("SCID",
-								"/system/bin/chmod 744 /data/data/org.scid.android/"
-										+ uciEngineFileName);
+						Log.d("SCID", "chmod 744 /data/data/org.scid.android/"
+								+ uciEngineFileName);
 					} catch (InterruptedException e) {
 						Log.e("SCID", e.getMessage(), e);
 					}
