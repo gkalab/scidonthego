@@ -104,6 +104,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
             	game->SetNumHalfMoves(iE.GetNumHalfMoves());
             } else {
             	if (game->Decode(&bbuf, GAME_DECODE_ALL) != OK) {
+                    LOGW("Unable to decode game.");
             		goto cleanup;
             	}
             }
@@ -154,25 +155,20 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
         (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        TextBuffer tbuf;
-        tbuf.SetBufferSize(TBUF_SIZE);
-        tbuf.Empty();
-        tbuf.SetWrapColumn(99999);
-        game->WriteToPGN(&tbuf);
-        // Make sure pgn only contains valid UTF-8 Characters
-        char* bytes = tbuf.GetBuffer();
-        while (*bytes != '\0') {
-            if (*bytes >= 0x80) {
-                *bytes = '?';
-            }
-            bytes++;
+    TextBuffer tbuf;
+    tbuf.SetBufferSize(TBUF_SIZE);
+    tbuf.Empty();
+    tbuf.SetWrapColumn(99999);
+    game->WriteToPGN(&tbuf);
+    // Make sure pgn only contains valid UTF-8 Characters
+    char* bytes = tbuf.GetBuffer();
+    while (*bytes != '\0') {
+        if (*bytes >= 0x80) {
+            *bytes = '?';
         }
-        return (*env).NewStringUTF(tbuf.GetBuffer());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
+        bytes++;
     }
+    return (*env).NewStringUTF(tbuf.GetBuffer());
 }
 
 /*
@@ -216,12 +212,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
         (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
 }
 
 /*
@@ -232,12 +223,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getWhite
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(game->GetWhiteStr());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(game->GetWhiteStr());
 }
 
 /*
@@ -248,12 +234,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getWhite
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getBlack
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(game->GetBlackStr());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(game->GetBlackStr());
 }
 
 /*
@@ -264,12 +245,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getBlack
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getEvent
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(game->GetEventStr());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(game->GetEventStr());
 }
 
 /*
@@ -280,12 +256,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getEvent
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getSite
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(game->GetSiteStr());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(game->GetSiteStr());
 }
 
 /*
@@ -296,14 +267,9 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getSite
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        char dateStr [20];
-        date_DecodeToString(game->GetDate(), dateStr);
-        return (*env).NewStringUTF(dateStr);
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    char dateStr [20];
+    date_DecodeToString(game->GetDate(), dateStr);
+    return (*env).NewStringUTF(dateStr);
 }
 
 /*
@@ -314,12 +280,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getRound
                 (JNIEnv* env, jobject obj)
 {
-    if (game->GetNumHalfMoves() > 0) {
-        return (*env).NewStringUTF(game->GetRoundStr());
-    } else {
-        static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
-    }
+    return (*env).NewStringUTF(game->GetRoundStr());
 }
 
 

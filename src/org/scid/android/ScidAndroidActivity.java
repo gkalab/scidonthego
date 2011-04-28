@@ -264,8 +264,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 				saveGameState();
 			} catch (ChessParseError e) {
-				Toast.makeText(getApplicationContext(), e.getMessage(),
-						Toast.LENGTH_SHORT).show();
+				Log.i("SCID", "ChessParseError", e);
+				Toast.makeText(getApplicationContext(),
+						"Parse error " + e.getMessage(), Toast.LENGTH_SHORT)
+						.show();
 			}
 		}
 	}
@@ -836,6 +838,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					String fen = data.getAction();
 					ctrl.setFENOrPGN(fen);
 				} catch (ChessParseError e) {
+					Log.d("SCID", "ChessParseError", e);
 				}
 			}
 			break;
@@ -1223,6 +1226,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									try {
 										ctrl.setFENOrPGN(fenPgn);
 									} catch (ChessParseError e) {
+										Log.i("SCID", "ChessParseError", e);
 										Toast.makeText(getApplicationContext(),
 												e.getMessage(),
 												Toast.LENGTH_SHORT).show();
