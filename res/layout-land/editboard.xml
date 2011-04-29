@@ -5,7 +5,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
     <view
-    	class="org.petero.droidfish.ChessBoardEdit"
+    	class="org.scid.android.ChessBoardEdit"
         android:id="@+id/eb_chessboard"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"/>

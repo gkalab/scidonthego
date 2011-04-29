@@ -108,13 +108,13 @@ public class ChessBoardEdit extends ChessBoard {
                 Paint paint = Position.darkSquare(x, y) ? darkPaint : brightPaint;
                 canvas.drawRect(xCrd, yCrd, xCrd+sqSize, yCrd+sqSize, paint);
                 int p = extraPieces(x, y);
-                drawPiece(canvas, xCrd + sqSize / 2, yCrd + sqSize / 2, p);
+                drawPiece(canvas, xCrd, yCrd, p);
             }
         }
 	}
 
 	@Override
-	Move mousePressed(int sq) {
+	public Move mousePressed(int sq) {
 		if (sq == -1)
 			return null;
     	cursorVisible = false;
@@ -168,7 +168,7 @@ public class ChessBoardEdit extends ChessBoard {
      * @return The square corresponding to the mouse event, or -1 if outside board.
      */
 	@Override
-    int eventToSquare(MotionEvent evt) {
+    public int eventToSquare(MotionEvent evt) {
     	int sq = super.eventToSquare(evt);
     	if (sq != -1)
     		return sq;
