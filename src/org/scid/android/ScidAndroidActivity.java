@@ -41,12 +41,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -88,6 +88,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
 	private String uciEngineFileName = "robbolito0085e4l"; // "stockfish1.9";
+	private String x86UciEngineFileName = "stockfish-211-32-ja";
 	private String lastEndOfVariation = null; // remember the last position a
 
 	// "end of variation" message
@@ -104,15 +105,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		checkUciEngine();
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
-		settings
-				.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
-					@Override
-					public void onSharedPreferenceChanged(
-							SharedPreferences sharedPreferences, String key) {
-						readPrefs();
-						setGameMode();
-					}
-				});
+		settings.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+			@Override
+			public void onSharedPreferenceChanged(
+					SharedPreferences sharedPreferences, String key) {
+				readPrefs();
+				setGameMode();
+			}
+		});
 
 		initUI(true);
 
@@ -153,16 +153,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void checkUciEngine() {
 		// check if engine exists in /data/data/org.scid.android
-		File stockfish = new File("/data/data/org.scid.android/"
-				+ uciEngineFileName);
-		if (stockfish.exists()) {
+		final String engineFileName = getEngineFileName();
+		final File engine = new File("/data/data/org.scid.android/"
+				+ engineFileName);
+		if (engine.exists()) {
 			try {
-				String cmd[] = { "chmod", "744", stockfish.getAbsolutePath() };
+				String cmd[] = { "chmod", "744", "/data/data/org.scid.android/"
+						+ engineFileName };
 				Process process = Runtime.getRuntime().exec(cmd);
 				try {
 					process.waitFor();
-					Log.d("SCID", "chmod 744 /data/data/org.scid.android/"
-							+ uciEngineFileName);
+					Log.d("SCID", "chmod 744 " + "/data/data/org.scid.android/"
+							+ engineFileName);
 				} catch (InterruptedException e) {
 					Log.e("SCID", e.getMessage(), e);
 				}
@@ -172,9 +174,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		} else {
 			Log.d("SCID", "Engine is missing from data. Intializing...");
 			try {
-				InputStream istream = getAssets().open(uciEngineFileName);
+				InputStream istream = getAssets().open(engineFileName);
 				FileOutputStream fout = new FileOutputStream(
-						"/data/data/org.scid.android/" + uciEngineFileName);
+						"/data/data/org.scid.android/" + engineFileName);
 				byte[] b = new byte[1024];
 				int noOfBytes = 0;
 				while ((noOfBytes = istream.read(b)) != -1) {
@@ -182,16 +184,16 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 				istream.close();
 				fout.close();
-				Log.d("SCID", uciEngineFileName
+				Log.d("SCID", engineFileName
 						+ " copied to /data/data/org.scid.android/");
 				try {
 					String cmd[] = { "chmod", "744",
-							"/data/data/org.scid.android/" + uciEngineFileName };
+							"/data/data/org.scid.android/" + engineFileName };
 					Process process = Runtime.getRuntime().exec(cmd);
 					try {
 						process.waitFor();
 						Log.d("SCID", "chmod 744 /data/data/org.scid.android/"
-								+ uciEngineFileName);
+								+ engineFileName);
 					} catch (InterruptedException e) {
 						Log.e("SCID", e.getMessage(), e);
 					}
@@ -203,6 +205,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 		}
 
+	}
+
+	private String getEngineFileName() {
+		String architecture = System.getProperty("os.arch");
+		Log.d("SCID", "architecture: " + architecture);
+		final String engineFileName;
+		if (architecture.equals("i686")) {
+			engineFileName = x86UciEngineFileName;
+		} else {
+			engineFileName = uciEngineFileName;
+		}
+		return engineFileName;
 	}
 
 	public void onNextGameClick(View view) {
@@ -224,16 +238,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void setPgnFromCursor(Cursor cursor) {
 		Log.d("SCID", "getting cursor");
-		this
-				.getScidAppContext()
+		this.getScidAppContext()
 				.setCurrentGameNo(
-						cursor
-								.getInt(cursor
-										.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
+						cursor.getInt(cursor
+								.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
 		boolean isFavorite = Boolean
-				.parseBoolean(cursor
-						.getString(cursor
-								.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
+				.parseBoolean(cursor.getString(cursor
+						.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
 		Log.d("SCID", "isFavorite=" + isFavorite);
 		this.getScidAppContext().setFavorite(isFavorite);
 		setFavoriteRating();
@@ -797,7 +808,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
 			moveList.setText(R.string.initializing_engine);
-			new StartEngineTask().execute(this, ctrl, uciEngineFileName);
+			new StartEngineTask().execute(this, ctrl, getEngineFileName());
 		} else {
 			onFinishStartAnalysis();
 		}
@@ -880,8 +891,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (resultCode == RESULT_OK && data != null) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					Tools.importPgn(this, Tools
-							.getFullScidFileName(pgnFileName), false,
+					Tools.importPgn(this,
+							Tools.getFullScidFileName(pgnFileName), false,
 							RESULT_PGN_IMPORT);
 				}
 			}
@@ -894,8 +905,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (resultCode == RESULT_OK && data != null) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					Tools.importPgn(this, Tools
-							.getFullScidFileName(pgnFileName), true,
+					Tools.importPgn(this,
+							Tools.getFullScidFileName(pgnFileName), true,
 							RESULT_PGN_IMPORT);
 				}
 			}
@@ -1221,8 +1232,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 								if (clipboard.hasText()) {
 									String fenPgn = clipboard.getText()
-											.toString().replaceAll("\n|\r|\t",
-													" ");
+											.toString()
+											.replaceAll("\n|\r|\t", " ");
 									try {
 										ctrl.setFENOrPGN(fenPgn);
 									} catch (ChessParseError e) {
@@ -1244,11 +1255,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 							ContentValues values = new ContentValues();
 							values.put("isFavorite", isFavorite);
 							int updated = getContentResolver()
-									.update(
-											Uri
-													.parse("content://org.scid.database.scidprovider/games/"
-															+ getScidAppContext()
-																	.getCurrentGameNo()),
+									.update(Uri
+											.parse("content://org.scid.database.scidprovider/games/"
+													+ getScidAppContext()
+															.getCurrentGameNo()),
 											values,
 											getScidAppContext()
 													.getCurrentFileName(), null);
@@ -1452,7 +1462,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						try {
 							pgnFile = Tools.downloadFile(urlString);
 						} catch (IOException e) {
-							Tools.showErrorMessage(ScidAndroidActivity.this,
+							Tools.showErrorMessage(
+									ScidAndroidActivity.this,
 									getText(R.string.download_error) + " ("
 											+ e.getMessage() + ")");
 						}
@@ -1463,8 +1474,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								int pos = pgnFileName.lastIndexOf(".");
 								if (pos > 0) {
 									pgnFileName = pgnFileName.substring(0,
-											pos - 1)
-											+ ".pgn";
+											pos - 1) + ".pgn";
 								}
 							}
 							Log.d("SCID", "moving downloaded file from "
@@ -1478,9 +1488,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									.getExternalStorageDirectory()
 									+ File.separator + SCID_DIRECTORY,
 									pgnFileName));
-							Tools.importPgn(ScidAndroidActivity.this, Tools
-									.getFullScidFileName(pgnFileName), true,
-									RESULT_PGN_IMPORT);
+							Tools.importPgn(ScidAndroidActivity.this,
+									Tools.getFullScidFileName(pgnFileName),
+									true, RESULT_PGN_IMPORT);
 
 						} else {
 							Toast.makeText(getApplicationContext(),
@@ -1529,11 +1539,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public void reportInvalidMove(Move m) {
 		String msg = "";
 		if (gameMode.studyMode()) {
-			msg = String.format(getString(R.string.wrong_move), TextIO
-					.squareToString(m.from), TextIO.squareToString(m.to));
+			msg = String.format(getString(R.string.wrong_move),
+					TextIO.squareToString(m.from), TextIO.squareToString(m.to));
 		} else {
-			msg = String.format(getString(R.string.invalid_move), TextIO
-					.squareToString(m.from), TextIO.squareToString(m.to));
+			msg = String.format(getString(R.string.invalid_move),
+					TextIO.squareToString(m.from), TextIO.squareToString(m.to));
 		}
 		Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 	}
