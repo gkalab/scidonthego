@@ -158,8 +158,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				+ engineFileName);
 		if (engine.exists()) {
 			try {
-				String cmd[] = { "chmod", "744", "/data/data/org.scid.android/"
-						+ engineFileName };
+				String cmd[] = { "chmod", "744",
+						"/data/data/org.scid.android/" + engineFileName };
 				Process process = Runtime.getRuntime().exec(cmd);
 				try {
 					process.waitFor();
@@ -718,6 +718,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_GAMELIST = 4;
 	static private final int RESULT_PGN_IMPORT = 5;
 	static private final int RESULT_TWIC_IMPORT = 6;
+	static private final int RESULT_LOAD_SCID_FILE = 7;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -836,6 +837,29 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
+		case RESULT_LOAD_SCID_FILE:
+			if (resultCode == RESULT_OK && data != null) {
+				String fileName = data.getAction();
+				if (fileName != null) {
+					final String currentScidFile = settings.getString(
+							"currentScidFile", "");
+					int gameNo = 0;
+					if (fileName.equals(currentScidFile)) {
+						gameNo = settings.getInt("currentGameNo", 0);
+					} else {
+						Editor editor = settings.edit();
+						editor.putString("currentScidFile", fileName);
+						editor.commit();
+						getScidAppContext().setCurrentFileName(
+								Tools.getFullScidFileName(fileName));
+					}
+					Cursor cursor = getCursor();
+					if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
+						setPgnFromCursor(cursor);
+					}
+				}
+			}
+			break;
 		case RESULT_SETTINGS:
 			readPrefs();
 			String theme = settings.getString("colorTheme", "0");
@@ -1323,51 +1347,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			return dialog;
 		}
 		case SELECT_SCID_FILE_DIALOG: {
-			final String[] fileNames = Tools.findFilesInDirectory(
-					SCID_DIRECTORY, ".si4");
-			final int numFiles = fileNames.length;
-			if (numFiles == 0) {
-				AlertDialog.Builder builder = new AlertDialog.Builder(this);
-				builder.setTitle(R.string.app_name).setMessage(
-						R.string.no_scid_files);
-				AlertDialog alert = builder.create();
-				return alert;
-			}
-			int defaultItem = 0;
-			final String currentScidFile = settings.getString(
-					"currentScidFile", "");
-			for (int i = 0; i < numFiles; i++) {
-				if (currentScidFile.equals(fileNames[i])) {
-					defaultItem = i;
-					break;
-				}
-			}
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.select_pgn_file);
-			builder.setSingleChoiceItems(fileNames, defaultItem,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							String scidFile = fileNames[item].toString();
-							int gameNo = 0;
-							if (scidFile.equals(currentScidFile)) {
-								gameNo = settings.getInt("currentGameNo", 0);
-							} else {
-								Editor editor = settings.edit();
-								editor.putString("currentScidFile", scidFile);
-								editor.commit();
-								getScidAppContext().setCurrentFileName(
-										Tools.getFullScidFileName(scidFile));
-							}
-							Cursor cursor = getCursor();
-							if (cursor.moveToPosition(gameNo)
-									|| cursor.moveToFirst()) {
-								setPgnFromCursor(cursor);
-							}
-							dialog.dismiss();
-						}
-					});
-			AlertDialog alert = builder.create();
-			return alert;
+			Intent i = new Intent(ScidAndroidActivity.this,
+					LoadScidFileActivity.class);
+			startActivityForResult(i, RESULT_LOAD_SCID_FILE);
+			return null;
 		}
 		case IMPORT_PGN_DIALOG: {
 			final int IMPORT_PGN_FILE = 0;
