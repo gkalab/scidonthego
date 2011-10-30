@@ -76,6 +76,11 @@
             android:configChanges="orientation">
         </activity>
         <activity
+            android:name="LoadScidFileActivity"
+            android:label="Load Scid File"
+            android:configChanges="orientation">
+        </activity>
+        <activity
             android:name="GameListActivity"
             android:label="Game List"
             android:configChanges="orientation">
