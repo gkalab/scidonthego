@@ -688,7 +688,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				.getString("currentScidFile", "");
 		if (currentScidFile.length() > 0) {
 			this.getScidAppContext().setCurrentFileName(
-					Tools.getFullScidFileName(currentScidFile));
+					Tools.stripExtension(currentScidFile));
 		}
 
 		gameTextListener.clear();
@@ -724,8 +724,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.item_open_file:
-			removeDialog(SELECT_SCID_FILE_DIALOG);
-			showDialog(SELECT_SCID_FILE_DIALOG);
+			removeDialog(LOAD_SCID_FILE_DIALOG);
+			showDialog(LOAD_SCID_FILE_DIALOG);
 			return true;
 		case R.id.item_settings: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
@@ -851,7 +851,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						editor.putString("currentScidFile", fileName);
 						editor.commit();
 						getScidAppContext().setCurrentFileName(
-								Tools.getFullScidFileName(fileName));
+								Tools.stripExtension(fileName));
 					}
 					Cursor cursor = getCursor();
 					if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
@@ -1084,7 +1084,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int CLIPBOARD_DIALOG = 1;
 	static final int ABOUT_DIALOG = 2;
 	static final int SELECT_GOTO_GAME_DIALOG = 4;
-	static final int SELECT_SCID_FILE_DIALOG = 5;
+	static final int LOAD_SCID_FILE_DIALOG = 5;
 	static final int SEARCH_DIALOG = 6;
 	static final int IMPORT_PGN_DIALOG = 7;
 
@@ -1346,7 +1346,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			});
 			return dialog;
 		}
-		case SELECT_SCID_FILE_DIALOG: {
+		case LOAD_SCID_FILE_DIALOG: {
 			Intent i = new Intent(ScidAndroidActivity.this,
 					LoadScidFileActivity.class);
 			startActivityForResult(i, RESULT_LOAD_SCID_FILE);
@@ -1498,7 +1498,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
-		String scidFileName = Tools.getFullScidFileName(currentScidFile);
+		String scidFileName = Tools.stripExtension(currentScidFile);
 		Cursor cursor = getContentResolver().query(
 				Uri.parse("content://org.scid.database.scidprovider/games"),
 				null, scidFileName, null, null);
