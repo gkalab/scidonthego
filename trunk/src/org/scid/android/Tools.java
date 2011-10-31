@@ -205,12 +205,17 @@ public class Tools {
 
 	public static String getFullScidFileName(final String fileName) {
 		String pathName = getFullFileName(fileName);
+		return stripExtension(pathName);
+	}
+
+	public static String stripExtension(String pathName) {
 		int pos = pathName.lastIndexOf(".");
 		if (pos > 0) {
 			pathName = pathName.substring(0, pathName.indexOf("."));
 		}
 		return pathName;
 	}
+	
 
 	private static String getFullFileName(final String fileName) {
 		String sep = File.separator;
