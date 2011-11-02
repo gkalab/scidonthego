@@ -20,7 +20,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class LoadScidFileActivity extends ListActivity {
+public class SelectScidFileActivity extends ListActivity {
 
 	private Stack<String> path = new Stack<String>();
 	private ArrayAdapter<String> listAdapter;
@@ -28,7 +28,12 @@ public class LoadScidFileActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		final LoadScidFileActivity fileList = this;
+		final SelectScidFileActivity fileList = this;
+		File scidFileDir = new File(Environment.getExternalStorageDirectory()
+				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
+		if (!scidFileDir.exists()) {
+			scidFileDir.mkdirs();
+		}
 		fileList.showList();
 	}
 
@@ -50,8 +55,9 @@ public class LoadScidFileActivity extends ListActivity {
 			AlertDialog alert = builder.create();
 			alert.show();
 		}
-		listAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_list_item_1, fileNames);
+		listAdapter = new FileListArrayAdapter(this,
+				R.layout.select_file_list_item, R.id.select_file_label,
+				fileNames);
 		setListAdapter(listAdapter);
 		ListView lv = getListView();
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -61,7 +67,7 @@ public class LoadScidFileActivity extends ListActivity {
 				String item = listAdapter.getItem(pos);
 				if (item.endsWith(".si4")) {
 					setResult(Activity.RESULT_OK,
-							(new Intent()).setAction(getFullPath() + item));
+							(new Intent()).setAction(item));
 					finish();
 				} else {
 					// must be a directory
@@ -73,11 +79,13 @@ public class LoadScidFileActivity extends ListActivity {
 	}
 
 	private String getFullPath() {
-		String pathName = Environment.getExternalStorageDirectory()
-				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
-				+ File.separator;
-		for (String part : this.path) {
-			pathName += part + File.separator;
+		String pathName;
+		if (this.path.size() > 0) {
+			pathName = this.path.lastElement();
+		} else {
+			pathName = Environment.getExternalStorageDirectory()
+					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
+					+ File.separator;
 		}
 		return pathName;
 	}
@@ -112,11 +120,11 @@ public class LoadScidFileActivity extends ListActivity {
 		}
 		String[] fileNames = new String[files.length];
 		for (int i = 0; i < files.length; i++) {
-			fileNames[i] = files[i].getName();
+			fileNames[i] = files[i].getAbsolutePath();
 		}
 		String[] dirNames = new String[dirs.length];
 		for (int i = 0; i < dirs.length; i++) {
-			dirNames[i] = dirs[i].getName();
+			dirNames[i] = dirs[i].getAbsolutePath();
 		}
 		Arrays.sort(dirNames, String.CASE_INSENSITIVE_ORDER);
 		Arrays.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
