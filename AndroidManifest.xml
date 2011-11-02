@@ -76,12 +76,12 @@
             android:configChanges="orientation">
         </activity>
         <activity
-            android:name="LoadScidFileActivity"
-            android:label="Load Scid File"
+            android:name=".SelectScidFileActivity"
+            android:label="Select Scid File"
             android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity

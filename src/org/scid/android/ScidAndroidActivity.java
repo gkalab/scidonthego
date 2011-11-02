@@ -1348,7 +1348,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case LOAD_SCID_FILE_DIALOG: {
 			Intent i = new Intent(ScidAndroidActivity.this,
-					LoadScidFileActivity.class);
+					SelectScidFileActivity.class);
 			startActivityForResult(i, RESULT_LOAD_SCID_FILE);
 			return null;
 		}
