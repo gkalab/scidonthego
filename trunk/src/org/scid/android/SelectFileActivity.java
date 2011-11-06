@@ -20,15 +20,23 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class SelectScidFileActivity extends ListActivity {
+public class SelectFileActivity extends ListActivity {
 
 	private Stack<String> path = new Stack<String>();
 	private ArrayAdapter<String> listAdapter;
+	private String extension;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		final SelectScidFileActivity fileList = this;
+		Intent i = getIntent();
+		String extension = i.getAction();
+		if (extension != null && extension.length() != 0) {
+			this.extension = extension;
+		} else {
+			this.extension = "*";
+		}
+		final SelectFileActivity fileList = this;
 		File scidFileDir = new File(Environment.getExternalStorageDirectory()
 				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
 		if (!scidFileDir.exists()) {
@@ -39,7 +47,7 @@ public class SelectScidFileActivity extends ListActivity {
 
 	protected void showList() {
 		final List<String> fileNames = this.findFilesInDirectory(
-				this.getFullPath(), ".si4");
+				this.getFullPath(), this.extension);
 		if (fileNames.size() == 0) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.app_name).setMessage(
@@ -65,14 +73,14 @@ public class SelectScidFileActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
 				String item = listAdapter.getItem(pos);
-				if (item.endsWith(".si4")) {
+				File itemFile = new File(item);
+				if (itemFile.isDirectory()) {
+					path.add(item);
+					changePath();
+				} else {
 					setResult(Activity.RESULT_OK,
 							(new Intent()).setAction(item));
 					finish();
-				} else {
-					// must be a directory
-					path.add(item);
-					changePath();
 				}
 			}
 		});
@@ -92,7 +100,8 @@ public class SelectScidFileActivity extends ListActivity {
 
 	private void changePath() {
 		listAdapter.clear();
-		List<String> newFileNames = findFilesInDirectory(getFullPath(), ".si4");
+		List<String> newFileNames = findFilesInDirectory(getFullPath(),
+				this.extension);
 		for (String fileName : newFileNames) {
 			listAdapter.add(fileName);
 		}
@@ -104,7 +113,8 @@ public class SelectScidFileActivity extends ListActivity {
 		File[] files = dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				return pathname.isFile()
-						&& (pathname.getAbsolutePath().endsWith(extension));
+						&& ((pathname.getAbsolutePath().endsWith(extension)) || extension
+								.equals("*"));
 			}
 		});
 		if (files == null) {

@@ -19,6 +19,7 @@ public class FileListArrayAdapter extends ArrayAdapter<String> {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		// TODO: clean this up, call to super should not be necessary
 		View view = super.getView(position, convertView, parent);
 		ImageView icon = (ImageView) view.findViewById(R.id.select_file_icon);
 		String item = this.getItem(position);
