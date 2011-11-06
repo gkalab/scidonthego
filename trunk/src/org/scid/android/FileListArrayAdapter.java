@@ -27,8 +27,10 @@ public class FileListArrayAdapter extends ArrayAdapter<String> {
 			File itemFile = new File(item);
 			if (itemFile.isDirectory()) {
 				icon.setImageResource(R.drawable.folder);
-			} else {
+			} else if (item.endsWith(".si4")) {
 				icon.setImageResource(R.drawable.scid_file);
+			} else {
+				icon.setImageResource(R.drawable.file);
 			}
 			TextView label = (TextView) view
 					.findViewById(R.id.select_file_label);
