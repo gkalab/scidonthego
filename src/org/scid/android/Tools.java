@@ -57,29 +57,6 @@ public class Tools {
 		return result;
 	}
 
-	public static final String[] findFilesInDirectory(String dirName,
-			final String extension) {
-		File extDir = Environment.getExternalStorageDirectory();
-		String sep = File.separator;
-		File dir = new File(extDir.getAbsolutePath() + sep + dirName);
-		File[] files = dir.listFiles(new FileFilter() {
-			public boolean accept(File pathname) {
-				return pathname.isFile()
-						&& (pathname.getAbsolutePath().endsWith(extension));
-			}
-		});
-		if (files == null) {
-			files = new File[0];
-		}
-		final int numFiles = files.length;
-		String[] fileNames = new String[numFiles];
-		for (int i = 0; i < files.length; i++) {
-			fileNames[i] = files[i].getName();
-		}
-		Arrays.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
-		return fileNames;
-	}
-
 	/**
 	 * Download file to scid directory with file name from HTTP header or create
 	 * temp file if the HTTP header does not provide enough information
@@ -106,11 +83,11 @@ public class Tools {
 					fileName = fileName.substring(
 							fileName.indexOf("filename=") + 9).trim();
 					if (fileName.length() > 0)
-						result = new File(Environment
-								.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY
-								+ File.separator + fileName);
+						result = new File(
+								Environment.getExternalStorageDirectory()
+										+ File.separator
+										+ ScidAndroidActivity.SCID_DIRECTORY
+										+ File.separator + fileName);
 				}
 			} else {
 				fileName = getFileNameFromUrl(path);
@@ -134,8 +111,8 @@ public class Tools {
 			if (result == null) {
 				result = File.createTempFile("temp", ".tmp");
 			}
-			FileOutputStream out = new FileOutputStream(result
-					.getAbsolutePath());
+			FileOutputStream out = new FileOutputStream(
+					result.getAbsolutePath());
 			while ((bufferLength = in.read(buffer)) > 0) {
 				out.write(buffer, 0, bufferLength);
 				downloadedSize += bufferLength;
@@ -155,16 +132,21 @@ public class Tools {
 
 	public static void importPgn(final Activity activity, String baseName,
 			final boolean deletePgnAfterImport, final int resultId) {
-		final String pgnFileName = baseName + ".pgn";
-		String scidFileName = baseName + ".si4";
+		final String pgnFileName;
+		if (baseName.endsWith(".pgn")) {
+			pgnFileName = baseName;
+		} else {
+			pgnFileName = baseName + ".pgn";
+		}
+		String scidFileName = pgnFileName.replace(".pgn", ".si4");
 		File scidFile = new File(scidFileName);
 		if (scidFile.exists()) {
 			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
 					activity).create();
 			fileExistsDialog.setTitle("Database exists");
-			String message = String.format(activity
-					.getString(R.string.pgn_import_db_exists), scidFile
-					.getName());
+			String message = String.format(
+					activity.getString(R.string.pgn_import_db_exists),
+					scidFile.getName());
 			fileExistsDialog.setMessage(message);
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
 			fileExistsDialog.setButton(activity.getString(R.string.ok),
@@ -177,12 +159,10 @@ public class Tools {
 			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							Toast
-									.makeText(
-											activity.getApplicationContext(),
-											activity
-													.getString(R.string.pgn_import_cancel),
-											Toast.LENGTH_SHORT).show();
+							Toast.makeText(
+									activity.getApplicationContext(),
+									activity.getString(R.string.pgn_import_cancel),
+									Toast.LENGTH_SHORT).show();
 						}
 					});
 			fileExistsDialog.show();
@@ -215,7 +195,6 @@ public class Tools {
 		}
 		return pathName;
 	}
-	
 
 	private static String getFullFileName(final String fileName) {
 		String sep = File.separator;
@@ -246,9 +225,7 @@ public class Tools {
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
 				builder.setIcon(android.R.drawable.ic_dialog_alert);
-				builder
-						.setPositiveButton(activity.getString(R.string.ok),
-								null);
+				builder.setPositiveButton(activity.getString(R.string.ok), null);
 				builder.show();
 			}
 		});

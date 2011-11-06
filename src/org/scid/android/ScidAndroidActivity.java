@@ -916,7 +916,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
 					Tools.importPgn(this,
-							Tools.getFullScidFileName(pgnFileName), false,
+							pgnFileName, false,
 							RESULT_PGN_IMPORT);
 				}
 			}
@@ -1348,7 +1348,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case LOAD_SCID_FILE_DIALOG: {
 			Intent i = new Intent(ScidAndroidActivity.this,
-					SelectScidFileActivity.class);
+					SelectFileActivity.class);
+			i.setAction(".si4");
 			startActivityForResult(i, RESULT_LOAD_SCID_FILE);
 			return null;
 		}
@@ -1415,7 +1416,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void importPgnFile() {
 		Intent i = new Intent(ScidAndroidActivity.this,
-				ImportPgnFileActivity.class);
+				SelectFileActivity.class);
+		i.setAction(".pgn");
 		startActivityForResult(i, RESULT_PGN_FILE_IMPORT);
 	}
 

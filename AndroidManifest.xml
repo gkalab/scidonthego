@@ -71,12 +71,7 @@
             android:configChanges="orientation">
         </activity>
         <activity
-            android:name="ImportPgnFileActivity"
-            android:label="PGN File Import"
-            android:configChanges="orientation">
-        </activity>
-        <activity
-            android:name=".SelectScidFileActivity"
+            android:name=".SelectFileActivity"
             android:label="Select Scid File"
             android:configChanges="orientation">
             <intent-filter>
