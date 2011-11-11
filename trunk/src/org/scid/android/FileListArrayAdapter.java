@@ -25,7 +25,8 @@ public class FileListArrayAdapter extends ArrayAdapter<String> {
 		String item = this.getItem(position);
 		if (item != null) {
 			File itemFile = new File(item);
-			if (itemFile.isDirectory()) {
+			if (itemFile.isDirectory()
+					|| item.equals(SelectFileActivity.PARENT_FOLDER)) {
 				icon.setImageResource(R.drawable.folder);
 			} else if (item.endsWith(".si4")) {
 				icon.setImageResource(R.drawable.scid_file);

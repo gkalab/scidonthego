@@ -7,28 +7,45 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
+import android.text.TextUtils.TruncateAt;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class SelectFileActivity extends ListActivity {
 
-	private Stack<String> path = new Stack<String>();
+	public static final String PARENT_FOLDER = ".. (parent folder)";
+	private static Stack<String> path = new Stack<String>();
 	private ArrayAdapter<String> listAdapter;
 	private String extension;
+	private int defaultItem = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.filelist);
+		View title = findViewById(android.R.id.title);
+		if (title instanceof TextView) {
+			TextView titleText = (TextView) title;
+			titleText.setEllipsize(TruncateAt.START);
+		}
 		Intent i = getIntent();
 		String extension = i.getAction();
 		if (extension != null && extension.length() != 0) {
@@ -36,6 +53,10 @@ public class SelectFileActivity extends ListActivity {
 		} else {
 			this.extension = "*";
 		}
+		path = getStringStackPref(this, "lastPath");
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		defaultItem = settings.getInt("lastPathDefaultItem", 0);
 		final SelectFileActivity fileList = this;
 		File scidFileDir = new File(Environment.getExternalStorageDirectory()
 				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
@@ -46,9 +67,12 @@ public class SelectFileActivity extends ListActivity {
 	}
 
 	protected void showList() {
-		final List<String> fileNames = this.findFilesInDirectory(
-				this.getFullPath(), this.extension);
-		if (fileNames.size() == 0) {
+		listAdapter = new FileListArrayAdapter(this,
+				R.layout.select_file_list_item, R.id.select_file_label,
+				new ArrayList<String>());
+		setListAdapter(listAdapter);
+		List<String> fileNames = changePath();
+		if (path.size() == 0 && fileNames.size() == 0) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.app_name).setMessage(
 					R.string.no_scid_files);
@@ -63,24 +87,36 @@ public class SelectFileActivity extends ListActivity {
 			AlertDialog alert = builder.create();
 			alert.show();
 		}
-		listAdapter = new FileListArrayAdapter(this,
-				R.layout.select_file_list_item, R.id.select_file_label,
-				fileNames);
-		setListAdapter(listAdapter);
 		ListView lv = getListView();
+		lv.setSelectionFromTop(defaultItem, 0);
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
-				String item = listAdapter.getItem(pos);
-				File itemFile = new File(item);
-				if (itemFile.isDirectory()) {
-					path.add(item);
-					changePath();
-				} else {
-					setResult(Activity.RESULT_OK,
-							(new Intent()).setAction(item));
-					finish();
+				if (pos >= 0 && pos < listAdapter.getCount()) {
+					String item = listAdapter.getItem(pos);
+					if (path.size() > 0 && item.equals(PARENT_FOLDER)) {
+						SelectFileActivity.path.pop();
+						changePath();
+						return;
+					}
+					defaultItem = pos;
+					File itemFile = new File(item);
+					if (itemFile.isDirectory()) {
+						path.add(item);
+						changePath();
+					} else {
+						setResult(Activity.RESULT_OK,
+								(new Intent()).setAction(item));
+						SharedPreferences settings = PreferenceManager
+								.getDefaultSharedPreferences(SelectFileActivity.this);
+						Editor editor = settings.edit();
+						editor.putInt("lastPathDefaultItem", defaultItem);
+						editor.commit();
+						setStringStackPref(SelectFileActivity.this, "lastPath",
+								path);
+						finish();
+					}
 				}
 			}
 		});
@@ -88,8 +124,8 @@ public class SelectFileActivity extends ListActivity {
 
 	private String getFullPath() {
 		String pathName;
-		if (this.path.size() > 0) {
-			pathName = this.path.lastElement();
+		if (path.size() > 0) {
+			pathName = path.lastElement();
 		} else {
 			pathName = Environment.getExternalStorageDirectory()
 					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
@@ -98,13 +134,25 @@ public class SelectFileActivity extends ListActivity {
 		return pathName;
 	}
 
-	private void changePath() {
+	private List<String> changePath() {
+		TextView titleView = (TextView) findViewById(android.R.id.title);
+		if (titleView != null) {
+			String breadcrumb = "/";
+			for (String crumb : path) {
+				breadcrumb += new File(crumb).getName() + "/";
+			}
+			titleView.setText(breadcrumb);
+		}
 		listAdapter.clear();
 		List<String> newFileNames = findFilesInDirectory(getFullPath(),
 				this.extension);
+		if (path.size() > 0) {
+			listAdapter.add(PARENT_FOLDER);
+		}
 		for (String fileName : newFileNames) {
 			listAdapter.add(fileName);
 		}
+		return newFileNames;
 	}
 
 	private List<String> findFilesInDirectory(String dirName,
@@ -143,13 +191,39 @@ public class SelectFileActivity extends ListActivity {
 		return resultList;
 	}
 
-	@Override
-	public void onBackPressed() {
-		if (this.path.size() > 0) {
-			this.path.pop();
-			changePath();
-		} else {
-			super.onBackPressed();
+	private void setStringStackPref(Context context, String key,
+			Stack<String> values) {
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		SharedPreferences.Editor editor = prefs.edit();
+		JSONArray a = new JSONArray();
+		for (int i = 0; i < values.size(); i++) {
+			a.put(values.get(i));
 		}
+		if (!values.isEmpty()) {
+			editor.putString(key, a.toString());
+		} else {
+			editor.putString(key, null);
+		}
+		editor.commit();
+	}
+
+	private Stack<String> getStringStackPref(Context context, String key) {
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		String json = prefs.getString(key, null);
+		Stack<String> result = new Stack<String>();
+		if (json != null) {
+			try {
+				JSONArray a = new JSONArray(json);
+				for (int i = 0; i < a.length(); i++) {
+					String url = a.optString(i);
+					result.add(url);
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
 	}
 }
