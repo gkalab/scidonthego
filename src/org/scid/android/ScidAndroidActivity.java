@@ -724,8 +724,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.item_open_file:
-			removeDialog(LOAD_SCID_FILE_DIALOG);
-			showDialog(LOAD_SCID_FILE_DIALOG);
+			Intent intent = new Intent(ScidAndroidActivity.this,
+					SelectFileActivity.class);
+			intent.setAction(".si4");
+			startActivityForResult(intent, RESULT_LOAD_SCID_FILE);
 			return true;
 		case R.id.item_settings: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
@@ -1084,9 +1086,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int CLIPBOARD_DIALOG = 1;
 	static final int ABOUT_DIALOG = 2;
 	static final int SELECT_GOTO_GAME_DIALOG = 4;
-	static final int LOAD_SCID_FILE_DIALOG = 5;
-	static final int SEARCH_DIALOG = 6;
-	static final int IMPORT_PGN_DIALOG = 7;
+	static final int SEARCH_DIALOG = 5;
+	static final int IMPORT_PGN_DIALOG = 6;
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -1346,13 +1347,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			});
 			return dialog;
 		}
-		case LOAD_SCID_FILE_DIALOG: {
-			Intent i = new Intent(ScidAndroidActivity.this,
-					SelectFileActivity.class);
-			i.setAction(".si4");
-			startActivityForResult(i, RESULT_LOAD_SCID_FILE);
-			return null;
-		}
 		case IMPORT_PGN_DIALOG: {
 			final int IMPORT_PGN_FILE = 0;
 			final int IMPORT_TWIC = 1;
@@ -1491,7 +1485,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						dialog.cancel();
 					}
 				});
-		alert.show();
+		AlertDialog dlg = alert.create();
+	    dlg.show();
+		WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+	    lp.copyFrom(dlg.getWindow().getAttributes());
+	    lp.width = WindowManager.LayoutParams.FILL_PARENT;
+	    dlg.getWindow().setAttributes(lp);
 	}
 
 	private Cursor getCursor() {

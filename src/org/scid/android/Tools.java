@@ -209,9 +209,11 @@ public class Tools {
 		if (lastPathSep > 0 && path.length() > lastPathSep + 1) {
 			result = path.substring(lastPathSep + 1);
 		}
-		int lastEquals = result.lastIndexOf("=");
-		if (lastEquals > 0 && result.length() > lastEquals + 1) {
-			result = result.substring(lastEquals + 1);
+		if (result != null) {
+			int lastEquals = result.lastIndexOf("=");
+			if (lastEquals > 0 && result.length() > lastEquals + 1) {
+				result = result.substring(lastEquals + 1);
+			}
 		}
 		return result;
 	}
