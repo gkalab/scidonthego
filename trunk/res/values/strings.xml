@@ -45,9 +45,11 @@
 * Edit board\n\
 * Support for variations\n\
 * PGN import\n\
+* Add additional UCI engines for analysis\n\
 \n\
 <b>Hints</b>\n\
 * Put all three files (*.si4, *.sg4, *.sn4) of a Scid database into the scid folder on your SD Card.\n\
+* Put UCI chess engines in the scid folder on your SD Card.\n\
 * Use the search button on your device to enter search menu.\n\
 * Long press chess board to activate copy/paste, edit board and favorites menu.\n\
 * In edit board mode, long press chess board to activate edit menu.\n\
@@ -137,7 +139,7 @@ GNU GPL v2\n\
     <string name="error">Error</string>
     <string name="study_mode_enabled">Study mode enabled</string>
     <string name="study_mode_disabled">Study mode turned off</string>
-    <string name="analysis_mode_enabled">Analysis enabled</string>
+    <string name="analysis_mode_enabled">Analysis enabled using \n%s</string>
     <string name="analysis_mode_disabled">Analysis turned off</string>
     <string name="filter_no_games">No games found. Filter is reset.</string>
     <string name="filter_numberof_games">games in current filter</string>
@@ -172,4 +174,22 @@ GNU GPL v2\n\
     <string name="favorites">Favorites</string>
     <string name="end_of_variation">End of variation.\nNo more moves.</string>
     <string name="initializing_engine">Initializing engine</string>
+    <string name="manage_engines_title">Manage UCI Engines</string>
+    <string name="add_engine">Add Engine</string>
+    <string name="name_label">Name:</string>
+    <string name="executable_label">Executable:</string>
+    <string name="make_current_engine">Make this the current analysis engine</string>
+    <string name="add_engine_exists">\"%s\" already exists.</string>
+    <string name="remove_engine">Remove Engine</string>
+    <string name="engine_added">Engine \"%s\" added.</string>
+    <string name="engine_added_copied">Engine \"%s\" added. The executable file was copied to internal storage for execution.</string>
+    <string name="engine_removed">Engine \"%s\" removed.</string>
+    <string name="engine_copy_title">Copying executable...</string>
+    <string name="engine_copy_msg">Copying executable \"%s\" to internal storage.</string>
+    <string name="engine_copy_failed">Error occurred copying executable: %s</string>
+    <string name="engine_copy_canceled">Addition of engine \"%s\" canceled.</string>
+    <string name="remove_unused_executable">The \"%0$s\" executable file is no longer used by any engine. Do you want to delete it from internal storage?</string>
+    <string name="add">Add</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

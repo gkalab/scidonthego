@@ -30,11 +30,11 @@ public class ComputerPlayer {
 	int timeLimit;
 	Book book;
 
-	public ComputerPlayer(String enginefileName) {
+	public ComputerPlayer(EngineConfig engineConfig) {
 		if (npp == null) {
 			npp = new PipedProcess();
 			Log.d("SCID", "engine: initialize");
-			npp.initialize(enginefileName);
+			npp.initialize(engineConfig);
 			Log.d("SCID", "engine: write uci");
 			npp.writeLineToProcess("uci");
 			Log.d("SCID", "engine: read uci options");

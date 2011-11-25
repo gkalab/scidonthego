@@ -11,17 +11,23 @@ import java.io.OutputStreamWriter;
 import android.util.Log;
 
 public class PipedProcess {
+	private EngineConfig engineConfig;
 	private boolean processAlive = false;
 	private BufferedReader reader = null;
 	private BufferedWriter writer = null;
 	private Process process;
 
 	/** Start process. */
-	public final void initialize(String fileName) {
+	public final void initialize(EngineConfig engineConfig) {
 		if (!processAlive) {
-			Log.d("SCID", "process not alive, starting " + fileName);
-			startProcess(fileName);
+			this.engineConfig = engineConfig;
+			Log.d("SCID", "process not alive, starting " + engineConfig.getName());
+			startProcess(engineConfig);
 		}
+	}
+
+	public EngineConfig getEngineConfig() {
+		return engineConfig;
 	}
 
 	public boolean isAlive() {
@@ -86,9 +92,8 @@ public class PipedProcess {
 	}
 
 	/** Start the child process. */
-	private final void startProcess(String fileName) {
-		ProcessBuilder builder = new ProcessBuilder(
-				"/data/data/org.scid.android/" + fileName);
+	private final void startProcess(EngineConfig engineConfig) {
+		ProcessBuilder builder = new ProcessBuilder(engineConfig.getExecutablePath());
 		builder.redirectErrorStream(true);
 		try {
 			Log.d("SCID", "starting process");
@@ -103,7 +108,7 @@ public class PipedProcess {
 			processAlive = true;
 			Log.d("SCID", "process is now alive");
 		} catch (IOException e) {
-			Log.e("SCID", "Error initializing engine " + fileName, e);
+			Log.e("SCID", "Error initializing engine " + engineConfig.getName(), e);
 		}
 	}
 

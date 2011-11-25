@@ -1,5 +1,6 @@
 package org.scid.android;
 
+import org.scid.android.engine.EngineConfig;
 import org.scid.android.gamelogic.ChessController;
 
 import android.os.AsyncTask;
@@ -12,8 +13,8 @@ public class StartEngineTask extends AsyncTask {
 	protected Object doInBackground(Object... params) {
 		this.activity = (ScidAndroidActivity) params[0];
 		this.ctrl = (ChessController) params[1];
-		String engineFileName = (String) params[2];
-		ctrl.startEngine(engineFileName);
+		EngineConfig engineConfig = (EngineConfig) params[2];
+		ctrl.startEngine(engineConfig);
 		return null;
 	}
 

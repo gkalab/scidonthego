@@ -11,6 +11,7 @@ import org.scid.android.GUIInterface;
 import org.scid.android.GameMode;
 import org.scid.android.PGNOptions;
 import org.scid.android.engine.ComputerPlayer;
+import org.scid.android.engine.EngineConfig;
 import org.scid.android.gamelogic.Game.GameState;
 
 import android.util.Log;
@@ -205,14 +206,21 @@ public class ChessController {
 		updateGameMode();
 	}
 
-	public final void startEngine(String engineFileName) {
+	public final void startEngine(EngineConfig engineDef) {
 		if (computerPlayer == null) {
-			computerPlayer = new ComputerPlayer(engineFileName);
+			computerPlayer = new ComputerPlayer(engineDef);
 			computerPlayer.setListener(listener);
 			computerPlayer.setBookFileName(bookFileName);
 			game.setComputerPlayer(computerPlayer);
 			gameTextListener.clear();
 		}
+	}
+
+	public EngineConfig getEngineConfig() {
+		if (computerPlayer != null && computerPlayer.getEngine() != null) {
+			return computerPlayer.getEngine().getEngineConfig();
+		}
+		return null;
 	}
 
 	public final void startGame() {

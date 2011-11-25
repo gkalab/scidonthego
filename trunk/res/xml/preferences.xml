@@ -34,5 +34,10 @@
             android:entries="@array/theme_texts"
             android:defaultValue="0">
         </ListPreference>
+        <ListPreference
+            android:key="analysisEngine"
+            android:title="Analysis Engine"
+            android:summary="Select engine for analysis mode">
+        </ListPreference>
 	</PreferenceCategory>
 </PreferenceScreen>
