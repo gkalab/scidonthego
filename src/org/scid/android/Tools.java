@@ -12,6 +12,9 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +58,44 @@ public class Tools {
 			}
 		}
 		return result;
+	}
+
+	
+	/**
+	 * Add names of engine files (files which not have an ignored extension) to the
+	 * specified set of already found engines.
+	 * 
+	 * @param foundEngines Set of already found engines or null if a new set should be
+	 *  created.
+	 * @param dirPath Path of directory to search.
+	 * @param ignoreExtensions Extensions (including the period) of non-engine files.
+	 * @return Updated or created set of engine file names.
+	 */
+	public static final SortedSet<String> findEnginesInDirectory(String dirPath, Set<String> ignoreExtensions) {
+		File dir = new File(dirPath);
+		final Set<String> _ignore = ignoreExtensions;
+		File[] files = dir.listFiles(new FileFilter() {
+			public boolean accept(File pathname) {
+				if (pathname.isFile()) {
+					int index = pathname.getName().lastIndexOf('.');
+					if (index >= 0) {
+						String ext = pathname.getName().substring(index);
+						if (_ignore != null && _ignore.contains(ext)) {
+							return false;
+						}
+					}
+					return true;
+				}
+				return false;
+			}
+		});
+		SortedSet<String> engines = new TreeSet<String>();
+		if (files != null) {
+			for (int i = 0; i < files.length; i++) {
+				engines.add(files[i].getName());
+			}
+		}
+		return engines;
 	}
 
 	/**

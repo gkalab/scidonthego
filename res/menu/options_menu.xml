@@ -38,9 +38,15 @@
         android:title="Goto Game"
         android:icon="@drawable/ic_menu_goto">
     </item>
+    <item
+        android:id="@+id/item_manage_engines"
+        android:title="Manage UCI Engines"
+        android:icon="@drawable/ic_menu_manage">
+	</item>
 	<item
 		android:id="@+id/item_about"
 		android:title="About / Help"
   		android:icon="@drawable/ic_menu_help">
 	</item>
+	
 </menu>

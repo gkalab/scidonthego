@@ -85,6 +85,16 @@
             android:configChanges="orientation">
         </activity>
 
+        <activity
+            android:name="AddEngineActivity"
+            android:label="Add Engine"
+            android:configChanges="orientation">
+        </activity>
+        <activity
+            android:name="RemoveEngineActivity"
+            android:label="Remove Engine"
+            android:configChanges="orientation">
+        </activity>
         <provider
             android:name="org.scid.database.ScidProvider"
             android:authorities="org.scid.database.scidprovider" />
