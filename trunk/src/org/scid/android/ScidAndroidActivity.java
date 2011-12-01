@@ -156,7 +156,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void checkUciEngine() {
 		// check if engine exists in /data/data/org.scid.android
-		File engine = new File(EngineManager.getDefaultEngine().getExecutablePath());
+		File engine = new File(EngineManager.getDefaultEngine()
+				.getExecutablePath());
 		if (engine.exists()) {
 			try {
 				String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
@@ -175,7 +176,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			Log.d("SCID", "Engine is missing from data. Intializing...");
 			try {
 				InputStream istream = getAssets().open(engine.getName());
-				FileOutputStream fout = new FileOutputStream(engine.getAbsolutePath());
+				FileOutputStream fout = new FileOutputStream(
+						engine.getAbsolutePath());
 				byte[] b = new byte[1024];
 				int noOfBytes = 0;
 				while ((noOfBytes = istream.read(b)) != -1) {
@@ -186,7 +188,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				Log.d("SCID", engine.getName()
 						+ " copied to /data/data/org.scid.android/");
 				try {
-					String cmd[] = { "chmod", "744", engine.getAbsolutePath()};
+					String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
 					Process process = Runtime.getRuntime().exec(cmd);
 					try {
 						process.waitFor();
@@ -521,6 +523,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			public boolean onLongClick(View v) {
 				ctrl.gotoMove(0);
 				lastEndOfVariation = null;
+				moveListScroll.fullScroll(View.FOCUS_UP);
 				return true;
 			}
 		});
@@ -668,7 +671,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ColorTheme.instance().readColors(settings);
 		cb.setColors();
 
-		String engineName = settings.getString("analysisEngine", EngineManager.getDefaultEngine().getName());
+		String engineName = settings.getString("analysisEngine", EngineManager
+				.getDefaultEngine().getName());
 		engineManager.setCurrentEngineName(engineName);
 
 		final String currentScidFile = settings
@@ -720,8 +724,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			return true;
 		case R.id.item_settings: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
-			i.putExtra(Preferences.DATA_ENGINE_NAMES, engineManager.getEngineNames(true));
-			i.putExtra(Preferences.DATA_ENGINE_NAME, engineManager.getCurrentEngineName());
+			i.putExtra(Preferences.DATA_ENGINE_NAMES,
+					engineManager.getEngineNames(true));
+			i.putExtra(Preferences.DATA_ENGINE_NAME,
+					engineManager.getCurrentEngineName());
 			startActivityForResult(i, RESULT_SETTINGS);
 			return true;
 		}
@@ -797,11 +803,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	private void showAnalysisModeInfo() {
 		if (gameMode.analysisMode()) {
-			String msg = getApplicationContext().getString(R.string.analysis_mode_enabled,
+			String msg = getApplicationContext().getString(
+					R.string.analysis_mode_enabled,
 					engineManager.getCurrentEngineName());
-			Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-		}
-		else {
+			Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT)
+					.show();
+		} else {
 			Toast.makeText(getApplicationContext(),
 					R.string.analysis_mode_disabled, Toast.LENGTH_SHORT).show();
 		}
@@ -810,7 +817,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
 			moveList.setText(R.string.initializing_engine);
-			new StartEngineTask().execute(this, ctrl, engineManager.getCurrentEngine());
+			new StartEngineTask().execute(this, ctrl,
+					engineManager.getCurrentEngine());
 		} else {
 			onFinishStartAnalysis();
 		}
@@ -916,9 +924,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			if (resultCode == RESULT_OK && data != null) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					Tools.importPgn(this,
-							pgnFileName, false,
-							RESULT_PGN_IMPORT);
+					Tools.importPgn(this, pgnFileName, false, RESULT_PGN_IMPORT);
 				}
 			}
 			break;
@@ -946,9 +952,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 			break;
 		case RESULT_ADD_ENGINE:
-			if (resultCode == AddEngineActivity.RESULT_EXECUTABLE_EXISTS && data != null) {
-				String engineName = data.getStringExtra(AddEngineActivity.DATA_ENGINE_NAME);
-				String executable = data.getStringExtra(AddEngineActivity.DATA_ENGINE_EXECUTABLE);
+			if (resultCode == AddEngineActivity.RESULT_EXECUTABLE_EXISTS
+					&& data != null) {
+				String engineName = data
+						.getStringExtra(AddEngineActivity.DATA_ENGINE_NAME);
+				String executable = data
+						.getStringExtra(AddEngineActivity.DATA_ENGINE_EXECUTABLE);
 				boolean makeCurrentEngine = data.getBooleanExtra(
 						AddEngineActivity.DATA_MAKE_CURRENT_ENGINE, false);
 				addNewEngine(engineName, executable, makeCurrentEngine, false);
@@ -956,19 +965,25 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			break;
 		case RESULT_REMOVE_ENGINE:
 			if (resultCode == RESULT_OK && data != null) {
-				final String _engineName = data.getStringExtra(RemoveEngineActivity.DATA_ENGINE_NAME);
+				final String _engineName = data
+						.getStringExtra(RemoveEngineActivity.DATA_ENGINE_NAME);
 				if (_engineName != null && _engineName.length() > 0) {
 					// Update preferences if removing current analysis engine
-					String analysisEngine = settings.getString("analysisEngine", null);
-					if (analysisEngine != null && analysisEngine.equals(_engineName)) {
+					String analysisEngine = settings.getString(
+							"analysisEngine", null);
+					if (analysisEngine != null
+							&& analysisEngine.equals(_engineName)) {
 						final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
 
 							@Override
 							public void engineChanged(EngineChangeEvent event) {
 								if (_engineName.equals(event.getEngineName())
-										&& event.getChangeType() == EngineChangeEvent.REMOVE_ENGINE && event.getSuccess()) {
+										&& event.getChangeType() == EngineChangeEvent.REMOVE_ENGINE
+										&& event.getSuccess()) {
 									Editor editor = settings.edit();
-									editor.putString("analysisEngine", EngineManager.getDefaultEngine().getName());
+									editor.putString("analysisEngine",
+											EngineManager.getDefaultEngine()
+													.getName());
 									editor.commit();
 								}
 								engineManager.removeEngineChangeListener(this);
@@ -976,7 +991,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						};
 						engineManager.addEngineChangeListener(_listener);
 
-					
 					}
 					engineManager.removeEngine(_engineName);
 				}
@@ -985,7 +999,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 	}
 
-	public void addNewEngine(String engineName, String executable, boolean makeCurrentEngine, boolean copied) {
+	public void addNewEngine(String engineName, String executable,
+			boolean makeCurrentEngine, boolean copied) {
 		if (makeCurrentEngine) {
 			final String _engineName = engineName;
 			final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
@@ -993,7 +1008,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				@Override
 				public void engineChanged(EngineChangeEvent event) {
 					if (_engineName.equals(event.getEngineName())
-							&& event.getChangeType() == EngineChangeEvent.ADD_ENGINE && event.getSuccess()) {
+							&& event.getChangeType() == EngineChangeEvent.ADD_ENGINE
+							&& event.getSuccess()) {
 						Editor editor = settings.edit();
 						editor.putString("analysisEngine", _engineName);
 						editor.commit();
@@ -1003,7 +1019,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 			};
 			engineManager.addEngineChangeListener(_listener);
-		};
+		}
+		;
 		engineManager.addEngine(engineName, executable);
 	}
 
@@ -1057,8 +1074,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				moveList.setText(gameTextListener
 						.getCurrentSpannableData(whiteMove));
 			}
-			ScrollView scrollView = (ScrollView) findViewById(R.id.moveListScrollView);
-			Tools.bringPointtoView(moveList, scrollView, gameTextListener.getCurrentPosition());
+			Tools.bringPointtoView(moveList, moveListScroll,
+					gameTextListener.getCurrentPosition());
 		}
 		if (gameTextListener.atEnd()) {
 			moveListScroll.fullScroll(View.FOCUS_DOWN);
@@ -1577,23 +1594,22 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					}
 				});
 		AlertDialog dlg = alert.create();
-	    dlg.show();
+		dlg.show();
 		WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-	    lp.copyFrom(dlg.getWindow().getAttributes());
-	    lp.width = WindowManager.LayoutParams.FILL_PARENT;
-	    dlg.getWindow().setAttributes(lp);
+		lp.copyFrom(dlg.getWindow().getAttributes());
+		lp.width = WindowManager.LayoutParams.FILL_PARENT;
+		dlg.getWindow().setAttributes(lp);
 	}
 
 	private void addEngine() {
-		Intent i = new Intent(ScidAndroidActivity.this,
-				AddEngineActivity.class);
+		Intent i = new Intent(ScidAndroidActivity.this, AddEngineActivity.class);
 		startActivityForResult(i, RESULT_ADD_ENGINE);
 	}
 
 	private void removeEngine() {
 		Intent i = new Intent(ScidAndroidActivity.this,
 				RemoveEngineActivity.class);
-		String [] engineNames = engineManager.getEngineNames(false);
+		String[] engineNames = engineManager.getEngineNames(false);
 		i.putExtra(RemoveEngineActivity.DATA_ENGINE_NAMES, engineNames);
 		startActivityForResult(i, RESULT_REMOVE_ENGINE);
 	}
