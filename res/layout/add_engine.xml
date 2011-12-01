@@ -62,20 +62,20 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">
 		<Button
-			android:id="@+id/addengine_cancel"
-			android:onClick="onCancelClick"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:text="@string/cancel">
-		</Button>
-		<Button
 			android:id="@+id/addengine_add"
 			android:onClick="onOkClick"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_weight="1"
 			android:text="@string/add">
+		</Button>
+		<Button
+			android:id="@+id/addengine_cancel"
+			android:onClick="onCancelClick"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/cancel">
 		</Button>
 	</LinearLayout>
 </LinearLayout>
