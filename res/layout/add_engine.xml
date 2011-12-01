@@ -27,7 +27,8 @@
 				android:text=""
 				android:gravity="center_vertical"
 				android:layout_width="match_parent"
-				android:layout_height="wrap_content">
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="3dip">
 			</EditText>
 		</LinearLayout>
 		<LinearLayout
@@ -41,19 +42,12 @@
 				android:text="@string/executable_label"
 				android:textAppearance="?android:attr/textAppearanceLarge">
 			</TextView>
-			<ScrollView 
-				android:id="@+id/engine_view"
+			<ListView
+				android:id="@+id/engine_list"
 				android:layout_weight="1"
 				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:fillViewport="true">
-				<ListView
-					android:id="@+id/engine_list"
-					android:layout_weight="1"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent">
-				</ListView>
-			</ScrollView>
+				android:layout_height="match_parent">
+			</ListView>
 		</LinearLayout>
 		<CheckBox
 			android:id="@+id/make_current"
