@@ -250,4 +250,8 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 			currNode = node;
 		}
 	}
+
+	public int getCurrentPosition() {
+		return currPos;
+	}
 }

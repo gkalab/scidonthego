@@ -91,7 +91,7 @@
             android:textStyle="bold"
             android:textSize="12dip" />
         <ScrollView
-            android:id="@+id/scrollView"
+            android:id="@+id/moveListScrollView"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
