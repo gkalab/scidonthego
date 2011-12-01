@@ -406,7 +406,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		favoriteRating = (RatingBar) findViewById(R.id.favorite);
 		status = (TextView) findViewById(R.id.status);
-		moveListScroll = (ScrollView) findViewById(R.id.scrollView);
+		moveListScroll = (ScrollView) findViewById(R.id.moveListScrollView);
 		moveList = (TextView) findViewById(R.id.moveList);
 		status.setFocusable(false);
 		moveListScroll.setFocusable(false);
@@ -1057,6 +1057,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				moveList.setText(gameTextListener
 						.getCurrentSpannableData(whiteMove));
 			}
+			ScrollView scrollView = (ScrollView) findViewById(R.id.moveListScrollView);
+			Tools.bringPointtoView(moveList, scrollView, gameTextListener.getCurrentPosition());
 		}
 		if (gameTextListener.atEnd()) {
 			moveListScroll.fullScroll(View.FOCUS_DOWN);

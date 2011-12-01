@@ -10,7 +10,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -24,6 +23,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class Tools {
@@ -275,5 +276,14 @@ public class Tools {
 				builder.show();
 			}
 		});
+	}
+
+	public static void bringPointtoView(TextView textView,
+			ScrollView scrollView, int offset) {
+		if (textView.getLayout() != null) {
+			int line = textView.getLayout().getLineForOffset(offset);
+			int y = (int) ((line + 0.5) * textView.getLineHeight());
+			scrollView.smoothScrollTo(0, y - scrollView.getHeight() / 2);
+		}
 	}
 }
