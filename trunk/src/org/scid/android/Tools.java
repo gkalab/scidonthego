@@ -60,23 +60,26 @@ public class Tools {
 		return result;
 	}
 
-	
 	/**
-	 * Add names of engine files (files which not have an ignored extension) to the
-	 * specified set of already found engines.
+	 * Add names of engine files (files which not have an ignored extension) to
+	 * the specified set of already found engines.
 	 * 
-	 * @param foundEngines Set of already found engines or null if a new set should be
-	 *  created.
-	 * @param dirPath Path of directory to search.
-	 * @param ignoreExtensions Extensions (including the period) of non-engine files.
+	 * @param foundEngines
+	 *            Set of already found engines or null if a new set should be
+	 *            created.
+	 * @param dirPath
+	 *            Path of directory to search.
+	 * @param ignoreExtensions
+	 *            Extensions (including the period) of non-engine files.
 	 * @return Updated or created set of engine file names.
 	 */
-	public static final SortedSet<String> findEnginesInDirectory(String dirPath, Set<String> ignoreExtensions) {
+	public static final SortedSet<String> findEnginesInDirectory(
+			String dirPath, Set<String> ignoreExtensions) {
 		File dir = new File(dirPath);
 		final Set<String> _ignore = ignoreExtensions;
 		File[] files = dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.isFile()) {
+				if (pathname.isFile() && !pathname.getName().startsWith(".")) {
 					int index = pathname.getName().lastIndexOf('.');
 					if (index >= 0) {
 						String ext = pathname.getName().substring(index);
