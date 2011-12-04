@@ -960,7 +960,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						.getStringExtra(AddEngineActivity.DATA_ENGINE_EXECUTABLE);
 				boolean makeCurrentEngine = data.getBooleanExtra(
 						AddEngineActivity.DATA_MAKE_CURRENT_ENGINE, false);
-				addNewEngine(engineName, executable, makeCurrentEngine, false);
+				if (executable == null) {
+					Toast.makeText(getApplicationContext(),
+							getText(R.string.no_engine_selected), Toast.LENGTH_LONG)
+							.show();
+				} else {
+					addNewEngine(engineName, executable, makeCurrentEngine,
+							false);
+				}
 			}
 			break;
 		case RESULT_REMOVE_ENGINE:

@@ -182,6 +182,7 @@ GNU GPL v2\n\
     <string name="make_current_engine">Make this the current analysis engine</string>
     <string name="add_engine_exists">\"%s\" already exists.</string>
     <string name="remove_engine">Remove Engine</string>
+    <string name="no_engine_selected">No engine selected. Put a chess engine into the scid directory and select it.</string>
     <string name="engine_added">Engine \"%s\" added.</string>
     <string name="engine_added_copied">Engine \"%s\" added. The executable file was copied to internal storage for execution.</string>
     <string name="engine_removed">Engine \"%s\" removed.</string>
