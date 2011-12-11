@@ -414,8 +414,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		moveList = (TextView) findViewById(R.id.moveList);
 		status.setFocusable(false);
 		moveListScroll.setFocusable(false);
-		moveList.setFocusable(false);
 		moveList.setMovementMethod(LinkMovementMethod.getInstance());
+		moveList.setFocusable(false);
+		// disable all other text colors (e.g. pressed) for move list
+		moveList.setTextColor(moveList.getTextColors().getDefaultColor());
+		moveList.setLinkTextColor(moveList.getTextColors().getDefaultColor());
 
 		cb = (ChessBoard) findViewById(R.id.chessboard);
 		cb.setFocusable(true);
