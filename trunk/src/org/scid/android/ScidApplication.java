@@ -1,5 +1,6 @@
 package org.scid.android;
 
+import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.Position;
 
 import android.app.Application;
@@ -13,6 +14,7 @@ public class ScidApplication extends Application {
 	private int currentGameNo = -1;
 	private int noGames;
 	private boolean isFavorite = false;
+	private ChessController controller;
 
 	public Position getPosition() {
 		return position;
@@ -67,5 +69,13 @@ public class ScidApplication extends Application {
 
 	public void setFavorite(boolean isFavorite) {
 		this.isFavorite = isFavorite;
+	}
+	
+	public void setController(ChessController controller) {
+		this.controller = controller;
+	}
+	
+	public ChessController getController() {
+		return this.controller;
 	}
 }

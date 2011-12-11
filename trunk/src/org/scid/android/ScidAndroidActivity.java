@@ -36,6 +36,7 @@ import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -43,12 +44,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -121,6 +122,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 		gameTextListener = new PgnScreenText(pgnOptions);
 		ctrl = new ChessController(this, gameTextListener, pgnOptions);
+		getScidAppContext().setController(ctrl);
 		ctrl.newGame(new GameMode(GameMode.TWO_PLAYERS));
 		readPrefs();
 		ctrl.newGame(gameMode);
@@ -413,6 +415,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		status.setFocusable(false);
 		moveListScroll.setFocusable(false);
 		moveList.setFocusable(false);
+		moveList.setMovementMethod(LinkMovementMethod.getInstance());
 
 		cb = (ChessBoard) findViewById(R.id.chessboard);
 		cb.setFocusable(true);

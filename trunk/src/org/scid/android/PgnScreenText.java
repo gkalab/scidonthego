@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.BackgroundColorSpan;
+import android.text.style.ClickableSpan;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.StyleSpan;
 
@@ -175,6 +176,12 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 				sb.append(token);
 				int l1 = sb.length();
 				nodeToCharPos.put(node, new NodeInfo(l0, l1));
+
+				// add clickable area
+				ClickableSpan clspan = new MoveClickableSpan(node);
+				sb.setSpan(clspan, l0, l1,
+						Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+				
 				if (endPos < l0) {
 					endPos = l0;
 				}

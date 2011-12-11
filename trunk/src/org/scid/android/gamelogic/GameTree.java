@@ -1486,6 +1486,19 @@ public class GameTree {
 			result += " " + this.postComment;
 			return result.trim();
 		}
+
+		/**
+		 * Get the variation of the Node in its parent
+		 */
+		private Integer getVariation() {
+			Node parent = this.parent;
+			for (int i=0;i<parent.children.size();i++) {
+				if (parent.children.get(i).equals(this)) {
+					return i;
+				}
+			}
+			return 0;
+		}
 	}
 
 	void setHeaders(ArrayList<String> tags, ArrayList<String> vals) {
@@ -1549,5 +1562,20 @@ public class GameTree {
 		for (int i = currPath.size() - 1; i >= 0; i--)
 			goForward(currPath.get(i), false);
 		return result;
+	}
+
+	public final void gotoNode(Node node) {
+		List<Integer> path = new ArrayList<Integer>(64);
+		Node n = node;
+		while (n.parent != null) {
+			path.add(n.getVariation());
+			n = n.parent;
+		}
+		Collections.reverse(path);
+		while (currentNode != rootNode)
+			goBack();
+		for (Integer variation : path) {
+			goForward(variation);
+		}
 	}
 }
