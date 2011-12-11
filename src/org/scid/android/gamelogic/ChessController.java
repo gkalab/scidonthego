@@ -13,6 +13,7 @@ import org.scid.android.PGNOptions;
 import org.scid.android.engine.ComputerPlayer;
 import org.scid.android.engine.EngineConfig;
 import org.scid.android.gamelogic.Game.GameState;
+import org.scid.android.gamelogic.GameTree.Node;
 
 import android.util.Log;
 
@@ -744,5 +745,10 @@ public class ChessController {
 
 	private void setAnimMove(Position sourcePos, Move move, boolean forward) {
 		gui.setAnimMove(sourcePos, move, forward);
+	}
+
+	public void gotoNode(Node node) {
+		this.game.tree.gotoNode(node);
+		this.startGame();
 	}
 }
