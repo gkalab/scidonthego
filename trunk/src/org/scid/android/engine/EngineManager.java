@@ -38,10 +38,10 @@ import android.widget.Toast;
 public class EngineManager {
 	private static final String DATA_PATH = "/data/data/org.scid.android/";
 	private static final String ENGINE_DATA_FILE = "engines.xml";
-	private static final String ROBBO_LITO_ENGINE_NAME = "RobboLito 0.085e4l";
-	private static final String ROBBO_LITO_ENGINE_EXECUTABLE = "robbolito0085e4l";
-	private static final String STOCKFISH_ENGINE_NAME = "Stockfish 2.11";
-	private static final String STOCKFISH_ENGINE_EXECUTABLE = "stockfish-211-32-ja";
+	private static final String ARM_ENGINE_NAME = "Critter 1.2";
+	private static final String ARM_ENGINE_EXECUTABLE = "critter-12-arm";
+	private static final String X86_ENGINE_NAME = "Stockfish 2.11";
+	private static final String X86_ENGINE_EXECUTABLE = "stockfish-211-32-ja";
 	private static EngineConfig defaultEngine;
 
 	private Context context;
@@ -100,11 +100,11 @@ public class EngineManager {
 		String architecture = System.getProperty("os.arch");
 		Log.d("SCID", "architecture: " + architecture);
 		if (architecture.equals("i686")) {
-			defaultEngine = new EngineConfig(STOCKFISH_ENGINE_NAME,
-					DATA_PATH + STOCKFISH_ENGINE_EXECUTABLE);
+			defaultEngine = new EngineConfig(X86_ENGINE_NAME,
+					DATA_PATH + X86_ENGINE_EXECUTABLE);
 		} else {
-			defaultEngine = new EngineConfig(ROBBO_LITO_ENGINE_NAME,
-					DATA_PATH + ROBBO_LITO_ENGINE_EXECUTABLE);
+			defaultEngine = new EngineConfig(ARM_ENGINE_NAME,
+					DATA_PATH + ARM_ENGINE_EXECUTABLE);
 		}
 	}
 

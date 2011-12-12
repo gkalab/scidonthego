@@ -21,12 +21,6 @@ public class MoveClickableSpan extends ClickableSpan {
 	}
 
 	@Override
-	public void updateDrawState(TextPaint ds) {
-		super.updateDrawState(ds);
-		ds.setUnderlineText(false);
-	}
-
-	@Override
 	public void onClick(View widget) {
 		if (node != null) {
 			Log.d("SCID", "clicked on node " + node);
