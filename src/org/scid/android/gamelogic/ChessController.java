@@ -412,34 +412,39 @@ public class ChessController {
 		return gameMode.analysisMode() || !humansTurn();
 	}
 
-	private final void undoMoveNoUpdate() {
-		if (game.getLastMove() != null) {
-			ss.searchResultWanted = false;
-			game.undoMove();
-			if (!humansTurn()) {
-				if (game.getLastMove() != null) {
-					game.undoMove();
-					if (!humansTurn()) {
-						game.redoMove();
-					}
-				} else {
-					// Don't undo first white move if playing black vs computer,
-					// because that would cause computer to immediately make
-					// a new move and the whole redo history will be lost.
-					if (gameMode.playerWhite() || gameMode.playerBlack())
-						game.redoMove();
-				}
-			}
-		}
+	private final boolean undoMoveNoUpdate() {
+    	if (game.getLastMove() == null)
+    		return false;
+    	ss.searchResultWanted = false;
+    	game.undoMove();
+    	if (!humansTurn()) {
+    		if (game.getLastMove() != null) {
+    			game.undoMove();
+    			if (!humansTurn()) {
+    				game.redoMove();
+    			}
+    		} else {
+    			// Don't undo first white move if playing black vs computer,
+    			// because that would cause computer to immediately make
+    			// a new move and the whole redo history will be lost.
+    			if (gameMode.playerWhite() || gameMode.playerBlack()) {
+    				game.redoMove();
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
 	}
 
 	public final void undoMove() {
 		if (game.getLastMove() != null) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			undoMoveNoUpdate();
+			boolean didUndo = undoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
+    		if (didUndo)
+    			setAnimMove(game.currPos(), game.getNextMove(), false);
 			updateGUI();
 		}
 	}
@@ -460,16 +465,14 @@ public class ChessController {
 		return game.canRedoMove();
 	}
 
-	public final void redoMove(boolean animate) {
+	public final void redoMove() {
 		if (canRedoMove()) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
 			redoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
-			if (animate) {
-				setAnimMove(game.prevPos(), game.getLastMove(), true);
-			}
+			setAnimMove(game.prevPos(), game.getLastMove(), true);
 			updateGUI();
 		}
 	}
@@ -543,7 +546,7 @@ public class ChessController {
 				updateComputeThreads(true);
 				updateGUI();
 				if (gameMode.studyMode()) {
-					redoMove(true);
+					redoMove();
 				}
 			} else {
 				gui.setSelection(-1);
