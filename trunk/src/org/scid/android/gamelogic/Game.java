@@ -83,6 +83,17 @@ public class Game {
 		}
 	}
 
+	public final Move getNextMove() {
+		if (canRedoMove()) {
+			tree.goForward(-1);
+			Move ret = tree.currentNode.move;
+			tree.goBack();
+			return ret;
+		} else {
+			return null;
+		}
+	}
+
 	/**
 	 * Update the game state according to move/command string from a player.
 	 * 

@@ -323,7 +323,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	public void onNextMoveClick(View view) {
 		if (ctrl.canRedoMove()) {
-			ctrl.redoMove(false);
+			ctrl.redoMove();
 		} else {
 			String currentPosition = ctrl.getFEN();
 			if (lastEndOfVariation == null
@@ -1700,7 +1700,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	/** Report a move made that is a candidate for GUI animation. */
 	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
-		if (gameMode.studyMode() && (move != null))
+		if (move != null) {
 			cb.setAnimMove(sourcePos, move, forward);
+		}
 	}
 }
