@@ -12,6 +12,7 @@ public class GameInfo {
 	private int id = -1;
 	private int currentPly = 0;
 	private Boolean isFavorite = false;
+	private Boolean isDeleted = false;
 
 	public String toString() {
 		StringBuilder info = new StringBuilder();
@@ -71,6 +72,8 @@ public class GameInfo {
 			} else {
 				return "" + 0;
 			}
+		case 13:
+			return "" + isDeleted;
 		default:
 			return null;
 		}
@@ -184,7 +187,15 @@ public class GameInfo {
 		this.isFavorite = isFavorite;
 	}
 
+	public void setDeleted(boolean isDeleted) {
+		this.isDeleted = isDeleted;
+	}
+
 	public boolean isFavorite() {
 		return isFavorite;
+	}
+
+	public boolean isDeleted() {
+		return isDeleted;
 	}
 }

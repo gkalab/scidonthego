@@ -81,7 +81,8 @@ public class ScidCursor extends AbstractCursor {
 			ScidProviderMetaData.ScidMetaData.SUMMARY,
 			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
 			ScidProviderMetaData.ScidMetaData.DETAILS,
-			ScidProviderMetaData.ScidMetaData.IS_FAVORITE };
+			ScidProviderMetaData.ScidMetaData.IS_FAVORITE,
+			ScidProviderMetaData.ScidMetaData.IS_DELETED };
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
@@ -240,6 +241,7 @@ public class ScidCursor extends AbstractCursor {
 		gameInfo.setPgn(loadPGN ? this.db.getPGN() : null);
 		gameInfo.setId(gameNo);
 		gameInfo.setFavorite(isFavorite);
+		gameInfo.setDeleted(this.db.isDeleted());
 	}
 
 	/**

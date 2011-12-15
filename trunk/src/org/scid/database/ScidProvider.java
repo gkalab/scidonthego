@@ -124,7 +124,7 @@ public class ScidProvider extends ContentProvider {
 	 * Update a game in the scid database. The last path segment must specify
 	 * the real game number in the database (not the one in the current filter)
 	 * 
-	 * currently only sets the favorite flag of a game
+	 * currently only sets the favorite flag or the delete flag of a game
 	 */
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
@@ -141,6 +141,11 @@ public class ScidProvider extends ContentProvider {
 			if (values.containsKey("isFavorite")) {
 				db.setFavorite(selection, gameNo, values
 						.getAsBoolean("isFavorite"));
+				result = 1;
+			}
+			if (values.containsKey("isDeleted")) {
+				db.setDeleted(selection, gameNo, values
+						.getAsBoolean("isDeleted"));
 				result = 1;
 			}
 			break;

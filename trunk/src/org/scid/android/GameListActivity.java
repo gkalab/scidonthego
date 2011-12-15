@@ -228,11 +228,10 @@ public class GameListActivity extends ListActivity {
 					.getInt(cursor
 							.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)) != 0;
 		}
-		if (isFavorite) {
-			info.setFavorite(1);
-		} else {
-			info.setFavorite(0);
-		}
+		info.setFavorite(isFavorite);
+		boolean isDeleted = Boolean.parseBoolean(cursor.getString(cursor
+				.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_DELETED)));
+		info.setDeleted(isDeleted);
 		gamesInFile.add(info);
 		runOnUiThread(new Runnable() {
 			public void run() {

@@ -35,12 +35,15 @@ public class GameListArrayAdapter extends ArrayAdapter<GameInfo> {
 			}
 			if (details != null) {
 				String text = item.getDetails();
+				if (item.isDeleted()) {
+					text = "<font color='red'><b>DELETED</b></font> " + text;
+				}
 				details.setText(Html.fromHtml(text));
 			}
 			RatingBar favorite = (RatingBar) view
 					.findViewById(R.id.item_favorite);
 			if (favorite != null) {
-				favorite.setRating(item.getFavorite());
+				favorite.setRating(item.isFavorite() ? 1 : 0);
 			}
 		}
 		return view;
