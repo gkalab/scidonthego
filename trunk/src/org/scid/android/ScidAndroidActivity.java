@@ -1397,7 +1397,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								break;
 							}
 							case REMOVE_VARIATION:
-								ctrl.removeVariation();
+								ctrl.removeSubTree();
 								break;
 							}
 						}

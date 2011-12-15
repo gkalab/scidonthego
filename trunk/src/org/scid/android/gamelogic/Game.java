@@ -167,8 +167,9 @@ public class Game {
 				varNo = tree.addMove(moveStr, playerAction, 0, "", "");
 			}
 		}
-		tree.reorderVariation(varNo, 0);
-		tree.goForward(0);
+        int newPos = addFirst ? 0 : varNo;
+        tree.reorderVariation(varNo, newPos);
+        tree.goForward(newPos);
 		int remaining = timeController.moveMade(System.currentTimeMillis());
 		tree.setRemainingTime(remaining);
 		updateTimeControl(true);
@@ -247,8 +248,7 @@ public class Game {
 		int nVar = tree.variations().size();
 		if (nVar == 1) {
 			// check if last move is the null move
-			if (tree.variations().get(0).from == 0
-					&& tree.variations().get(0).to == 0) {
+			if (tree.variations().get(0).isNullMove()) {
 				nVar = 0;
 			}
 		}
@@ -264,6 +264,15 @@ public class Game {
 		return nChildren;
 	}
 
+    public final int currVariation() {
+        if (tree.currentNode == tree.rootNode)
+            return 0;
+        tree.goBack();
+        int defChild = tree.currentNode.defaultChild;
+        tree.goForward(-1);
+        return defChild;
+    }
+
 	public final void changeVariation(int delta) {
 		if (tree.currentNode == tree.rootNode)
 			return;
@@ -278,19 +287,37 @@ public class Game {
 		updateTimeControl(true);
 	}
 
-	public final void removeVariation() {
-		if (numVariations() <= 1)
+    public final void moveVariation(int delta) {
+        if (tree.currentNode == tree.rootNode)
 			return;
 		tree.goBack();
+        int varNo = tree.currentNode.defaultChild;
+        int nChildren = tree.variations().size();
+        int newPos = varNo + delta;
+        newPos = Math.max(newPos, 0);
+        newPos = Math.min(newPos, nChildren - 1);
+        tree.reorderVariation(varNo, newPos);
+        tree.goForward(newPos);
+        pendingDrawOffer = false;
+        updateTimeControl(true);
+    }
+
+    public final void removeSubTree() {
+        if (getLastMove() != null) {
+            tree.goBack();
 		int defChild = tree.currentNode.defaultChild;
 		tree.deleteVariation(defChild);
-		tree.goForward(-1);
+        } else {
+            while (canRedoMove())
+                tree.deleteVariation(0);
+        }
 		pendingDrawOffer = false;
 		updateTimeControl(true);
 	}
 
 	public static enum GameState {
-		ALIVE, WHITE_MATE, // White mates
+		ALIVE, 
+		WHITE_MATE, // White mates
 		BLACK_MATE, // Black mates
 		WHITE_STALEMATE, // White is stalemated
 		BLACK_STALEMATE, // Black is stalemated
@@ -299,8 +326,7 @@ public class Game {
 		DRAW_NO_MATE, // Draw by impossibility of check mate
 		DRAW_AGREE, // Draw by agreement
 		RESIGN_WHITE, // White resigns
-		RESIGN_BLACK
-		// Black resigns
+		RESIGN_BLACK // Black resigns
 	}
 
 	/**
@@ -312,7 +338,6 @@ public class Game {
 
 	/**
 	 * Check if a draw offer is available.
-	 * 
 	 * @return True if the current player has the option to accept a draw offer.
 	 */
 	public final boolean haveDrawOffer() {
@@ -343,9 +368,10 @@ public class Game {
 		updateTimeControl(true);
 	}
 
+
 	/**
-	 * Return the last zeroing position and a list of moves to go from that
-	 * position to the current position.
+     * Return the last zeroing position and a list of moves
+     * to go from that position to the current position.
 	 */
 	public final Pair<Position, ArrayList<Move>> getUCIHistory() {
 		Pair<List<Node>, Integer> ml = tree.getMoveList();

@@ -493,16 +493,21 @@ public class ChessController {
 		}
 	}
 
-	public final void removeVariation() {
-		if (game.numVariations() > 1) {
+	public final void removeSubTree() {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			game.removeVariation();
+			game.removeSubTree();
 			updateComputeThreads(true);
 			setSelection();
 			updateGUI();
-		}
 	}
+
+    public final void moveVariation(int delta) {
+        if (game.numVariations() > 1) {
+            game.moveVariation(delta);
+            updateGUI();
+        }
+    }
 
 	public final void gotoMove(int moveNr) {
 		gotoHalfMove(moveNr * 2);
