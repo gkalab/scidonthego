@@ -1671,6 +1671,9 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
             iE->SetRound (id);
             LOGD("Round written to name base.");
 
+            // RESULT:
+            iE->SetResult(game->GetResult());
+
             // If replacing, decrement the frequency of the old names:
             if (replaceMode) {
                 sourceNameBase.IncFrequency (NAME_PLAYER, oldIE->GetWhite(), -1);

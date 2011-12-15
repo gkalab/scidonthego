@@ -513,28 +513,32 @@ public class GameTree {
 				goForward(0);
 			GameState state = getGameState();
 			if (state == GameState.ALIVE) {
-				if (result.equals("1-0")) {
-					if (currentPos.whiteMove) {
-						currentNode.playerAction = "resign";
-					} else {
-						addMove("--", "resign", 0, "", "");
-					}
-				} else if (result.equals("0-1")) {
-					if (!currentPos.whiteMove) {
-						currentNode.playerAction = "resign";
-					} else {
-						addMove("--", "resign", 0, "", "");
-					}
-				} else if (result.equals("1/2-1/2") || result.equals("1/2")) {
-					currentNode.playerAction = "draw offer";
-					addMove("--", "draw accept", 0, "", "");
-				}
+				setPGNResult(result);
 			}
 			gotoFirstNode();
 		}
 
 		updateListener();
 		return true;
+	}
+
+	private void setPGNResult(String result) {
+		if (result.equals("1-0")) {
+			if (currentPos.whiteMove) {
+				currentNode.playerAction = "resign";
+			} else {
+				addMove("--", "resign", 0, "", "");
+			}
+		} else if (result.equals("0-1")) {
+			if (!currentPos.whiteMove) {
+				currentNode.playerAction = "resign";
+			} else {
+				addMove("--", "resign", 0, "", "");
+			}
+		} else if (result.equals("1/2-1/2") || result.equals("1/2")) {
+			currentNode.playerAction = "draw offer";
+			addMove("--", "draw accept", 0, "", "");
+		}
 	}
 
 	/** Serialize to byte array. */
@@ -1546,12 +1550,22 @@ public class GameTree {
         }
     }
 
-    private void setResult(String result) {
+	private void setResult(String result) {
 		List<Integer> currPath = getCurrentPath();
 		gotoLastNode();
 		String currentResult = getPGNResultString();
 		if (!result.equals(currentResult)) {
 			// change the result node
+			if (currentNode.move.isNullMove()) {
+				// delete any null move
+				goBack();
+				currentNode.children.remove(0);
+			}
+			if (result.equals("*")) {
+				currentNode.playerAction = "";
+			} else {
+				setPGNResult(result);
+			}
 		}
 		gotoFirstNode();
 		gotoPath(currPath);
