@@ -719,6 +719,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_LOAD_SCID_FILE = 7;
 	static private final int RESULT_ADD_ENGINE = 8;
 	static private final int RESULT_REMOVE_ENGINE = 9;
+	static private final int RESULT_SAVE_GAME = 10;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -780,17 +781,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void saveGame() {
-		if (getScidAppContext().getCurrentFileName().length() > 0) {
-			DataBase db = new DataBase();
-			String pgn = ctrl.getPGN();
-			final String result = db.saveGame(getScidAppContext().getCurrentFileName(), 
-					this.getScidAppContext().getCurrentGameNo(), pgn);
-			if (result.length()>0) {
-				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
-			} else {
-				Toast.makeText(getApplicationContext(), R.string.game_saved, Toast.LENGTH_SHORT).show();
-			}
-		}
+		Intent i = new Intent(ScidAndroidActivity.this,
+				SaveGameActivity.class);
+		startActivityForResult(i, RESULT_SAVE_GAME);
 	}
 
 	private void setStudyMode() {
@@ -1021,6 +1014,24 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 					}
 					engineManager.removeEngine(_engineName);
+				}
+			}
+			break;
+		case RESULT_SAVE_GAME:
+			if (resultCode == RESULT_OK && data != null) {
+				String gameNoString = data.getAction();
+				if (gameNoString != null) {
+					int gameNo = new Integer(gameNoString);
+					if (gameNo == -1) {
+						// a new game was added
+						// TODO: reset cursor for now - saving should be done within the
+						// data provider and cursor
+						Cursor cursor = getCursor();
+						// move to newly added game
+						if (cursor!=null && cursor.moveToLast()) {
+							setPgnFromCursor(cursor);
+						}
+					}
 				}
 			}
 			break;
@@ -1288,8 +1299,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 			lst.add(getString(R.string.edit_board));
 			actions.add(EDIT_BOARD);
-			lst.add(getString(R.string.save_game));
-			actions.add(SAVE_GAME);
+			if (getScidAppContext().getCurrentFileName().length() > 0) {
+				lst.add(getString(R.string.save_game));
+				actions.add(SAVE_GAME);
+			}
 			lst.add(getString(R.string.copy_game));
 			actions.add(COPY_GAME);
 			lst.add(getString(R.string.copy_position));

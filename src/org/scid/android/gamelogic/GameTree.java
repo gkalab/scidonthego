@@ -10,6 +10,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.scid.android.PGNOptions;
 import org.scid.android.gamelogic.Game.GameState;
@@ -213,20 +215,11 @@ public class GameTree {
 		// Go to end of mainline to evaluate PGN result string.
 		String pgnResultString;
 		{
-			List<Integer> currPath = new ArrayList<Integer>();
-			while (currentNode != rootNode) {
-				Node child = currentNode;
-				goBack();
-				int childNum = variations().indexOf(child);
-				currPath.add(childNum);
-			}
-			while (variations().size() > 0)
-				goForward(0, false);
+			List<Integer> currPath = getCurrentPath();
+			gotoLastNode();
 			pgnResultString = getPGNResultString();
-			while (currentNode != rootNode)
-				goBack();
-			for (int i = currPath.size() - 1; i >= 0; i--)
-				goForward(currPath.get(i), false);
+			gotoFirstNode();
+			gotoPath(currPath);
 		}
 
 		// Write seven tag roster
@@ -537,9 +530,7 @@ public class GameTree {
 					addMove("--", "draw accept", 0, "", "");
 				}
 			}
-			// Go back to the root
-			while (currentNode != rootNode)
-				goBack();
+			gotoFirstNode();
 		}
 
 		updateListener();
@@ -1501,66 +1492,13 @@ public class GameTree {
 		}
 	}
 
-	void setHeaders(ArrayList<String> tags, ArrayList<String> vals) {
-		for (int i = 0; i < tags.size(); i++) {
-			String tag = tags.get(i);
-			String val = vals.get(i);
-			if (tag.equals("Event"))
-				event = val;
-			else if (tag.equals("Site"))
-				site = val;
-			else if (tag.equals("Date"))
-				date = val;
-			else if (tag.equals("Round"))
-				round = val;
-			else if (tag.equals("White"))
-				white = val;
-			else if (tag.equals("Black"))
-				black = val;
-			else {
-				TagPair tp = new TagPair();
-				tp.tagName = tag;
-				tp.tagValue = val;
-				tagPairs.add(tp);
-			}
-		}
-	}
-
-	void getHeaders(ArrayList<String> tags, ArrayList<String> vals) {
-		tags.add("Event");
-		vals.add(event);
-		tags.add("Site");
-		vals.add(site);
-		tags.add("Date");
-		vals.add(date);
-		tags.add("Round");
-		vals.add(round);
-		tags.add("White");
-		vals.add(white);
-		tags.add("Black");
-		vals.add(black);
-		for (int i = 0; i < tagPairs.size(); i++) {
-			tags.add(tagPairs.get(i).tagName);
-			vals.add(tagPairs.get(i).tagValue);
-		}
-	}
-
 	public String getResult() {
 		String result = "*";
-		List<Integer> currPath = new ArrayList<Integer>();
-		while (currentNode != rootNode) {
-			Node child = currentNode;
-			goBack();
-			int childNum = variations().indexOf(child);
-			currPath.add(childNum);
-		}
-		while (variations().size() > 0)
-			goForward(0, false);
+		List<Integer> currPath = getCurrentPath();
+		gotoLastNode();
 		result = getPGNResultString();
-		while (currentNode != rootNode)
-			goBack();
-		for (int i = currPath.size() - 1; i >= 0; i--)
-			goForward(currPath.get(i), false);
+		gotoFirstNode();
+		gotoPath(currPath);
 		return result;
 	}
 
@@ -1572,10 +1510,90 @@ public class GameTree {
 			n = n.parent;
 		}
 		Collections.reverse(path);
-		while (currentNode != rootNode)
-			goBack();
+		gotoFirstNode();
 		for (Integer variation : path) {
 			goForward(variation);
 		}
 	}
+
+    void setHeaders(Map<String,String> headers) {
+        for (Entry<String, String> entry : headers.entrySet()) {
+            String tag = entry.getKey();
+            String val = entry.getValue();
+            if (tag.equals("Event")) event = val;
+            else if (tag.equals("Site")) site = val;
+            else if (tag.equals("Date")) date = val;
+            else if (tag.equals("Round")) round = val;
+            else if (tag.equals("White")) white = val;
+            else if (tag.equals("Black")) black = val;
+            else if (tag.equals("Result")) setResult(val);
+            else {
+                boolean found = false;
+                for (TagPair t : tagPairs) {
+                    if (t.tagName.equals(tag)) {
+                        t.tagValue = val;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    TagPair tp = new TagPair();
+                    tp.tagName = tag;
+                    tp.tagValue = val;
+                    tagPairs.add(tp);
+                }
+            }
+        }
+    }
+
+    private void setResult(String result) {
+		List<Integer> currPath = getCurrentPath();
+		gotoLastNode();
+		String currentResult = getPGNResultString();
+		if (!result.equals(currentResult)) {
+			// change the result node
+		}
+		gotoFirstNode();
+		gotoPath(currPath);
+	}
+
+	private void gotoFirstNode() {
+		while (currentNode != rootNode)
+			goBack();
+	}
+
+	private void gotoPath(List<Integer> currPath) {
+		for (int i = currPath.size() - 1; i >= 0; i--)
+			goForward(currPath.get(i), false);
+	}
+
+	private void gotoLastNode() {
+		while (variations().size() > 0)
+			goForward(0, false);
+	}
+
+	private List<Integer> getCurrentPath() {
+		List<Integer> currPath = new ArrayList<Integer>();
+		while (currentNode != rootNode) {
+			Node child = currentNode;
+			goBack();
+			int childNum = variations().indexOf(child);
+			currPath.add(childNum);
+		}
+		return currPath;
+	}
+
+	void getHeaders(Map<String,String> headers) {
+        headers.put("Event", event);
+        headers.put("Site",  site);
+        headers.put("Date",  date);
+        headers.put("Round", round);
+        headers.put("White", white);
+        headers.put("Black", black);
+        headers.put("Result", getResult());
+        for (int i = 0; i < tagPairs.size(); i++) {
+            TagPair tp = tagPairs.get(i);
+            headers.put(tp.tagName, tp.tagValue);
+        }
+    }
 }
