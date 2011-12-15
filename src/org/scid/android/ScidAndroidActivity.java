@@ -16,6 +16,7 @@ import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.Position;
 import org.scid.android.gamelogic.TextIO;
 import org.scid.android.twic.ImportTwicActivity;
+import org.scid.database.DataBase;
 import org.scid.database.ScidProviderMetaData;
 
 import android.app.Activity;
@@ -778,6 +779,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		return false;
 	}
 
+	private void saveGame() {
+		if (getScidAppContext().getCurrentFileName().length() > 0) {
+			DataBase db = new DataBase();
+			String pgn = ctrl.getPGN();
+			final String result = db.saveGame(getScidAppContext().getCurrentFileName(), 
+					this.getScidAppContext().getCurrentGameNo(), pgn);
+			if (result.length()>0) {
+				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(getApplicationContext(), R.string.game_saved, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
 	private void setStudyMode() {
 		if (gameMode.studyMode()) {
 			gameMode = new GameMode(GameMode.TWO_PLAYERS);
@@ -1256,6 +1271,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int EDIT_BOARD = 4;
 			final int ADD_FAVORITES = 5;
 			final int REMOVE_FAVORITES = 6;
+			final int SAVE_GAME = 7;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
@@ -1272,6 +1288,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 			lst.add(getString(R.string.edit_board));
 			actions.add(EDIT_BOARD);
+			lst.add(getString(R.string.save_game));
+			actions.add(SAVE_GAME);
 			lst.add(getString(R.string.copy_game));
 			actions.add(COPY_GAME);
 			lst.add(getString(R.string.copy_position));
@@ -1330,6 +1348,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 										EditBoard.class);
 								i.setAction(ctrl.getFEN());
 								startActivityForResult(i, RESULT_EDITBOARD);
+								break;
+							}
+							case SAVE_GAME: {
+								saveGame();
 								break;
 							}
 							case COPY_GAME: {
