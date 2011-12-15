@@ -45,6 +45,10 @@ public class Move {
         return (from * 64 + to) * 16 + promoteTo;
     }
 
+    public boolean isNullMove() {
+    	return (from==0 && to==0);
+    }
+    
     /** Useful for debugging. */
     public final String toString() {
     	return TextIO.moveToUCIString(this);
