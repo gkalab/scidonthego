@@ -92,4 +92,7 @@ public class DataBase {
 
 	/** Return the favorites as a filter. */
 	public final native int[] getFavorites(String fileName);
+	
+	/** Save the game with the game number. */
+	public final native String saveGame(String fileName, int gameNo, String pgn);
 }

@@ -15,6 +15,7 @@
 #include "scid/pgnparse.h"
 
 #define  LOG_TAG    "SCIDjni"
+#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
@@ -22,6 +23,7 @@
 int main(int argc, char* argv[]);
 
 static Game * game = new Game;
+static bool initialized = false;
 
 typedef uint filterOpT;
 const filterOpT FILTEROP_AND = 2;
@@ -37,7 +39,6 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
                 (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
 {
     bool result = false;
-	static bool initialized = false;
 	static char* currFileName = 0;
     static time_t currModifiedTime = 0;
 	static Index sourceIndex;
@@ -59,7 +60,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
             // TODO: check why this does not work
             //|| mktime(modified) != currModifiedTime
         )
-        	initialized = false;
+            initialized = false;
     	if (!initialized) {
             if (currFileName != 0) {
                 LOGI("reloading index");
@@ -82,7 +83,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
                 goto cleanup;
             }
             if (currFileName)
-            	free(currFileName);
+                free(currFileName);
             currFileName = strdup(sourceFileName);
             currModifiedTime = mktime(modified);
     		initialized = true;
@@ -170,6 +171,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
     }
     return (*env).NewStringUTF(tbuf.GetBuffer());
 }
+
 
 /*
  * Class:     org_scid_database_DataBase
@@ -1169,6 +1171,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 }
 
 
+
 /*
  * Class:     org_scid_database_DataBase
  * Method:    importPgn
@@ -1511,4 +1514,211 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
     sourceIndex.Clear();
     (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     return result;
+}
+
+
+/*
+ * Class:     org_scid_database_DataBase
+ * Method:    saveGame
+ */
+extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
+        (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jstring pgn)
+{
+    const char* pgnString = (*env).GetStringUTFChars(pgn, NULL);
+    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    std::string resultString = "";
+    if (pgnString) {
+        if (sourceFileName) {
+            ByteBuffer *bbuf = new ByteBuffer;
+            bbuf->SetBufferSize (BBUF_SIZE);
+            PgnParser parser;
+            parser.Reset (pgnString);
+            uint size=16000;
+            LOGD("parsing game");
+            game->Clear();
+            parser.ParseGame(game);
+            LOGD("create index entry");
+            // Grab a new idx entry, if needed:
+            IndexEntry * oldIE = NULL;
+            IndexEntry * iE = new IndexEntry;
+            iE->Init();
+
+            bbuf->Empty();
+            LOGD("encode game");
+            if (game->Encode (bbuf, iE) != OK) {
+                resultString.append("Error encoding game.");
+                goto cleanup;
+            }
+            LOGD("finished encoding game");
+
+            bool replaceMode = false;
+            gameNumberT gNumber = gameNo;
+            if (gameNo >= 0) {
+                replaceMode = true;
+            }
+
+            Index sourceIndex;
+            GFile sourceGFile;
+            errorT err = 0;
+            LOGD("Saving game.");
+
+            sourceIndex.SetFileName(sourceFileName);
+            if (sourceIndex.OpenIndexFile(FMODE_Both) != OK) {
+                resultString.append("Unable to load index file.");
+                goto cleanup;
+            }
+            if (sourceGFile.Open(sourceFileName, FMODE_Both) != OK) {
+                resultString.append("Unable to load game file.");
+                goto cleanup;
+            }
+            NameBase sourceNameBase;
+            sourceNameBase.SetFileName(sourceFileName);
+            if (sourceNameBase.ReadNameFile() != OK) {
+                resultString.append("Unable to read name base.");
+                goto cleanup;
+            }
+            err = sourceIndex.ReadEntries(iE, gNumber, 1);
+            if (err != OK) {
+                resultString.append("Error reading index entry.");
+                goto cleanup;
+            }
+            LOGD("All files read.");
+
+            // game->Encode computes flags, so we have to re-set flags if replace mode
+            if (replaceMode) {
+                oldIE = sourceIndex.FetchEntry (gNumber);
+                LOGD("Old index entry fetched.");
+                // Remember previous user-settable flags:
+                for (uint flag = 0; flag < IDX_NUM_FLAGS; flag++) {
+                    char flags [32];
+                    oldIE->GetFlagStr (flags, NULL);
+                    iE->SetFlagStr (flags);
+                }
+            } else {
+                // add game without resetting the index, because it has been filled by game->encode above
+                if (sourceIndex.AddGame (&gNumber, iE, false) != OK) {
+                    resultString.append("Too many games in this database.");
+                    goto cleanup;
+                }
+            }
+            int noGames = sourceIndex.GetNumGames();
+
+            bbuf->BackToStart();
+
+            // Now try writing the game to the gfile:
+            LOGD("Trying to write game to gfile.");
+            uint offset = 0;
+            if (sourceGFile.AddGame (bbuf, &offset) != OK) {
+                resultString.append("Error writing game file.");
+                goto cleanup;
+            }
+            iE->SetOffset (offset);
+            iE->SetLength (bbuf->GetByteCount());
+            LOGD("Game written to gfile.");
+
+            // Now we add the names to the NameBase
+            // If replacing, we decrement the frequency of the old names.
+            const char * s;
+            idNumberT id = 0;
+
+            // WHITE:
+            s = game->GetWhiteStr();  if (!s) { s = "?"; }
+            if (sourceNameBase.AddName (NAME_PLAYER, s, &id) == ERROR_NameBaseFull) {
+                resultString.append("Too many player names.");
+                goto cleanup;
+            }
+            sourceNameBase.IncFrequency (NAME_PLAYER, id, 1);
+            iE->SetWhite (id);
+            LOGD("White written to name base.");
+
+            // BLACK:
+            s = game->GetBlackStr();  if (!s) { s = "?"; }
+            if (sourceNameBase.AddName (NAME_PLAYER, s, &id) == ERROR_NameBaseFull) {
+                resultString.append("Too many player names.");
+                goto cleanup;
+            }
+            sourceNameBase.IncFrequency (NAME_PLAYER, id, 1);
+            iE->SetBlack (id);
+            LOGD("Black written to name base.");
+
+            // EVENT:
+            s = game->GetEventStr();  if (!s) { s = "?"; }
+            if (sourceNameBase.AddName (NAME_EVENT, s, &id) == ERROR_NameBaseFull) {
+                resultString.append("Too many event names.");
+                goto cleanup;
+            }
+            sourceNameBase.IncFrequency (NAME_EVENT, id, 1);
+            iE->SetEvent (id);
+            LOGD("Event written to name base.");
+
+            // SITE:
+            s = game->GetSiteStr();  if (!s) { s = "?"; }
+            if (sourceNameBase.AddName (NAME_SITE, s, &id) == ERROR_NameBaseFull) {
+                resultString.append("Too many site names.");
+                goto cleanup;
+            }
+            sourceNameBase.IncFrequency (NAME_SITE, id, 1);
+            iE->SetSite (id);
+            LOGD("Site written to name base.");
+
+            // ROUND:
+            s = game->GetRoundStr();  if (!s) { s = "?"; }
+            if (sourceNameBase.AddName (NAME_ROUND, s, &id) == ERROR_NameBaseFull) {
+                resultString.append("Too many round names.");
+                goto cleanup;
+            }
+            sourceNameBase.IncFrequency (NAME_ROUND, id, 1);
+            iE->SetRound (id);
+            LOGD("Round written to name base.");
+
+            // If replacing, decrement the frequency of the old names:
+            if (replaceMode) {
+                sourceNameBase.IncFrequency (NAME_PLAYER, oldIE->GetWhite(), -1);
+                sourceNameBase.IncFrequency (NAME_PLAYER, oldIE->GetBlack(), -1);
+                sourceNameBase.IncFrequency (NAME_EVENT,  oldIE->GetEvent(), -1);
+                sourceNameBase.IncFrequency (NAME_SITE,   oldIE->GetSite(),  -1);
+                sourceNameBase.IncFrequency (NAME_ROUND,  oldIE->GetRound(), -1);
+            }
+            LOGD("Frequencies incremented.");
+
+            // Flush the gfile so it is up-to-date with other files:
+            // This made copying games between databases VERY slow, so it
+            // is now done elsewhere OUTSIDE a loop that copies many
+            // games, such as in sc_filter_copy().
+            sourceGFile.FlushAll();
+            LOGD("All flushed.");
+
+            // Last of all, we write the new idxEntry
+            if (sourceIndex.WriteEntries (iE, gNumber, 1) != OK) {
+                resultString.append("Error writing index file.");
+                goto cleanup;
+            }
+            LOGD("Index file written.");
+            if (sourceIndex.WriteHeader() != OK) {
+                resultString.append("Error writing index header.");
+                goto cleanup;
+            }
+            LOGD("Index header written.");
+            if (sourceNameBase.WriteNameFile() != OK) {
+                resultString.append("Error writing name file.");
+                goto cleanup;
+            }
+            LOGD("Name file written.");
+
+            sourceIndex.CloseIndexFile();
+            sourceIndex.Clear();
+            sourceNameBase.Clear();
+            sourceGFile.Close();
+
+            // We need to increase the filter size if a game was added:
+            if (! replaceMode) {
+                // TODO
+            }
+            initialized = false;
+        }
+    }
+    cleanup:
+        (*env).ReleaseStringUTFChars(pgn, pgnString);
+        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        return (*env).NewStringUTF(resultString.c_str());
 }
