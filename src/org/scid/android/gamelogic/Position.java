@@ -11,11 +11,11 @@ import java.security.NoSuchAlgorithmException;
 import android.util.Log;
 
 /**
- * Stores the state of a chess position. All required state is stored, except
- * for all previous positions since the last capture or pawn move. That state is
- * only needed for three-fold repetition draw detection, and is better stored in
- * a separate hash table.
- * 
+ * Stores the state of a chess position.
+ * All required state is stored, except for all previous positions
+ * since the last capture or pawn move. That state is only needed
+ * for three-fold repetition draw detection, and is better stored
+ * in a separate hash table.
  * @author petero
  */
 public class Position {
@@ -24,14 +24,10 @@ public class Position {
 	public boolean whiteMove;
 
 	/** Bit definitions for the castleMask bit mask. */
-	public static final int A1_CASTLE = 0;
-	/** White long castle. */
-	public static final int H1_CASTLE = 1;
-	/** White short castle. */
-	public static final int A8_CASTLE = 2;
-	/** Black long castle. */
-	public static final int H8_CASTLE = 3;
-	/** Black short castle. */
+    public static final int A1_CASTLE = 0; /** White long castle. */
+    public static final int H1_CASTLE = 1; /** White short castle. */
+    public static final int A8_CASTLE = 2; /** Black long castle. */
+    public static final int H8_CASTLE = 3; /** Black short castle. */
 
 	private int castleMask;
 
@@ -102,17 +98,15 @@ public class Position {
 	}
 
 	/**
-	 * Return Zobrish hash value for the current position. Everything except the
-	 * move counters are included in the hash value.
+     * Return Zobrish hash value for the current position.
+     * Everything except the move counters are included in the hash value.
 	 */
 	public final long zobristHash() {
 		return hashKey;
 	}
 
 	/**
-	 * Decide if two positions are equal in the sense of the draw by repetition
-	 * rule.
-	 * 
+     * Decide if two positions are equal in the sense of the draw by repetition rule.
 	 * @return True if positions are equal, false otherwise.
 	 */
 	final public boolean drawRuleEquals(Position other) {
@@ -135,22 +129,18 @@ public class Position {
 			this.whiteMove = whiteMove;
 		}
 	}
-
 	/** Return index in squares[] vector corresponding to (x,y). */
 	public final static int getSquare(int x, int y) {
 		return y * 8 + x;
 	}
-
 	/** Return x position (file) corresponding to a square. */
 	public final static int getX(int square) {
 		return square & 7;
 	}
-
 	/** Return y position (rank) corresponding to a square. */
 	public final static int getY(int square) {
 		return square >> 3;
 	}
-
 	/** Return true if (x,y) is a dark square. */
 	public final static boolean darkSquare(int x, int y) {
 		return (x & 1) == (y & 1);
@@ -165,7 +155,6 @@ public class Position {
 			return Piece.EMPTY;
 		}
 	}
-
 	/** Set a square to a piece value. */
 	public final void setPiece(int square, int piece) {
 		// Update hash key
@@ -188,27 +177,22 @@ public class Position {
 	public final boolean a1Castle() {
 		return (castleMask & (1 << A1_CASTLE)) != 0;
 	}
-
 	/** Return true if white short castling right has not been lost. */
 	public final boolean h1Castle() {
 		return (castleMask & (1 << H1_CASTLE)) != 0;
 	}
-
 	/** Return true if black long castling right has not been lost. */
 	public final boolean a8Castle() {
 		return (castleMask & (1 << A8_CASTLE)) != 0;
 	}
-
 	/** Return true if black short castling right has not been lost. */
 	public final boolean h8Castle() {
 		return (castleMask & (1 << H8_CASTLE)) != 0;
 	}
-
 	/** Bitmask describing castling rights. */
 	public final int getCastleMask() {
 		return castleMask;
 	}
-
 	public final void setCastleMask(int castleMask) {
 		hashKey ^= castleHashKeys[this.castleMask];
 		hashKey ^= castleHashKeys[castleMask];
@@ -219,15 +203,14 @@ public class Position {
 	public final int getEpSquare() {
 		return epSquare;
 	}
-
 	public final void setEpSquare(int epSquare) {
 		if (this.epSquare != epSquare) {
-			hashKey ^= epHashKeys[(this.epSquare >= 0) ? getX(this.epSquare) + 1
-					: 0];
+            hashKey ^= epHashKeys[(this.epSquare >= 0) ? getX(this.epSquare) + 1 : 0];
 			hashKey ^= epHashKeys[(epSquare >= 0) ? getX(epSquare) + 1 : 0];
 			this.epSquare = epSquare;
 		}
 	}
+
 
 	public final int getKingSq(boolean whiteMove) {
 		return whiteMove ? wKingSq : bKingSq;
@@ -258,8 +241,7 @@ public class Position {
 
 		boolean nullMove = (move.from == 0) && (move.to == 0);
 
-		if (nullMove || (capP != Piece.EMPTY)
-				|| (p == (wtm ? Piece.WPAWN : Piece.BPAWN))) {
+        if (nullMove || (capP != Piece.EMPTY) || (p == (wtm ? Piece.WPAWN : Piece.BPAWN))) {
 			halfMoveClock = 0;
 		} else {
 			halfMoveClock++;
@@ -305,8 +287,8 @@ public class Position {
 		if (p == Piece.WPAWN) {
 			if (move.to - move.from == 2 * 8) {
 				int x = Position.getX(move.to);
-				if (((x > 0) && (squares[move.to - 1] == Piece.BPAWN))
-						|| ((x < 7) && (squares[move.to + 1] == Piece.BPAWN))) {
+                if (    ((x > 0) && (squares[move.to - 1] == Piece.BPAWN)) ||
+                        ((x < 7) && (squares[move.to + 1] == Piece.BPAWN))) {
 					setEpSquare(move.from + 8);
 				}
 			} else if (move.to == prevEpSquare) {
@@ -315,8 +297,8 @@ public class Position {
 		} else if (p == Piece.BPAWN) {
 			if (move.to - move.from == -2 * 8) {
 				int x = Position.getX(move.to);
-				if (((x > 0) && (squares[move.to - 1] == Piece.WPAWN))
-						|| ((x < 7) && (squares[move.to + 1] == Piece.WPAWN))) {
+                if (    ((x > 0) && (squares[move.to - 1] == Piece.WPAWN)) ||
+                        ((x < 7) && (squares[move.to + 1] == Piece.WPAWN))) {
 					setEpSquare(move.from - 8);
 				}
 			} else if (move.to == prevEpSquare) {
@@ -413,8 +395,7 @@ public class Position {
 	}
 
 	/**
-	 * Compute the Zobrist hash value non-incrementally. Only useful for test
-	 * programs.
+     * Compute the Zobrist hash value non-incrementally. Only useful for test programs.
 	 */
 	final long computeZobristHash() {
 		long hash = 0;

@@ -26,11 +26,10 @@ public class GameTree {
 	String timeControl;
 
 	// Non-standard tags
-	static private class TagPair {
+    static private final class TagPair {
 		String tagName;
 		String tagValue;
 	}
-
 	List<TagPair> tagPairs;
 
 	Node rootNode;
@@ -120,8 +119,8 @@ public class GameTree {
 
 		@Override
 		public void processToken(Node node, int type, String token) {
-			if ((prevType == PgnToken.RIGHT_BRACKET)
-					&& (type != PgnToken.LEFT_BRACKET)) {
+            if (    (prevType == PgnToken.RIGHT_BRACKET) &&
+                    (type != PgnToken.LEFT_BRACKET))  {
 				header = sb.toString();
 				sb = new StringBuilder(4096);
 			}
@@ -140,8 +139,8 @@ public class GameTree {
 				break;
 			}
 			case PgnToken.INTEGER:
-				if ((prevType != PgnToken.LEFT_PAREN)
-						&& (prevType != PgnToken.RIGHT_BRACKET))
+                if (    (prevType != PgnToken.LEFT_PAREN) &&
+                        (prevType != PgnToken.RIGHT_BRACKET))
 					sb.append(' ');
 				sb.append(token);
 				break;
@@ -168,14 +167,13 @@ public class GameTree {
 				sb.append(token);
 				break;
 			case PgnToken.SYMBOL:
-				if ((prevType != PgnToken.RIGHT_BRACKET)
-						&& (prevType != PgnToken.LEFT_BRACKET))
+                if ((prevType != PgnToken.RIGHT_BRACKET) && (prevType != PgnToken.LEFT_BRACKET))
 					sb.append(' ');
 				sb.append(token);
 				break;
 			case PgnToken.COMMENT:
-				if ((prevType != PgnToken.LEFT_PAREN)
-						&& (prevType != PgnToken.RIGHT_BRACKET))
+                if (    (prevType != PgnToken.LEFT_PAREN) &&
+                        (prevType != PgnToken.RIGHT_BRACKET))
 					sb.append(' ');
 				sb.append('{');
 				sb.append(token);
@@ -191,11 +189,9 @@ public class GameTree {
 		public boolean isUpToDate() {
 			return true;
 		}
-
 		@Override
 		public void clear() {
 		}
-
 		@Override
 		public void setCurrent(Node node) {
 		}
@@ -245,15 +241,13 @@ public class GameTree {
 			addTagPair(out, tagPairs.get(i).tagName, tagPairs.get(i).tagValue);
 
 		// Write moveText section
-		MoveNumber mn = new MoveNumber(startPos.fullMoveCounter,
-				startPos.whiteMove);
+        MoveNumber mn = new MoveNumber(startPos.fullMoveCounter, startPos.whiteMove);
 		Node.addPgnData(out, rootNode, mn.prev(), options);
 		out.processToken(null, PgnToken.SYMBOL, pgnResultString);
 		out.processToken(null, PgnToken.EOF, null);
 	}
 
-	private final void addTagPair(PgnToken.PgnTokenReceiver out,
-			String tagName, String tagValue) {
+    private final void addTagPair(PgnToken.PgnTokenReceiver out, String tagName, String tagValue) {
 		out.processToken(null, PgnToken.LEFT_BRACKET, null);
 		out.processToken(null, PgnToken.SYMBOL, tagName);
 		out.processToken(null, PgnToken.STRING, tagValue);
@@ -329,8 +323,7 @@ public class GameTree {
 						break;
 					} else if (c == '{') {
 						ret.type = PgnToken.COMMENT;
-						StringBuilder sb = new StringBuilder();
-						;
+                        StringBuilder sb = new StringBuilder();;
 						while ((c = data.charAt(idx++)) != '}') {
 							sb.append(c);
 						}
@@ -338,8 +331,7 @@ public class GameTree {
 						break;
 					} else if (c == ';') {
 						ret.type = PgnToken.COMMENT;
-						StringBuilder sb = new StringBuilder();
-						;
+                        StringBuilder sb = new StringBuilder();;
 						while (true) {
 							c = data.charAt(idx++);
 							if ((c == '\n') || (c == '\r'))
@@ -350,8 +342,7 @@ public class GameTree {
 						break;
 					} else if (c == '"') {
 						ret.type = PgnToken.STRING;
-						StringBuilder sb = new StringBuilder();
-						;
+                        StringBuilder sb = new StringBuilder();;
 						while (true) {
 							c = data.charAt(idx++);
 							if (c == '"') {
@@ -365,8 +356,7 @@ public class GameTree {
 						break;
 					} else if (c == '$') {
 						ret.type = PgnToken.NAG;
-						StringBuilder sb = new StringBuilder();
-						;
+                        StringBuilder sb = new StringBuilder();;
 						while (true) {
 							c = data.charAt(idx++);
 							if (!Character.isDigit(c)) {
@@ -385,8 +375,7 @@ public class GameTree {
 						final String term = ".*[](){;\"$";
 						while (true) {
 							c = data.charAt(idx++);
-							if (Character.isWhitespace(c)
-									|| (term.indexOf(c) >= 0)) {
+                            if (Character.isWhitespace(c) || (term.indexOf(c) >= 0)) {
 								idx--;
 								break;
 							}
@@ -417,8 +406,7 @@ public class GameTree {
 	}
 
 	/** Import PGN data. */
-	public final boolean readPGN(String pgn, PGNOptions options)
-			throws ChessParseError {
+    public final boolean readPGN(String pgn, PGNOptions options) throws ChessParseError {
 		PgnScanner scanner = new PgnScanner(pgn);
 		PgnToken tok = scanner.nextToken();
 
@@ -441,12 +429,10 @@ public class GameTree {
 				// " characters sometimes occur. Try to do something useful
 				// for such headers here.
 				PgnToken prevTok = new PgnToken(PgnToken.STRING, "");
-				while ((tok.type == PgnToken.STRING)
-						|| (tok.type == PgnToken.SYMBOL)) {
+                while ((tok.type == PgnToken.STRING) || (tok.type == PgnToken.SYMBOL)) {
 					if (tok.type != prevTok.type)
 						tp.tagValue += '"';
-					if ((tok.type == PgnToken.SYMBOL)
-							&& (prevTok.type == PgnToken.SYMBOL))
+                    if ((tok.type == PgnToken.SYMBOL) && (prevTok.type == PgnToken.SYMBOL))
 						tp.tagValue += ' ';
 					tp.tagValue += tok.token;
 					prevTok = tok;
@@ -612,6 +598,7 @@ public class GameTree {
 		updateListener();
 	}
 
+
 	/** Go backward in game tree. */
 	public final void goBack() {
 		if (currentNode.parent != null) {
@@ -620,16 +607,12 @@ public class GameTree {
 		}
 	}
 
-	/**
-	 * Go forward in game tree.
-	 * 
-	 * @param variation
-	 *            Which variation to follow. -1 to follow default variation.
+    /** Go forward in game tree.
+     * @param variation Which variation to follow. -1 to follow default variation.
 	 */
 	public final void goForward(int variation) {
 		goForward(variation, true);
 	}
-
 	public final void goForward(int variation, boolean updateDefault) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
@@ -657,18 +640,14 @@ public class GameTree {
 		return ret;
 	}
 
-	/**
-	 * Add a move last in the list of variations.
-	 * 
+    /** Add a move last in the list of variations.
 	 * @return Move number in variations list. -1 if moveStr is not a valid move
 	 */
-	public final int addMove(String moveStr, String playerAction, int nag,
-			String preComment, String postComment) {
+    public final int addMove(String moveStr, String playerAction, int nag, String preComment, String postComment) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		int idx = currentNode.children.size();
-		Node node = new Node(currentNode, moveStr, playerAction,
-				Integer.MIN_VALUE, nag, preComment, postComment);
+        Node node = new Node(currentNode, moveStr, playerAction, Integer.MIN_VALUE, nag, preComment, postComment);
 		Move move = TextIO.UCIstringToMove(moveStr);
 		if (move == null)
 			move = TextIO.stringToMove(currentPos, moveStr);
@@ -687,8 +666,7 @@ public class GameTree {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		int nChild = currentNode.children.size();
-		if ((varNo < 0) || (varNo >= nChild) || (newPos < 0)
-				|| (newPos >= nChild))
+        if ((varNo < 0) || (varNo >= nChild) || (newPos < 0) || (newPos >= nChild))
 			return;
 		Node var = currentNode.children.get(varNo);
 		currentNode.children.remove(varNo);
@@ -698,10 +676,8 @@ public class GameTree {
 		if (varNo == newDef) {
 			newDef = newPos;
 		} else {
-			if (varNo < newDef)
-				newDef--;
-			if (newPos <= newDef)
-				newDef++;
+            if (varNo < newDef) newDef--;
+            if (newPos <= newDef) newDef++;
 		}
 		currentNode.defaultChild = newDef;
 		updateListener();
@@ -762,8 +738,7 @@ public class GameTree {
 		Node node = currentNode;
 		boolean wtm = currentPos.whiteMove;
 		while (true) {
-			if (wtm != whiteMove) { // If wtm in current mode, black made last
-				// move
+            if (wtm != whiteMove) { // If wtm in current mode, black made last move
 				remainingTime = node.remainingTime;
 				if (remainingTime != undef)
 					break;
@@ -785,18 +760,15 @@ public class GameTree {
 		String action = currentNode.playerAction;
 		if (action.equals("resign")) {
 			// Player made null move to resign, causing whiteMove to toggle
-			return pos.whiteMove ? GameState.RESIGN_BLACK
-					: GameState.RESIGN_WHITE;
+            return pos.whiteMove ? GameState.RESIGN_BLACK : GameState.RESIGN_WHITE;
 		}
 		ArrayList<Move> moves = new MoveGen().pseudoLegalMoves(pos);
 		moves = MoveGen.removeIllegal(pos, moves);
 		if (moves.size() == 0) {
 			if (MoveGen.inCheck(pos)) {
-				return pos.whiteMove ? GameState.BLACK_MATE
-						: GameState.WHITE_MATE;
+                return pos.whiteMove ? GameState.BLACK_MATE : GameState.WHITE_MATE;
 			} else {
-				return pos.whiteMove ? GameState.WHITE_STALEMATE
-						: GameState.BLACK_STALEMATE;
+                return pos.whiteMove ? GameState.WHITE_STALEMATE : GameState.BLACK_STALEMATE;
 			}
 		}
 		if (insufficientMaterial(pos)) {
@@ -815,10 +787,7 @@ public class GameTree {
 		return GameState.ALIVE;
 	}
 
-	/**
-	 * Get additional info affecting gameState. A player "draw" or "resign"
-	 * command.
-	 */
+    /** Get additional info affecting gameState. A player "draw" or "resign" command. */
 	final String getGameStateInfo() {
 		String ret = "";
 		String action = currentNode.playerAction;
@@ -857,18 +826,12 @@ public class GameTree {
 	}
 
 	private static final boolean insufficientMaterial(Position pos) {
-		if (pos.nPieces(Piece.WQUEEN) > 0)
-			return false;
-		if (pos.nPieces(Piece.WROOK) > 0)
-			return false;
-		if (pos.nPieces(Piece.WPAWN) > 0)
-			return false;
-		if (pos.nPieces(Piece.BQUEEN) > 0)
-			return false;
-		if (pos.nPieces(Piece.BROOK) > 0)
-			return false;
-		if (pos.nPieces(Piece.BPAWN) > 0)
-			return false;
+        if (pos.nPieces(Piece.WQUEEN) > 0) return false;
+        if (pos.nPieces(Piece.WROOK)  > 0) return false;
+        if (pos.nPieces(Piece.WPAWN)  > 0) return false;
+        if (pos.nPieces(Piece.BQUEEN) > 0) return false;
+        if (pos.nPieces(Piece.BROOK)  > 0) return false;
+        if (pos.nPieces(Piece.BPAWN)  > 0) return false;
 		int wb = pos.nPieces(Piece.WBISHOP);
 		int wn = pos.nPieces(Piece.WKNIGHT);
 		int bb = pos.nPieces(Piece.BBISHOP);
@@ -877,8 +840,7 @@ public class GameTree {
 			return true; // King + bishop/knight vs king is draw
 		}
 		if (wn + bn == 0) {
-			// Only bishops. If they are all on the same color, the position is
-			// a draw.
+            // Only bishops. If they are all on the same color, the position is a draw.
 			boolean bSquare = false;
 			boolean wSquare = false;
 			for (int x = 0; x < 8; x++) {
@@ -900,53 +862,41 @@ public class GameTree {
 		return false;
 	}
 
-	/**
-	 * Keep track of current move and side to move. Used for move number
-	 * printing.
-	 */
+
+    /** Keep track of current move and side to move. Used for move number printing. */
 	private static final class MoveNumber {
 		final int moveNo;
 		final boolean wtm; // White to move
-
 		MoveNumber(int moveNo, boolean wtm) {
 			this.moveNo = moveNo;
 			this.wtm = wtm;
 		}
-
 		public final MoveNumber next() {
-			if (wtm)
-				return new MoveNumber(moveNo, false);
-			else
-				return new MoveNumber(moveNo + 1, true);
+            if (wtm) return new MoveNumber(moveNo, false);
+            else     return new MoveNumber(moveNo + 1, true);
 		}
-
 		public final MoveNumber prev() {
-			if (wtm)
-				return new MoveNumber(moveNo - 1, false);
-			else
-				return new MoveNumber(moveNo, true);
+            if (wtm) return new MoveNumber(moveNo - 1, false);
+            else     return new MoveNumber(moveNo, true);
 		}
 	}
 
 	/**
-	 * A node object represents a position in the game tree. The position is
-	 * defined by the move that leads to the position from the parent position.
+     *  A node object represents a position in the game tree.
+     *  The position is defined by the move that leads to the position from the parent position.
 	 * The root node is special in that it doesn't have a move.
 	 */
 	public static class Node {
-		String moveStr; // String representation of move leading to this node.
-		// Empty string root node.
+        String moveStr;             // String representation of move leading to this node. Empty string root node.
 		Move move; // Computed on demand for better PGN parsing performance.
 		// Subtrees of invalid moves will be dropped when detected.
 		// Always valid for current node.
 		private int moveNumber; // the full move number
 
 		private UndoInfo ui; // Computed when move is computed
-		String playerAction; // Player action. Draw claim/offer/accept or
-		// resign.
+        String playerAction;        // Player action. Draw claim/offer/accept or resign.
 
-		int remainingTime; // Remaining time in ms for side that played moveStr,
-		// or INT_MIN if unknown.
+        int remainingTime;          // Remaining time in ms for side that played moveStr, or INT_MIN if unknown.
 		int nag; // Numeric annotation glyph
 		String preComment; // Comment before move
 		String postComment; // Comment after move
@@ -970,9 +920,8 @@ public class GameTree {
 			this.moveNumber = 0;
 		}
 
-		public Node(Node parent, String moveStr, String playerAction,
-				int remainingTime, int nag, String preComment,
-				String postComment) {
+        public Node(Node parent, String moveStr, String playerAction, int remainingTime, int nag,
+                    String preComment, String postComment) {
 			this.moveStr = moveStr;
 			this.move = null;
 			this.ui = null;
@@ -993,9 +942,7 @@ public class GameTree {
 				if (child.move == null) {
 					Move move = TextIO.stringToMove(nodePos, child.moveStr);
 					if (move != null) {
-						// apparently not needed here
-						// child.moveStr = TextIO.moveToString(nodePos, move,
-						// false);
+						child.moveStr = TextIO.moveToString(nodePos, move, false);
 						child.move = move;
 						child.ui = new UndoInfo();
 					} else {
@@ -1024,8 +971,7 @@ public class GameTree {
 			return ret;
 		}
 
-		static final void writeToStream(DataOutputStream dos, Node node)
-				throws IOException {
+        static final void writeToStream(DataOutputStream dos, Node node) throws IOException {
 			while (true) {
 				dos.writeUTF(node.moveStr);
 				if (node.move != null) {
@@ -1052,8 +998,7 @@ public class GameTree {
 			}
 		}
 
-		static final void readFromStream(DataInputStream dis, Node node)
-				throws IOException {
+        static final void readFromStream(DataInputStream dis, Node node) throws IOException {
 			while (true) {
 				node.moveStr = dis.readUTF();
 				int from = dis.readByte();
@@ -1086,17 +1031,15 @@ public class GameTree {
 		}
 
 		/** Export whole tree rooted at "node" in PGN format. */
-		public static final void addPgnData(PgnToken.PgnTokenReceiver out,
-				Node node, MoveNumber moveNum, PGNOptions options) {
-			boolean needMoveNr = node.addPgnDataOneNode(out, moveNum, true,
-					options);
+        public static final void addPgnData(PgnToken.PgnTokenReceiver out, Node node,
+                                            MoveNumber moveNum, PGNOptions options) {
+            boolean needMoveNr = node.addPgnDataOneNode(out, moveNum, true, options);
 			while (true) {
 				int nChild = node.children.size();
 				if (nChild == 0)
 					break;
 				MoveNumber nextMN = moveNum.next();
-				needMoveNr = node.children.get(0).addPgnDataOneNode(out,
-						nextMN, needMoveNr, options);
+                needMoveNr = node.children.get(0).addPgnDataOneNode(out, nextMN, needMoveNr, options);
 				if (options.exp.variations) {
 					for (int i = 1; i < nChild; i++) {
 						out.processToken(node, PgnToken.LEFT_PAREN, null);
@@ -1119,25 +1062,20 @@ public class GameTree {
 				needMoveNr = true;
 			}
 			if (moveStr.length() > 0) {
-				boolean nullSkip = moveStr.equals("--")
-						&& (playerAction.length() > 0)
-						&& !options.exp.playerAction;
+                boolean nullSkip = moveStr.equals("--") && (playerAction.length() > 0) && !options.exp.playerAction;
 				if (!nullSkip) {
 					if (mn.wtm) {
-						out.processToken(this, PgnToken.INTEGER, new Integer(
-								mn.moveNo).toString());
+                        out.processToken(this, PgnToken.INTEGER, Integer.valueOf(mn.moveNo).toString());
 						out.processToken(this, PgnToken.PERIOD, null);
 					} else {
 						if (needMoveNr) {
-							out.processToken(this, PgnToken.INTEGER,
-									new Integer(mn.moveNo).toString());
+                            out.processToken(this, PgnToken.INTEGER, Integer.valueOf(mn.moveNo).toString());
 							for (int i = 0; i < 3; i++)
 								out.processToken(this, PgnToken.PERIOD, null);
 						}
 					}
 					String str = moveStr;
-					if (options.exp.pgnPromotions && (move != null)
-							&& (move.promoteTo != Piece.EMPTY)) {
+                    if (options.exp.pgnPromotions && (move != null) && (move.promoteTo != Piece.EMPTY)) {
 						str = TextIO.pgnPromotion(str);
 					}
 					out.processToken(this, PgnToken.SYMBOL, str);
@@ -1145,8 +1083,7 @@ public class GameTree {
 				}
 			}
 			if ((nag > 0) && options.exp.nag) {
-				out.processToken(this, PgnToken.NAG, new Integer(nag)
-						.toString());
+                out.processToken(this, PgnToken.NAG, Integer.valueOf(nag).toString());
 				if (options.exp.moveNrAfterNag)
 					needMoveNr = true;
 			}
@@ -1167,8 +1104,7 @@ public class GameTree {
 
 		private final void addExtendedInfo(PgnToken.PgnTokenReceiver out,
 				String extCmd, String extData) {
-			out.processToken(this, PgnToken.COMMENT, "{[%" + extCmd + " "
-					+ extData + "]}");
+            out.processToken(this, PgnToken.COMMENT, "{[%" + extCmd + " " + extData + "]}");
 		}
 
 		private static final String getTimeStr(int remainingTime) {
@@ -1183,18 +1119,14 @@ public class GameTree {
 			int hours = mins / 60;
 			mins -= hours * 60;
 			StringBuilder ret = new StringBuilder();
-			if (neg)
-				ret.append('-');
-			if (hours < 10)
-				ret.append('0');
+            if (neg) ret.append('-');
+            if (hours < 10) ret.append('0');
 			ret.append(hours);
 			ret.append(':');
-			if (mins < 10)
-				ret.append('0');
+            if (mins < 10) ret.append('0');
 			ret.append(mins);
 			ret.append(':');
-			if (secs < 10)
-				ret.append('0');
+            if (secs < 10) ret.append('0');
 			ret.append(secs);
 			return ret.toString();
 		}
@@ -1205,8 +1137,7 @@ public class GameTree {
 			return child;
 		}
 
-		public static final void parsePgn(PgnScanner scanner, Node node,
-				PGNOptions options) {
+        public static final void parsePgn(PgnScanner scanner, Node node, PGNOptions options) {
 			Node nodeToAdd = new Node();
 			boolean moveAdded = false;
 			while (true) {
@@ -1227,21 +1158,15 @@ public class GameTree {
 						int nestLevel = 1;
 						while (nestLevel > 0) {
 							switch (scanner.nextToken().type) {
-							case PgnToken.LEFT_PAREN:
-								nestLevel++;
-								break;
-							case PgnToken.RIGHT_PAREN:
-								nestLevel--;
-								break;
-							case PgnToken.EOF:
-								return; // Broken PGN file. Just give up.
+                            case PgnToken.LEFT_PAREN: nestLevel++; break;
+                            case PgnToken.RIGHT_PAREN: nestLevel--; break;
+                            case PgnToken.EOF: return; // Broken PGN file. Just give up.
 							}
 						}
 					}
 					break;
 				case PgnToken.NAG:
-					if (moveAdded && options.imp.nag) { // NAG must be after
-						// move
+                    if (moveAdded && options.imp.nag) { // NAG must be after move
 						try {
 							nodeToAdd.nag = Integer.parseInt(tok.token);
 						} catch (NumberFormatException e) {
@@ -1250,16 +1175,13 @@ public class GameTree {
 					}
 					break;
 				case PgnToken.SYMBOL:
-					if (tok.token.equals("1-0") || tok.token.equals("0-1")
-							|| tok.token.equals("1/2-1/2")) {
-						if (moveAdded)
-							node.addChild(nodeToAdd);
+                    if (tok.token.equals("1-0") || tok.token.equals("0-1") || tok.token.equals("1/2-1/2")) {
+                        if (moveAdded) node.addChild(nodeToAdd);
 						return;
 					}
 					char lastChar = tok.token.charAt(tok.token.length() - 1);
 					if (lastChar == '+')
-						tok.token = tok.token.substring(0,
-								tok.token.length() - 1);
+                        tok.token = tok.token.substring(0, tok.token.length() - 1);
 					if ((lastChar == '!') || (lastChar == '?')) {
 						int movLen = tok.token.length() - 1;
 						while (movLen > 0) {
@@ -1272,21 +1194,14 @@ public class GameTree {
 						String ann = tok.token.substring(movLen);
 						tok.token = tok.token.substring(0, movLen);
 						int nag = 0;
-						if (ann.equals("!"))
-							nag = 1;
-						else if (ann.equals("?"))
-							nag = 2;
-						else if (ann.equals("!!"))
-							nag = 3;
-						else if (ann.equals("??"))
-							nag = 4;
-						else if (ann.equals("!?"))
-							nag = 5;
-						else if (ann.equals("?!"))
-							nag = 6;
+                        if      (ann.equals("!"))  nag = 1;
+                        else if (ann.equals("?"))  nag = 2;
+                        else if (ann.equals("!!")) nag = 3;
+                        else if (ann.equals("??")) nag = 4;
+                        else if (ann.equals("!?")) nag = 5;
+                        else if (ann.equals("?!")) nag = 6;
 						if (nag > 0)
-							scanner.putBack(new PgnToken(PgnToken.NAG,
-									new Integer(nag).toString()));
+                            scanner.putBack(new PgnToken(PgnToken.NAG, Integer.valueOf(nag).toString()));
 					}
 					if (tok.token.length() > 0) {
 						if (moveAdded) {
@@ -1301,8 +1216,7 @@ public class GameTree {
 				case PgnToken.COMMENT:
 					try {
 						while (true) {
-							Pair<String, String> ret = extractExtInfo(
-									tok.token, "clk");
+                            Pair<String,String> ret = extractExtInfo(tok.token, "clk");
 							tok.token = ret.first;
 							String cmdPars = ret.second;
 							if (cmdPars == null)
@@ -1310,8 +1224,7 @@ public class GameTree {
 							nodeToAdd.remainingTime = parseTimeString(cmdPars);
 						}
 						while (true) {
-							Pair<String, String> ret = extractExtInfo(
-									tok.token, "playeraction");
+                            Pair<String,String> ret = extractExtInfo(tok.token, "playeraction");
 							tok.token = ret.first;
 							String cmdPars = ret.second;
 							if (cmdPars == null)
@@ -1333,8 +1246,7 @@ public class GameTree {
 				case PgnToken.STRING:
 				case PgnToken.RIGHT_PAREN:
 				case PgnToken.EOF:
-					if (moveAdded)
-						node.addChild(nodeToAdd);
+                    if (moveAdded) node.addChild(nodeToAdd);
 					return;
 				}
 			}
@@ -1351,8 +1263,7 @@ public class GameTree {
 			if (start >= 0) {
 				int end = comment.indexOf("]", start);
 				if (end >= 0) {
-					remaining = comment.substring(0, start)
-							+ comment.substring(end + 1);
+                    remaining = comment.substring(0, start) + comment.substring(end + 1);
 					param = comment.substring(start + match.length(), end);
 				}
 			}
@@ -1390,68 +1301,39 @@ public class GameTree {
 
 		public final static String nagStr(int nag) {
 			switch (nag) {
-			case 1:
-				return "!";
-			case 2:
-				return "?";
-			case 3:
-				return "!!";
-			case 4:
-				return "??";
-			case 5:
-				return "!?";
-			case 6:
-				return "?!";
-			case 11:
-				return " =";
-			case 13:
-				return " ∞";
-			case 14:
-				return " +/=";
-			case 15:
-				return " =/+";
-			case 16:
-				return " +/-";
-			case 17:
-				return " -/+";
-			case 18:
-				return " +-";
-			case 19:
-				return " -+";
-			default:
-				return "";
+            case 1: return "!";
+            case 2: return "?";
+            case 3: return "!!";
+            case 4: return "??";
+            case 5: return "!?";
+            case 6: return "?!";
+            case 11: return " =";
+            case 13: return " 8";
+            case 14: return " +/=";
+            case 15: return " =/+";
+            case 16: return " +/-";
+            case 17: return " -/+";
+            case 18: return " +-";
+            case 19: return " -+";
+            default: return "";
 			}
 		}
 
 		public final static int strToNag(String str) {
-			if (str.equals("!"))
-				return 1;
-			else if (str.equals("?"))
-				return 2;
-			else if (str.equals("!!"))
-				return 3;
-			else if (str.equals("??"))
-				return 4;
-			else if (str.equals("!?"))
-				return 5;
-			else if (str.equals("?!"))
-				return 6;
-			else if (str.equals("="))
-				return 11;
-			else if (str.equals("∞"))
-				return 13;
-			else if (str.equals("+/="))
-				return 14;
-			else if (str.equals("=/+"))
-				return 15;
-			else if (str.equals("+/-"))
-				return 16;
-			else if (str.equals("-/+"))
-				return 17;
-			else if (str.equals("+-"))
-				return 18;
-			else if (str.equals("-+"))
-				return 19;
+            if      (str.equals("!"))  return 1;
+            else if (str.equals("?"))  return 2;
+            else if (str.equals("!!")) return 3;
+            else if (str.equals("??")) return 4;
+            else if (str.equals("!?")) return 5;
+            else if (str.equals("?!")) return 6;
+            else if (str.equals("=")) return 11;
+            else if (str.equals("8")) return 13;
+            else if (str.equals("+/=")) return 14;
+            else if (str.equals("=/+")) return 15;
+            else if (str.equals("+/-")) return 16;
+            else if (str.equals("-/+")) return 17;
+            else if (str.equals("+-")) return 18;
+            else if (str.equals("-+")) return 19;
 			else {
 				try {
 					str = str.replace("$", "");
