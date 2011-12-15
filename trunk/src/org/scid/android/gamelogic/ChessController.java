@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.scid.android.GUIInterface;
@@ -739,6 +740,16 @@ public class ChessController {
 		return false;
 	}
 
+    public final void setHeaders(Map<String,String> headers) {
+        game.tree.setHeaders(headers);
+        gameTextListener.clear();
+        updateGUI();
+    }
+
+    public final void getHeaders(Map<String,String> headers) {
+        game.tree.getHeaders(headers);
+    }
+	
 	public final void resignGame() {
 		if (game.getGameState() == GameState.ALIVE) {
 			game.processString("resign", false);

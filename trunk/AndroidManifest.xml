@@ -1,108 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.scid.android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
+    package="org.scid.android"
     android:versionCode="24"
-    android:versionName="1.23">
+    android:versionName="1.23" >
+
     <application
+        android:debuggable="false"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:name=".ScidApplication"
-        android:debuggable="false">
+        android:name=".ScidApplication" >
         <activity
-            android:name=".ScidAndroidActivity"
+            android:configChanges="orientation"
             android:label="@string/app_name"
-            android:configChanges="orientation">
-            <intent-filter>
-                <action
-                    android:name="android.intent.action.MAIN" />
-                <category
-                    android:name="android.intent.category.LAUNCHER" />
+            android:name=".ScidAndroidActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="Preferences"
-            android:label="Preferences">
+            android:label="Preferences"
+            android:name="Preferences" >
         </activity>
         <activity
-            android:name="EditBoard"
+            android:configChanges="orientation"
             android:label="Edit Board"
-            android:configChanges="orientation">
+            android:name="EditBoard" >
         </activity>
         <activity
-            android:name="SearchCurrentBoardActivity"
+            android:configChanges="orientation"
             android:label="Board Search"
-            android:configChanges="orientation">
+            android:name="SearchCurrentBoardActivity" >
         </activity>
         <activity
-            android:name="SearchHeaderActivity"
+            android:configChanges="orientation"
             android:label="Header Search"
-            android:configChanges="orientation">
+            android:name="SearchHeaderActivity" >
         </activity>
         <activity
-            android:name="FavoritesSearchActivity"
+            android:configChanges="orientation"
             android:label="Favorites"
-            android:configChanges="orientation">
+            android:name="FavoritesSearchActivity" >
         </activity>
         <activity
-            android:name="ImportPgnActivity"
+            android:configChanges="orientation"
             android:label="PGN Import"
-            android:configChanges="orientation">
+            android:name="ImportPgnActivity" >
         </activity>
         <activity
-            android:name=".twic.ImportTwicActivity"
+            android:configChanges="orientation"
             android:label="TWIC Import"
-            android:configChanges="orientation">
+            android:name=".twic.ImportTwicActivity" >
         </activity>
         <activity
-            android:name=".chessok.ImportChessOkActivity"
+            android:configChanges="orientation"
             android:label="ChessOK Import"
-            android:configChanges="orientation">
+            android:name=".chessok.ImportChessOkActivity" >
         </activity>
         <activity
-            android:name=".chessok.PgnLinkListActivity"
+            android:configChanges="orientation"
             android:label="ChessOK Import"
-            android:configChanges="orientation">
+            android:name=".chessok.PgnLinkListActivity" >
         </activity>
         <activity
-            android:name=".chessok.ChessOkLinkMapActivity"
+            android:configChanges="orientation"
             android:label="ChessOK Import"
-            android:configChanges="orientation">
+            android:name=".chessok.ChessOkLinkMapActivity" >
         </activity>
         <activity
-            android:name=".SelectFileActivity"
+            android:configChanges="orientation"
             android:label="Select File"
-            android:configChanges="orientation">
-            <intent-filter>
+            android:name=".SelectFileActivity" >
+            <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
-            android:name="GameListActivity"
+            android:configChanges="orientation"
             android:label="Game List"
-            android:configChanges="orientation">
+            android:name="GameListActivity" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:label="Add Engine"
+            android:name="AddEngineActivity" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:label="Remove Engine"
+            android:name="RemoveEngineActivity" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:label="Save Game"
+            android:name="SaveGameActivity" >
         </activity>
 
-        <activity
-            android:name="AddEngineActivity"
-            android:label="Add Engine"
-            android:configChanges="orientation">
-        </activity>
-        <activity
-            android:name="RemoveEngineActivity"
-            android:label="Remove Engine"
-            android:configChanges="orientation">
-        </activity>
         <provider
-            android:name="org.scid.database.ScidProvider"
-            android:authorities="org.scid.database.scidprovider" />
+            android:authorities="org.scid.database.scidprovider"
+            android:name="org.scid.database.ScidProvider" />
     </application>
-    <uses-sdk
-        android:minSdkVersion="4" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.INTERNET"></uses-permission>
-</manifest> 
+
+    <uses-sdk android:minSdkVersion="4" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" >
+    </uses-permission>
+
+</manifest>
