@@ -3,7 +3,8 @@ package org.scid.android;
 final class GameInfo {
 	private String title;
 	private String details;
-	private int favorite = 0;
+	private boolean favorite = false;
+	private boolean deleted = false;
 
 	public String getTitle() {
 		return title;
@@ -21,11 +22,19 @@ final class GameInfo {
 		this.details = details;
 	}
 
-	public int getFavorite() {
+	public boolean isFavorite() {
 		return favorite;
 	}
 
-	public void setFavorite(int favorite) {
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setFavorite(boolean favorite) {
 		this.favorite = favorite;
+	}
+	
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
 	}
 }

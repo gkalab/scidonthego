@@ -15,6 +15,7 @@ public class ScidApplication extends Application {
 	private int noGames;
 	private boolean isFavorite = false;
 	private ChessController controller;
+	private boolean isDeleted = false;
 
 	public Position getPosition() {
 		return position;
@@ -67,10 +68,26 @@ public class ScidApplication extends Application {
 		return this.isFavorite;
 	}
 
+	/**
+	 * Set the current game as a favorite (true) or not (false)
+	 * @param isFavorite
+	 */
 	public void setFavorite(boolean isFavorite) {
 		this.isFavorite = isFavorite;
 	}
-	
+
+	public boolean isDeleted() {
+		return this.isDeleted ;
+	}
+
+	/**
+	 * Set the current game to deleted (true) or not (false)
+	 * @param isDeleted
+	 */
+	public void setDeleted(boolean isDeleted) {
+		this.isDeleted = isDeleted;
+	}
+
 	public void setController(ChessController controller) {
 		this.controller = controller;
 	}

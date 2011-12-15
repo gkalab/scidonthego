@@ -114,6 +114,9 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
             game->AddPgnStyle(PGN_STYLE_COMMENTS);
             game->AddPgnStyle(PGN_STYLE_VARS);
             game->SetPgnFormat(PGN_FORMAT_Plain);
+
+            // !Altered flag is here misused for the delete flag!
+            game->SetAltered(iE.GetDeleteFlag());
         }
       cleanup:
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
@@ -1398,6 +1401,43 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
 
 /*
  * Class:     org_scid_database_DataBase
+ * Method:    setDeleted
+ */
+extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
+                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean isDeleted)
+{
+    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    if (sourceFileName) {
+        Index sourceIndex;
+        sourceIndex.SetFileName(sourceFileName);
+        if (sourceIndex.OpenIndexFile(FMODE_Both) != OK) {
+            goto cleanup;
+        }
+
+        if (gameNo < sourceIndex.GetNumGames()) {
+            IndexEntry iE;
+            errorT err = 0;
+            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
+            if (err != OK) {
+                goto cleanup;
+            }
+            iE.SetDeleteFlag(isDeleted);
+            game->SetAltered(isDeleted);
+            // remove any favorite flag
+            iE.SetUserFlag(false);
+            sourceIndex.WriteEntries(&iE, gameNo, 1);
+            sourceIndex.CloseIndexFile();
+            sourceIndex.Clear();
+        }
+      cleanup:
+        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        return;
+    }
+}
+
+
+/*
+ * Class:     org_scid_database_DataBase
  * Method:    isFavorite
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isFavorite
@@ -1427,6 +1467,18 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isFavorite
         (*env).ReleaseStringUTFChars(fileName, sourceFileName);
     }
     return result;
+}
+
+
+/*
+ * Class:     org_scid_database_DataBase
+ * Method:    isDeleted
+ */
+extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
+                (JNIEnv* env, jobject obj)
+{
+    // misused altered flag for delete flag
+    return game->GetAltered();
 }
 
 

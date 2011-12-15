@@ -95,4 +95,11 @@ public class DataBase {
 	
 	/** Save the game with the game number. */
 	public final native String saveGame(String fileName, int gameNo, String pgn);
+	
+	/** Set the deleted flag on a game. */
+	public final native void setDeleted(String fileName, int gameNo,
+			boolean isDeleted);
+	
+	/** Return true if the current game is marked as deleted. */
+	public final native boolean isDeleted();
 }
