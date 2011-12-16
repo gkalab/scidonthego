@@ -67,11 +67,7 @@ public class GameInfo {
 		case 11:
 			return this.getDetails();
 		case 12:
-			if (isFavorite) {
-				return "" + 1;
-			} else {
-				return "" + 0;
-			}
+			return "" + isFavorite;
 		case 13:
 			return "" + isDeleted;
 		default:

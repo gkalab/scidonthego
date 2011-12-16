@@ -1438,40 +1438,6 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
 
 /*
  * Class:     org_scid_database_DataBase
- * Method:    isFavorite
- */
-extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isFavorite
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo)
-{
-    bool result = false;
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
-    if (sourceFileName) {
-        Index sourceIndex;
-        sourceIndex.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-            goto cleanup;
-        }
-
-        if (gameNo < sourceIndex.GetNumGames()) {
-            IndexEntry iE;
-            errorT err = 0;
-            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
-            if (err != OK) {
-                goto cleanup;
-            }
-            result = iE.GetUserFlag();
-            sourceIndex.CloseIndexFile();
-            sourceIndex.Clear();
-        }
-      cleanup:
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
-    }
-    return result;
-}
-
-
-/*
- * Class:     org_scid_database_DataBase
  * Method:    isDeleted
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
