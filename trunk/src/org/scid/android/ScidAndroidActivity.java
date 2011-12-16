@@ -1110,6 +1110,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				TextView.BufferType.SPANNABLE);
 	}
 
+	private void updateStatus() {
+		String statusStr = status.getText().toString();
+		if (statusStr.startsWith("DELETED ")) {
+			statusStr = statusStr.substring(8);
+		}
+		setStatusString(statusStr);
+	}
+	
 	@Override
 	public void moveListUpdated() {
 		if (gameMode.studyMode()) {
@@ -1583,6 +1591,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				if (value) {
 					getScidAppContext().setFavorite(false);
 				}
+				updateStatus();
 				setFavoriteRating();
 				reloadGameList = true;
 			} else {

@@ -7,9 +7,15 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 
 public class ScidProvider extends ContentProvider {
 	private DataBase db = new DataBase();
+
+	/**
+	 * The current cursor
+	 */
+	private Cursor cursor;
 
 	private static final int BOARDSEARCH_SELECTION_ARGS_LENGTH = 3;
 	// Provide a mechanism to identify all the incoming uri patterns.
@@ -100,24 +106,28 @@ public class ScidProvider extends ContentProvider {
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
+		this.cursor = result;
 		return result;
 	}
 
 	private Cursor getFavorites(String selection, String[] projection) {
-		return new ScidCursor(selection, projection);
+		this.cursor = new ScidCursor(selection, projection);
+		return this.cursor;
 	}
 
 	private Cursor searchBoard(String selection, String[] projection,
 			int startPosition, String[] selectionArgs, boolean singleGame) {
-		return new ScidCursor(selection, projection, startPosition,
+		this.cursor = new ScidCursor(selection, projection, startPosition,
 				selectionArgs[0], selectionArgs[1], new Integer(
 						selectionArgs[2]), singleGame);
+		return this.cursor;
 	}
 
 	private Cursor searchHeader(String selection, String[] projection,
 			int startPosition, String[] selectionArgs, boolean singleGame) {
-		return new ScidCursor(selection, projection, startPosition,
+		this.cursor = new ScidCursor(selection, projection, startPosition,
 				selectionArgs, singleGame);
+		return this.cursor;
 	}
 
 	/**
@@ -141,11 +151,13 @@ public class ScidProvider extends ContentProvider {
 			if (values.containsKey("isFavorite")) {
 				db.setFavorite(selection, gameNo, values
 						.getAsBoolean("isFavorite"));
+				setCursorValue("isFavorite", values.getAsBoolean("isFavorite"));
 				result = 1;
 			}
 			if (values.containsKey("isDeleted")) {
 				db.setDeleted(selection, gameNo, values
 						.getAsBoolean("isDeleted"));
+				setCursorValue("isDeleted", values.getAsBoolean("isDeleted"));
 				result = 1;
 			}
 			break;
@@ -155,4 +167,11 @@ public class ScidProvider extends ContentProvider {
 		return result;
 	}
 
+	private void setCursorValue(String key, boolean value) {
+		if (this.cursor != null) {
+			Bundle bundle = new Bundle();
+			bundle.putBoolean(key, value);
+			cursor.respond(bundle);
+		}
+	}
 }

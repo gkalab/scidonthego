@@ -151,10 +151,10 @@ public class GameListActivity extends ListActivity {
 			int percent = -1;
 			if (cursor.moveToFirst()) {
 				int gameNo = 0;
-				addGameInfo(cursor, true);
+				addGameInfo(cursor);
 				while (gameNo < noGames && cursor.moveToNext()) {
 					gameNo++;
-					addGameInfo(cursor, false);
+					addGameInfo(cursor);
 					final int newPercent = (int) (gameNo * 100 / noGames);
 					if (newPercent > percent) {
 						percent = newPercent;
@@ -199,13 +199,7 @@ public class GameListActivity extends ListActivity {
 		return cursor;
 	}
 
-	/**
-	 * @param cursor
-	 * @param retrieveFavoriteFromDb
-	 *            weird: the first entry in the cursor must retrieve the
-	 *            favorite information from the db directly
-	 */
-	private void addGameInfo(Cursor cursor, boolean retrieveFavoriteFromDb) {
+	private void addGameInfo(Cursor cursor) {
 		final GameInfo info = new GameInfo();
 		info.setDetails(cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.DETAILS)));
@@ -217,17 +211,10 @@ public class GameListActivity extends ListActivity {
 						+ cursor
 								.getString(cursor
 										.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
-		boolean isFavorite;
-		if (retrieveFavoriteFromDb) {
-			isFavorite = Boolean
-					.parseBoolean(cursor
-							.getString(cursor
-									.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
-		} else {
-			isFavorite = cursor
-					.getInt(cursor
-							.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)) != 0;
-		}
+		boolean isFavorite = Boolean
+				.parseBoolean(cursor
+						.getString(cursor
+								.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
 		info.setFavorite(isFavorite);
 		boolean isDeleted = Boolean.parseBoolean(cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_DELETED)));
