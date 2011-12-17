@@ -37,12 +37,6 @@ public interface GUIInterface {
 	/** Report that user attempted to make an invalid move. */
 	public void reportInvalidMove(Move m);
 
-	/**
-	 * Called when computer made a move. GUI can notify user, for example by
-	 * playing a sound.
-	 */
-	public void computerMoveMade();
-
 	/** Report remaining thinking time to GUI. */
 	public void setGameInformation(String white, String black, String gameNo);
 

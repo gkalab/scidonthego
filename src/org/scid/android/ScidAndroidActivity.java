@@ -44,12 +44,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -426,6 +426,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		// disable all other text colors (e.g. pressed) for move list
 		moveList.setTextColor(moveList.getTextColors().getDefaultColor());
 		moveList.setLinkTextColor(moveList.getTextColors().getDefaultColor());
+        moveList.setOnLongClickListener(new OnLongClickListener() {
+            public boolean onLongClick(View v) {
+				if (!gameMode.studyMode() && !gameMode.analysisMode()) {
+					removeDialog(MOVELIST_MENU_DIALOG);
+					showDialog(MOVELIST_MENU_DIALOG);
+				}
+				return true;
+            }
+        });
 
 		cb = (ChessBoard) findViewById(R.id.chessboard);
 		cb.setFocusable(true);
@@ -1226,10 +1235,44 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int SEARCH_DIALOG = 5;
 	static final int IMPORT_PGN_DIALOG = 6;
 	static final int MANAGE_ENGINES_DIALOG = 8;
+	static final int MOVELIST_MENU_DIALOG = 9;
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
+		case MOVELIST_MENU_DIALOG: {
+            final int REMOVE_SUBTREE = 0;
+            final int MOVE_VAR_UP    = 1;
+            final int MOVE_VAR_DOWN  = 2;
+
+            List<CharSequence> lst = new ArrayList<CharSequence>();
+            List<Integer> actions = new ArrayList<Integer>();
+            lst.add(getString(R.string.truncate_gametree)); actions.add(REMOVE_SUBTREE);
+            if (ctrl.numVariations() > 1) {
+                lst.add(getString(R.string.move_var_up));   actions.add(MOVE_VAR_UP);
+                lst.add(getString(R.string.move_var_down)); actions.add(MOVE_VAR_DOWN);
+            }
+            final List<Integer> finalActions = actions;
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.edit_game);
+            builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int item) {
+                    switch (finalActions.get(item)) {
+                    case REMOVE_SUBTREE:
+                        ctrl.removeSubTree();
+                        break;
+                    case MOVE_VAR_UP:
+                        ctrl.moveVariation(-1);
+                        break;
+                    case MOVE_VAR_DOWN:
+                        ctrl.moveVariation(1);
+                        break;
+                    }
+                }
+            });
+            AlertDialog alert = builder.create();
+            return alert;
+		}
 		case PROMOTE_DIALOG: {
 			final CharSequence[] items = { getString(R.string.queen),
 					getString(R.string.rook), getString(R.string.bishop),
@@ -1299,13 +1342,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int COPY_GAME = 0;
 			final int COPY_POSITION = 1;
 			final int PASTE = 2;
-			final int REMOVE_VARIATION = 3;
-			final int EDIT_BOARD = 4;
-			final int ADD_FAVORITES = 5;
-			final int REMOVE_FAVORITES = 6;
-			final int SAVE_GAME = 7;
-			final int DELETE_GAME = 8;
-			final int UNDELETE_GAME = 9;
+			final int EDIT_BOARD = 3;
+			final int ADD_FAVORITES = 4;
+			final int REMOVE_FAVORITES = 5;
+			final int SAVE_GAME = 6;
+			final int DELETE_GAME = 7;
+			final int UNDELETE_GAME = 8;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
@@ -1340,10 +1382,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			actions.add(COPY_POSITION);
 			lst.add(getString(R.string.edit_board));
 			actions.add(EDIT_BOARD);
-			if (ctrl.numVariations() > 1) {
-				lst.add(getString(R.string.remove_variation));
-				actions.add(REMOVE_VARIATION);
-			}
 			final List<Integer> finalActions = actions;
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.tools_menu);
@@ -1419,9 +1457,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 								}
 								break;
 							}
-							case REMOVE_VARIATION:
-								ctrl.removeSubTree();
-								break;
 							}
 						}
 
@@ -1773,13 +1808,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					TextIO.squareToString(m.from), TextIO.squareToString(m.to));
 		}
 		Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-	}
-
-	@Override
-	public void computerMoveMade() {
-		// do nothing
-
-		// TODO: possibly re-enable sound
 	}
 
 	@Override
