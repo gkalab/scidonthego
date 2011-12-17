@@ -74,7 +74,6 @@ GNU GPL v2\n\
 	<string name="copy_position">Copy Position to Clipboard</string>
 	<string name="paste">Paste from Clipboard</string>
 	<string name="load_scid_game">Open a Scid file</string>
-	<string name="remove_variation">Remove variation</string>
 	<string name="tools_menu">Tools</string>
 	<string name="goto_move">Goto move</string>
     <string name="goto_game">Goto game</string>
@@ -218,4 +217,8 @@ GNU GPL v2\n\
         <item>1-0</item>
         <item>0-1</item>
     </string-array>
+    <string name="edit_game">Edit Game</string>
+    <string name="truncate_gametree">Strip moves to the end</string>
+    <string name="move_var_up">Move variation up</string>
+    <string name="move_var_down">Move variation down</string>
 </resources>
