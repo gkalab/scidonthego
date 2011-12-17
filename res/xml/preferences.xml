@@ -2,7 +2,27 @@
 <PreferenceScreen
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<PreferenceCategory
+		android:title="Usage">
+        <ListPreference
+            android:key="analysisEngine"
+            android:title="Analysis Engine"
+            android:summary="Select engine for analysis mode">
+        </ListPreference>
+        <EditTextPreference
+            android:key="playerNames"
+            android:title="My Player Names..."
+            android:summary="After loading a game the chessboard will be rotated to show the game from that players perspective.\nEnter one name per line."
+            android:singleLine="false" 
+            android:defaultValue="">
+        </EditTextPreference>
+	</PreferenceCategory>
+	<PreferenceCategory
 		android:title="User Interface">
+        <CheckBoxPreference
+            android:key="wakeLock"
+            android:title="@string/prefs_wakeLock_title"
+            android:defaultValue="false">
+        </CheckBoxPreference>
         <ListPreference
             android:key="moveDisplay"
             android:title="Move List"
@@ -19,13 +39,6 @@
 			android:entries="@array/font_size_texts"
 			android:defaultValue="12">
 		</ListPreference>
-        <EditTextPreference
-            android:key="playerNames"
-            android:title="My Player Names..."
-            android:summary="After loading a game the chessboard will be rotated to show the game from that players perspective.\nEnter one name per line."
-            android:singleLine="false" 
-            android:defaultValue="">
-        </EditTextPreference>
         <ListPreference
             android:key="colorTheme"
             android:title="Color Theme"
@@ -33,11 +46,6 @@
             android:entryValues="@array/theme_values"
             android:entries="@array/theme_texts"
             android:defaultValue="0">
-        </ListPreference>
-        <ListPreference
-            android:key="analysisEngine"
-            android:title="Analysis Engine"
-            android:summary="Select engine for analysis mode">
         </ListPreference>
 	</PreferenceCategory>
 </PreferenceScreen>
