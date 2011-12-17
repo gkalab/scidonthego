@@ -221,4 +221,5 @@ GNU GPL v2\n\
     <string name="truncate_gametree">Strip moves to the end</string>
     <string name="move_var_up">Move variation up</string>
     <string name="move_var_down">Move variation down</string>
+    <string name="prefs_wakeLock_title">Disable Screen Timeout</string>
 </resources>
