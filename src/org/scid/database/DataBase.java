@@ -8,7 +8,7 @@ public class DataBase {
 	}
 
 	/** Create a new scid database. */
-	public final native void create(String fileName);
+	public final native String create(String fileName);
 
 	/** 
 	 * Load a game from a scid file and set it as the current game.

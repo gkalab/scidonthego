@@ -16,6 +16,7 @@ import org.scid.android.gamelogic.Move;
 import org.scid.android.gamelogic.Position;
 import org.scid.android.gamelogic.TextIO;
 import org.scid.android.twic.ImportTwicActivity;
+import org.scid.database.DataBase;
 import org.scid.database.ScidProviderMetaData;
 
 import android.app.Activity;
@@ -42,18 +43,14 @@ import android.text.InputType;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RatingBar;
@@ -770,8 +767,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			startActivityForResult(i, RESULT_SETTINGS);
 			return true;
 		}
-		case R.id.item_goto_game: {
-			showDialog(SELECT_GOTO_GAME_DIALOG);
+		case R.id.item_create_database: {
+			showDialog(SELECT_CREATE_DATABASE_DIALOG);
 			return true;
 		}
 		case R.id.item_search: {
@@ -1245,7 +1242,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static final int PROMOTE_DIALOG = 0;
 	static final int CLIPBOARD_DIALOG = 1;
 	static final int ABOUT_DIALOG = 2;
-	static final int SELECT_GOTO_GAME_DIALOG = 4;
+	static final int SELECT_CREATE_DATABASE_DIALOG = 4;
 	static final int SEARCH_DIALOG = 5;
 	static final int IMPORT_PGN_DIALOG = 6;
 	static final int MANAGE_ENGINES_DIALOG = 8;
@@ -1374,9 +1371,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					lst.add(getString(R.string.remove_favorites));
 					actions.add(REMOVE_FAVORITES);
 				}
-				
-				lst.add(getString(R.string.save_game));
-				actions.add(SAVE_GAME);
+			}
+			lst.add(getString(R.string.save_game));
+			actions.add(SAVE_GAME);
+			if (getScidAppContext().getCurrentGameNo() >= 0) {
 				if (!getScidAppContext().isDeleted()) {
 					lst.add(getString(R.string.delete_game));
 					actions.add(DELETE_GAME);
@@ -1484,53 +1482,31 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			AlertDialog alert = builder.create();
 			return alert;
 		}
-		case SELECT_GOTO_GAME_DIALOG: {
-			final Dialog dialog = new Dialog(this);
-			dialog.setContentView(R.layout.select_game_number);
-			dialog.setTitle(R.string.goto_game);
-			final EditText gameNoView = (EditText) dialog
-					.findViewById(R.id.selgame_number);
-			Button ok = (Button) dialog.findViewById(R.id.selgame_ok);
-			Button cancel = (Button) dialog.findViewById(R.id.selgame_cancel);
-			gameNoView.setText("1");
-			final Runnable gotoGame = new Runnable() {
-				public void run() {
-					try {
-						int gameNo = Integer.parseInt(gameNoView.getText()
-								.toString()) - 1;
-						Cursor cursor = getCursor();
-						if (cursor != null && cursor.moveToPosition(gameNo)) {
-							setPgnFromCursor(cursor);
+		case SELECT_CREATE_DATABASE_DIALOG: {
+			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			final EditText input = new EditText(this);
+			builder.setTitle(getText(R.string.create_db_title)); 
+	        builder.setMessage(getText(R.string.create_db_message));
+			builder.setView(input);
+			builder.setPositiveButton(R.string.ok,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog,
+								int whichButton) {
+							String value = input.getText().toString().trim();
+							createDatabase(value);
 						}
-						dialog.cancel();
-					} catch (NumberFormatException nfe) {
-						Toast.makeText(getApplicationContext(),
-								R.string.invalid_number_format,
-								Toast.LENGTH_SHORT).show();
-					}
-				}
-			};
-			gameNoView.setOnKeyListener(new OnKeyListener() {
-				public boolean onKey(View v, int keyCode, KeyEvent event) {
-					if ((event.getAction() == KeyEvent.ACTION_DOWN)
-							&& (keyCode == KeyEvent.KEYCODE_ENTER)) {
-						gotoGame.run();
-						return true;
-					}
-					return false;
-				}
-			});
-			ok.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					gotoGame.run();
-				}
-			});
-			cancel.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					dialog.cancel();
-				}
-			});
-			return dialog;
+					});
+
+			builder.setNegativeButton(R.string.cancel,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog,
+								int whichButton) {
+							dialog.cancel();
+						}
+					});
+			AlertDialog alert = builder.create();
+
+			return alert;
 		}
 		case IMPORT_PGN_DIALOG: {
 			final int IMPORT_PGN_FILE = 0;
@@ -1609,6 +1585,36 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		}
 		return null;
+	}
+
+	private void createDatabase(String fileName) {
+		String scidFileName = Tools.getFullScidFileName(fileName);
+		if (new File(scidFileName + ".si4").exists()) {
+			Toast.makeText(
+					getApplicationContext(),
+					String.format(getString(R.string.create_db_exists),
+							fileName), Toast.LENGTH_LONG).show();
+		} else {
+			DataBase db = new DataBase();
+			String result = db.create(scidFileName);
+			if (result.length() > 0) {
+				Toast.makeText(getApplicationContext(), result,
+						Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(getApplicationContext(),
+						getString(R.string.create_db_success),
+						Toast.LENGTH_SHORT).show();
+				Editor editor = settings.edit();
+				editor.putString("currentScidFile", scidFileName);
+				editor.commit();
+				getScidAppContext().setCurrentFileName(
+						Tools.stripExtension(scidFileName));
+				Cursor cursor = getCursor();
+				if (cursor.moveToPosition(0) || cursor.moveToFirst()) {
+					setPgnFromCursor(cursor);
+				}
+			}
+		}
 	}
 
 	private void updateFavoriteFlag(boolean value, String successMsg, String failureMsg) {
