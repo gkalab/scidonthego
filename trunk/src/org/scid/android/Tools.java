@@ -178,7 +178,7 @@ public class Tools {
 	}
 
 	public static void importPgn(final Activity activity, String baseName,
-			final boolean deletePgnAfterImport, final int resultId) {
+			final int resultId) {
 		final String pgnFileName;
 		if (baseName.endsWith(".pgn")) {
 			pgnFileName = baseName;
@@ -199,8 +199,7 @@ public class Tools {
 			fileExistsDialog.setButton(activity.getString(R.string.ok),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							startPgnImport(activity, pgnFileName,
-									deletePgnAfterImport, resultId);
+							startPgnImport(activity, pgnFileName, resultId);
 						}
 					});
 			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
@@ -214,20 +213,15 @@ public class Tools {
 					});
 			fileExistsDialog.show();
 		} else {
-			startPgnImport(activity, pgnFileName, deletePgnAfterImport,
-					resultId);
+			startPgnImport(activity, pgnFileName, resultId);
 		}
 	}
 
 	private static void startPgnImport(Activity activity, String pgnFileName,
-			boolean deletePgnAfterImport, final int resultId) {
+			final int resultId) {
 		Intent i = new Intent(activity, ImportPgnActivity.class);
 		i.setAction(pgnFileName);
-		if (deletePgnAfterImport) {
-			activity.startActivityForResult(i, resultId);
-		} else {
-			activity.startActivity(i);
-		}
+		activity.startActivityForResult(i, resultId);
 	}
 
 	public static String getFullScidFileName(final String fileName) {
@@ -288,11 +282,11 @@ public class Tools {
 			scrollView.smoothScrollTo(0, y - scrollView.getHeight() / 2);
 		}
 	}
-	
+
 	public static void setKeepScreenOn(Activity activity, boolean alwaysOn) {
 		if (alwaysOn) {
-			activity.getWindow()
-					.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			activity.getWindow().addFlags(
+					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		} else {
 			activity.getWindow()
 					.clearFlags(
