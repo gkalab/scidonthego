@@ -2,7 +2,9 @@ package org.scid.android;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -33,6 +35,9 @@ public class SearchHeaderActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.search_header);
 		addSpinner();
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean keepScreenOn = settings.getBoolean("keepScreenOn", false);
+        Tools.setKeepScreenOn(this, keepScreenOn);
 	}
 
 	private void addSpinner() {
