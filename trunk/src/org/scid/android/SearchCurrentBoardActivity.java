@@ -3,7 +3,9 @@ package org.scid.android;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -36,6 +38,9 @@ public class SearchCurrentBoardActivity extends Activity {
 		addSpinner();
 		Intent i = getIntent();
 		this.fen = i.getAction();
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean keepScreenOn = settings.getBoolean("keepScreenOn", false);
+        Tools.setKeepScreenOn(this, keepScreenOn);
 	}
 
 	private void addSpinner() {

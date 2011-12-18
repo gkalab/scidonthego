@@ -23,6 +23,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -284,6 +286,17 @@ public class Tools {
 			int line = textView.getLayout().getLineForOffset(offset);
 			int y = (int) ((line + 0.5) * textView.getLineHeight());
 			scrollView.smoothScrollTo(0, y - scrollView.getHeight() / 2);
+		}
+	}
+	
+	public static void setKeepScreenOn(Activity activity, boolean alwaysOn) {
+		if (alwaysOn) {
+			activity.getWindow()
+					.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		} else {
+			activity.getWindow()
+					.clearFlags(
+							android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		}
 	}
 }

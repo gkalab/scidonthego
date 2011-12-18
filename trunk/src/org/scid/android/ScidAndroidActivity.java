@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,8 +33,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
@@ -88,8 +85,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private PGNOptions pgnOptions = new PGNOptions();
 
 	PgnScreenText gameTextListener;
-    private WakeLock wakeLock = null;
-    private boolean useWakeLock = false;
+    private boolean keepScreenOn = false;
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
@@ -119,11 +115,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				setGameMode();
 			}
 		});
-
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        setWakeLock(false);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "scid");
-        wakeLock.setReferenceCounted(false);
 
 		initUI(true);
 
@@ -629,7 +620,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (gameMode.analysisMode()) {
 			startAnalysis();
 		}
-        setWakeLock(useWakeLock);
 		super.onResume();
 	}
 
@@ -640,7 +630,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			saveGameState();
 			ctrl.shutdownEngine();
 		}
-        setWakeLock(false);
 		super.onPause();
 	}
 
@@ -676,8 +665,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
-        useWakeLock = settings.getBoolean("wakeLock", false);
-        setWakeLock(useWakeLock);
+        keepScreenOn = settings.getBoolean("keepScreenOn", false);
+        Tools.setKeepScreenOn(this, keepScreenOn);
 
 		tmp = settings.getString("fontSize", "12");
 		int fontSize = Integer.parseInt(tmp);
@@ -1875,14 +1864,4 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			cb.setAnimMove(sourcePos, move, forward);
 		}
 	}
-
-	private synchronized final void setWakeLock(boolean enableLock) {
-        WakeLock wl = wakeLock;
-        if (wl != null) {
-            if (wl.isHeld())
-                wl.release();
-            if (enableLock)
-                wl.acquire();
-        }
-    }
 }
