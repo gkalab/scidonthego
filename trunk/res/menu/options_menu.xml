@@ -29,20 +29,19 @@
         android:icon="@drawable/ic_menu_search">
     </item>
     <item
-        android:id="@+id/item_settings"
-        android:title="Settings"
-        android:icon="@drawable/ic_menu_preferences">
-    </item>
-    <item
-        android:id="@+id/item_goto_game"
-        android:title="Goto Game"
-        android:icon="@drawable/ic_menu_goto">
+        android:id="@+id/item_create_database"
+        android:title="@string/create_db_title">
     </item>
     <item
         android:id="@+id/item_manage_engines"
         android:title="Manage UCI Engines"
         android:icon="@drawable/ic_menu_manage">
 	</item>
+    <item
+        android:id="@+id/item_settings"
+        android:title="Settings"
+        android:icon="@drawable/ic_menu_preferences">
+    </item>
 	<item
 		android:id="@+id/item_about"
 		android:title="About / Help"

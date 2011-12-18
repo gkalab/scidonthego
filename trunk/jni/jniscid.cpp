@@ -502,53 +502,96 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 /*
  * Class:     org_scid_database_DataBase
  * Method:    create
- * Signature: (Ljava/lang/String;)V
  */
-extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_create
+extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
                 (JNIEnv* env, jobject obj, jstring fileName)
 {
     game->Clear();
+    std::string resultString = "";
     const char* targetFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (targetFileName) {
+        uint offset = 0;
+        IndexEntry * iE = new IndexEntry;
+        ByteBuffer *bbuf = new ByteBuffer;
         Index targetIndex;
         NameBase targetNameBase;
         GFile targetGFile;
         targetIndex.SetFileName (targetFileName);
+        targetIndex.SetDescription ("");
         targetNameBase.SetFileName (targetFileName);
         // Check that the target database does not already exist:
         Index tempIndex;
         tempIndex.SetFileName (targetFileName);
         if (tempIndex.OpenIndexFile(FMODE_ReadOnly) == OK) {
             tempIndex.CloseIndexFile();
-            //fprintf (stderr, "Error: the database %s already exists.\n", targetFileName);
-            return;
+            resultString.append("Error: the database already exists.");
+            goto cleanup;
         }
 
         // Open the target files:
-        if (targetIndex.CreateIndexFile(FMODE_WriteOnly) != OK) {
-            //fileError ("creating", targetFileName, INDEX_SUFFIX);
-            return;
+        if (targetIndex.CreateIndexFile(FMODE_Both) != OK) {
+            resultString.append("Error creating index file.");
+            goto cleanup;
         }
-        if (targetGFile.Create (targetFileName, FMODE_WriteOnly) != OK) {
-            //fileError ("creating", targetFileName, GFILE_SUFFIX);
-            return;
+        if (targetNameBase.WriteNameFile() != OK) {
+            resultString.append("Error writing name base file.");
+            goto cleanup;
+        }
+        targetIndex.ReadEntireFile();
+        if (targetGFile.Create (targetFileName, FMODE_Both) != OK) {
+            resultString.append("Error creating game file.");
+            goto cleanup;
         }
 
-        // Now all files have been read. All we need do is close the new base:
-        targetIndex.CloseIndexFile();
-        if (targetNameBase.WriteNameFile() != OK) {
-            //fileError ("writing", targetFileName, NAMEBASE_SUFFIX);
-            return;
+        // add an empty game to the database
+        game->Clear();
+        iE->Init();
+        bbuf->SetBufferSize (BBUF_SIZE); // 32768
+        bbuf->Empty();
+        if (game->Encode (bbuf, NULL) != OK) {
+            resultString.append("Error encoding game.");
+            goto cleanup;
         }
+        gameNumberT gNumber;
+        if (targetIndex.AddGame (&gNumber, iE, false) != OK) {
+            resultString.append("Error adding empty game.");
+            goto cleanup;
+        }
+        bbuf->BackToStart();
+        // write the game to the gfile:
+        if (targetGFile.AddGame (bbuf, &offset) != OK) {
+            resultString.append("Error writing game file.");
+            goto cleanup;
+        }
+        iE->SetOffset (offset);
+        iE->SetLength (bbuf->GetByteCount());
+        LOGD("Game written to gfile.");
+
+        // write the new idxEntry for game 0
+        if (targetIndex.WriteEntries (iE, gNumber, 1) != OK) {
+            resultString.append("Error writing index file.");
+            goto cleanup;
+        }
+        LOGD("Index file written.");
+        if (targetIndex.WriteHeader() != OK) {
+            resultString.append("Error writing index header.");
+            goto cleanup;
+        }
+
+        // Now all files have been created. All we need do is close the new base:
+        targetIndex.CloseIndexFile();
         if (targetGFile.Close() != OK) {
-            //fileError ("closing", targetFileName, GFILE_SUFFIX);
-            return;
+            resultString.append("Error closing game file.");
+            goto cleanup;
         }
 
         // Remove any treefile for this database:
         removeFile (targetFileName, TREEFILE_SUFFIX);
             (*env).ReleaseStringUTFChars(fileName, targetFileName);
-        return;
+
+        initialized = false;
+    cleanup:
+        return (*env).NewStringUTF(resultString.c_str());
     }
 }
 
