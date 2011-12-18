@@ -18,11 +18,6 @@
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="User Interface">
-        <CheckBoxPreference
-            android:key="keepScreenOn"
-            android:title="@string/prefs_keepscreenon_title"
-            android:defaultValue="false">
-        </CheckBoxPreference>
         <ListPreference
             android:key="moveDisplay"
             android:title="Move List"

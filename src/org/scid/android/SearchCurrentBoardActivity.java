@@ -38,9 +38,7 @@ public class SearchCurrentBoardActivity extends Activity {
 		addSpinner();
 		Intent i = getIntent();
 		this.fen = i.getAction();
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean keepScreenOn = settings.getBoolean("keepScreenOn", false);
-        Tools.setKeepScreenOn(this, keepScreenOn);
+        Tools.setKeepScreenOn(this, true);
 	}
 
 	private void addSpinner() {
