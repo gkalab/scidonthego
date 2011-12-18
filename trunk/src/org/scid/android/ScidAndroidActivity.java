@@ -85,7 +85,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	private PGNOptions pgnOptions = new PGNOptions();
 
 	PgnScreenText gameTextListener;
-    private boolean keepScreenOn = false;
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
@@ -665,8 +664,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
-        keepScreenOn = settings.getBoolean("keepScreenOn", false);
-        Tools.setKeepScreenOn(this, keepScreenOn);
 
 		tmp = settings.getString("fontSize", "12");
 		int fontSize = Integer.parseInt(tmp);
@@ -826,6 +823,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			moveListUpdated();
 			setGameMode();
 			showAnalysisModeInfo();
+			Tools.setKeepScreenOn(this, false);
 		} else {
 			gameMode = new GameMode(GameMode.ANALYSIS);
 			startAnalysis();
@@ -861,6 +859,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		setGameMode();
 		ctrl.startGame();
 		updateThinkingInfo();
+		Tools.setKeepScreenOn(this, true);
 	}
 
 	private boolean setGameMode() {

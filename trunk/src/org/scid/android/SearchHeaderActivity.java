@@ -35,9 +35,7 @@ public class SearchHeaderActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.search_header);
 		addSpinner();
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean keepScreenOn = settings.getBoolean("keepScreenOn", false);
-        Tools.setKeepScreenOn(this, keepScreenOn);
+        Tools.setKeepScreenOn(this, true);
 	}
 
 	private void addSpinner() {
