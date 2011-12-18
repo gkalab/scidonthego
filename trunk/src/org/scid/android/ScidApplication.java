@@ -12,7 +12,7 @@ public class ScidApplication extends Application {
 	private String currentFileName = "";
 	private Position position = null;
 	private int currentGameNo = -1;
-	private int noGames;
+	private int noGames = 0;
 	private boolean isFavorite = false;
 	private ChessController controller;
 	private boolean isDeleted = false;
@@ -70,6 +70,7 @@ public class ScidApplication extends Application {
 
 	/**
 	 * Set the current game as a favorite (true) or not (false)
+	 * 
 	 * @param isFavorite
 	 */
 	public void setFavorite(boolean isFavorite) {
@@ -77,11 +78,12 @@ public class ScidApplication extends Application {
 	}
 
 	public boolean isDeleted() {
-		return this.isDeleted ;
+		return this.isDeleted;
 	}
 
 	/**
 	 * Set the current game to deleted (true) or not (false)
+	 * 
 	 * @param isDeleted
 	 */
 	public void setDeleted(boolean isDeleted) {
@@ -91,7 +93,7 @@ public class ScidApplication extends Application {
 	public void setController(ChessController controller) {
 		this.controller = controller;
 	}
-	
+
 	public ChessController getController() {
 		return this.controller;
 	}

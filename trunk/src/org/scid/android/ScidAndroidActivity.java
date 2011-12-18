@@ -907,6 +907,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					Cursor cursor = getCursor();
 					if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
 						setPgnFromCursor(cursor);
+					} else {
+						newGame();
 					}
 				}
 			}
@@ -1363,7 +1365,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
 			// check if "add to favorites" or "remove from favorites" is needed
-			if (getScidAppContext().getCurrentGameNo() >= 0) {
+			if (getScidAppContext().getCurrentGameNo() >= 0
+					&& getScidAppContext().getNoGames() > 0) {
 				if (!getScidAppContext().isFavorite()) {
 					lst.add(getString(R.string.add_favorites));
 					actions.add(ADD_FAVORITES);
@@ -1372,9 +1375,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					actions.add(REMOVE_FAVORITES);
 				}
 			}
-			lst.add(getString(R.string.save_game));
-			actions.add(SAVE_GAME);
-			if (getScidAppContext().getCurrentGameNo() >= 0) {
+			if (getScidAppContext().getCurrentFileName().length() > 0) {
+				lst.add(getString(R.string.save_game));
+				actions.add(SAVE_GAME);
+			}
+			if (getScidAppContext().getCurrentGameNo() >= 0
+					&& getScidAppContext().getNoGames() > 0) {
 				if (!getScidAppContext().isDeleted()) {
 					lst.add(getString(R.string.delete_game));
 					actions.add(DELETE_GAME);
@@ -1609,12 +1615,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				editor.commit();
 				getScidAppContext().setCurrentFileName(
 						Tools.stripExtension(scidFileName));
-				Cursor cursor = getCursor();
-				if (cursor.moveToPosition(0) || cursor.moveToFirst()) {
-					setPgnFromCursor(cursor);
-				}
+				getCursor();
+				newGame();
 			}
 		}
+	}
+
+	private void newGame() {
+		ctrl.newGame(gameMode);
+		getScidAppContext().setFavorite(false);
+		getScidAppContext().setDeleted(false);
+		ctrl.setGuiPaused(true);
+		ctrl.setGuiPaused(false);
+		ctrl.startGame();
+		setFavoriteRating();
 	}
 
 	private void updateFavoriteFlag(boolean value, String successMsg, String failureMsg) {
