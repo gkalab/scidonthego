@@ -423,15 +423,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		// disable all other text colors (e.g. pressed) for move list
 		moveList.setTextColor(moveList.getTextColors().getDefaultColor());
 		moveList.setLinkTextColor(moveList.getTextColors().getDefaultColor());
-        moveList.setOnLongClickListener(new OnLongClickListener() {
-            public boolean onLongClick(View v) {
+		moveList.setOnLongClickListener(new OnLongClickListener() {
+			public boolean onLongClick(View v) {
 				if (!gameMode.studyMode() && !gameMode.analysisMode()) {
 					removeDialog(MOVELIST_MENU_DIALOG);
 					showDialog(MOVELIST_MENU_DIALOG);
 				}
 				return true;
-            }
-        });
+			}
+		});
 
 		cb = (ChessBoard) findViewById(R.id.chessboard);
 		cb.setFocusable(true);
@@ -726,7 +726,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_EDITBOARD = 0;
 	static private final int RESULT_SETTINGS = 1;
 	static private final int RESULT_SEARCH = 2;
-	static private final int RESULT_PGN_FILE_IMPORT = 3;
+	static private final int RESULT_PGN_FILEDIALOG = 3;
 	static private final int RESULT_GAMELIST = 4;
 	static private final int RESULT_PGN_IMPORT = 5;
 	static private final int RESULT_TWIC_IMPORT = 6;
@@ -734,6 +734,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	static private final int RESULT_ADD_ENGINE = 8;
 	static private final int RESULT_REMOVE_ENGINE = 9;
 	static private final int RESULT_SAVE_GAME = 10;
+	static private final int RESULT_PGN_FILE_IMPORT = 11;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -795,8 +796,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void saveGame() {
-		Intent i = new Intent(ScidAndroidActivity.this,
-				SaveGameActivity.class);
+		Intent i = new Intent(ScidAndroidActivity.this, SaveGameActivity.class);
 		startActivityForResult(i, RESULT_SAVE_GAME);
 	}
 
@@ -885,19 +885,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					int gameNo = 0;
 					if (fileName.equals(currentScidFile)) {
 						gameNo = settings.getInt("currentGameNo", 0);
-					} else {
-						Editor editor = settings.edit();
-						editor.putString("currentScidFile", fileName);
-						editor.commit();
-						getScidAppContext().setCurrentFileName(
-								Tools.stripExtension(fileName));
 					}
-					Cursor cursor = getCursor();
-					if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
-						setPgnFromCursor(cursor);
-					} else {
-						newGame();
-					}
+					loadScidFile(fileName, gameNo);
 				}
 			}
 			break;
@@ -951,12 +940,24 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				}
 			}
 			break;
-		case RESULT_PGN_FILE_IMPORT:
+		case RESULT_PGN_FILEDIALOG:
 			// the result of the file dialog for the pgn import
 			if (resultCode == RESULT_OK && data != null) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
-					Tools.importPgn(this, pgnFileName, false, RESULT_PGN_IMPORT);
+					Tools.importPgn(this, pgnFileName, RESULT_PGN_FILE_IMPORT);
+				}
+			}
+			break;
+		case RESULT_PGN_FILE_IMPORT:
+			// the result after importing the pgn file
+			if (resultCode == RESULT_OK && data != null) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					// open the successfully created scid database
+					String scidFileName = Tools.stripExtension(pgnFileName)
+							+ ".si4";
+					loadScidFile(scidFileName, 0);
 				}
 			}
 			break;
@@ -969,7 +970,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
 					Tools.importPgn(this,
-							Tools.getFullScidFileName(pgnFileName), true,
+							Tools.getFullScidFileName(pgnFileName),
 							RESULT_PGN_IMPORT);
 				}
 			}
@@ -994,8 +995,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						AddEngineActivity.DATA_MAKE_CURRENT_ENGINE, false);
 				if (executable == null) {
 					Toast.makeText(getApplicationContext(),
-							getText(R.string.no_engine_selected), Toast.LENGTH_LONG)
-							.show();
+							getText(R.string.no_engine_selected),
+							Toast.LENGTH_LONG).show();
 				} else {
 					addNewEngine(engineName, executable, makeCurrentEngine,
 							false);
@@ -1042,17 +1043,32 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					int gameNo = new Integer(gameNoString);
 					if (gameNo == -1) {
 						// a new game was added
-						// TODO: reset cursor for now - saving should be done within the
+						// TODO: reset cursor for now - saving should be done
+						// within the
 						// data provider and cursor
 						Cursor cursor = getCursor();
 						// move to newly added game
-						if (cursor!=null && cursor.moveToLast()) {
+						if (cursor != null && cursor.moveToLast()) {
 							setPgnFromCursor(cursor);
 						}
 					}
 				}
 			}
 			break;
+		}
+	}
+
+	private void loadScidFile(String fileName, int gameNo) {
+		Editor editor = settings.edit();
+		editor.putString("currentScidFile", fileName);
+		editor.commit();
+		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
+
+		Cursor cursor = getCursor();
+		if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
+			setPgnFromCursor(cursor);
+		} else {
+			newGame();
 		}
 	}
 
@@ -1127,7 +1143,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		setStatusString(statusStr);
 	}
-	
+
 	@Override
 	public void moveListUpdated() {
 		if (gameMode.studyMode()) {
@@ -1242,37 +1258,41 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case MOVELIST_MENU_DIALOG: {
-            final int REMOVE_SUBTREE = 0;
-            final int MOVE_VAR_UP    = 1;
-            final int MOVE_VAR_DOWN  = 2;
+			final int REMOVE_SUBTREE = 0;
+			final int MOVE_VAR_UP = 1;
+			final int MOVE_VAR_DOWN = 2;
 
-            List<CharSequence> lst = new ArrayList<CharSequence>();
-            List<Integer> actions = new ArrayList<Integer>();
-            lst.add(getString(R.string.truncate_gametree)); actions.add(REMOVE_SUBTREE);
-            if (ctrl.numVariations() > 1) {
-                lst.add(getString(R.string.move_var_up));   actions.add(MOVE_VAR_UP);
-                lst.add(getString(R.string.move_var_down)); actions.add(MOVE_VAR_DOWN);
-            }
-            final List<Integer> finalActions = actions;
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.edit_game);
-            builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int item) {
-                    switch (finalActions.get(item)) {
-                    case REMOVE_SUBTREE:
-                        ctrl.removeSubTree();
-                        break;
-                    case MOVE_VAR_UP:
-                        ctrl.moveVariation(-1);
-                        break;
-                    case MOVE_VAR_DOWN:
-                        ctrl.moveVariation(1);
-                        break;
-                    }
-                }
-            });
-            AlertDialog alert = builder.create();
-            return alert;
+			List<CharSequence> lst = new ArrayList<CharSequence>();
+			List<Integer> actions = new ArrayList<Integer>();
+			lst.add(getString(R.string.truncate_gametree));
+			actions.add(REMOVE_SUBTREE);
+			if (ctrl.numVariations() > 1) {
+				lst.add(getString(R.string.move_var_up));
+				actions.add(MOVE_VAR_UP);
+				lst.add(getString(R.string.move_var_down));
+				actions.add(MOVE_VAR_DOWN);
+			}
+			final List<Integer> finalActions = actions;
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.edit_game);
+			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int item) {
+							switch (finalActions.get(item)) {
+							case REMOVE_SUBTREE:
+								ctrl.removeSubTree();
+								break;
+							case MOVE_VAR_UP:
+								ctrl.moveVariation(-1);
+								break;
+							case MOVE_VAR_DOWN:
+								ctrl.moveVariation(1);
+								break;
+							}
+						}
+					});
+			AlertDialog alert = builder.create();
+			return alert;
 		}
 		case PROMOTE_DIALOG: {
 			final CharSequence[] items = { getString(R.string.queen),
@@ -1479,8 +1499,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		case SELECT_CREATE_DATABASE_DIALOG: {
 			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			final EditText input = new EditText(this);
-			builder.setTitle(getText(R.string.create_db_title)); 
-	        builder.setMessage(getText(R.string.create_db_message));
+			builder.setTitle(getText(R.string.create_db_title));
+			builder.setMessage(getText(R.string.create_db_message));
 			builder.setView(input);
 			builder.setPositiveButton(R.string.ok,
 					new DialogInterface.OnClickListener() {
@@ -1619,9 +1639,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		setFavoriteRating();
 	}
 
-	private void updateFavoriteFlag(boolean value, String successMsg, String failureMsg) {
-		if (getScidAppContext().getCurrentFileName()
-				.length() > 0) {
+	private void updateFavoriteFlag(boolean value, String successMsg,
+			String failureMsg) {
+		if (getScidAppContext().getCurrentFileName().length() > 0) {
 			int updated = setFavorite(value);
 			String message;
 			if (updated > 0) {
@@ -1632,14 +1652,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			} else {
 				message = failureMsg;
 			}
-			Toast.makeText(getApplicationContext(),
-					message, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT)
+					.show();
 		}
 	}
 
-	private void updateDeletedFlag(boolean value, String successMsg, String failureMsg) {
-		if (getScidAppContext().getCurrentFileName()
-				.length() > 0) {
+	private void updateDeletedFlag(boolean value, String successMsg,
+			String failureMsg) {
+		if (getScidAppContext().getCurrentFileName().length() > 0) {
 			int updated = setDeleted(value);
 			String message;
 			if (updated > 0) {
@@ -1654,8 +1674,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			} else {
 				message = failureMsg;
 			}
-			Toast.makeText(getApplicationContext(),
-					message, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT)
+					.show();
 		}
 	}
 
@@ -1664,7 +1684,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		values.put("isFavorite", isFavorite);
 		return updateGame(values);
 	}
-	
+
 	private int setDeleted(boolean isDeleted) {
 		ContentValues values = new ContentValues();
 		values.put("isDeleted", isDeleted);
@@ -1672,14 +1692,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private int updateGame(ContentValues values) {
-		int updated = getContentResolver()
-				.update(Uri
-						.parse("content://org.scid.database.scidprovider/games/"
-								+ getScidAppContext()
-										.getCurrentGameNo()),
-						values,
-						getScidAppContext()
-								.getCurrentFileName(), null);
+		int updated = getContentResolver().update(
+				Uri.parse("content://org.scid.database.scidprovider/games/"
+						+ getScidAppContext().getCurrentGameNo()), values,
+				getScidAppContext().getCurrentFileName(), null);
 		return updated;
 	}
 
@@ -1699,7 +1715,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		Intent i = new Intent(ScidAndroidActivity.this,
 				SelectFileActivity.class);
 		i.setAction(".pgn");
-		startActivityForResult(i, RESULT_PGN_FILE_IMPORT);
+		startActivityForResult(i, RESULT_PGN_FILEDIALOG);
 	}
 
 	private void importTwic() {
@@ -1756,7 +1772,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 									pgnFileName));
 							Tools.importPgn(ScidAndroidActivity.this,
 									Tools.getFullScidFileName(pgnFileName),
-									true, RESULT_PGN_IMPORT);
+									RESULT_PGN_IMPORT);
 
 						} else {
 							Toast.makeText(getApplicationContext(),

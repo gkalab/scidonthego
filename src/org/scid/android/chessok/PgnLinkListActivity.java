@@ -88,7 +88,7 @@ public class PgnLinkListActivity extends ListActivity {
 								+ ScidAndroidActivity.SCID_DIRECTORY,
 								pgnFileName));
 						Tools.importPgn(PgnLinkListActivity.this, Tools
-								.getFullScidFileName(pgnFileName), true,
+								.getFullScidFileName(pgnFileName), 
 								RESULT_PGN_IMPORT);
 					}
 
