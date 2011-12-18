@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -44,7 +45,11 @@ public class SaveGameActivity extends Activity {
 		setContentView(R.layout.save_game);
 		final TreeMap<String, String> headers = new TreeMap<String, String>();
 		getScidAppContext().getController().getHeaders(headers);
-
+		// disable save game if the database is empty
+		Button save_game_button = (Button) findViewById(R.id.save_game_save);
+		if (getScidAppContext().getNoGames() == 0) {
+			save_game_button.setEnabled(false);
+		}
 		event = (EditText) findViewById(R.id.ed_header_event);
 		site = (EditText) findViewById(R.id.ed_header_site);
 		date = (EditText) findViewById(R.id.ed_header_date);

@@ -510,9 +510,6 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
     std::string resultString = "";
     const char* targetFileName = (*env).GetStringUTFChars(fileName, NULL);
     if (targetFileName) {
-        uint offset = 0;
-        IndexEntry * iE = new IndexEntry;
-        ByteBuffer *bbuf = new ByteBuffer;
         Index targetIndex;
         NameBase targetNameBase;
         GFile targetGFile;
@@ -537,41 +534,11 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
             resultString.append("Error writing name base file.");
             goto cleanup;
         }
-        targetIndex.ReadEntireFile();
         if (targetGFile.Create (targetFileName, FMODE_Both) != OK) {
             resultString.append("Error creating game file.");
             goto cleanup;
         }
 
-        // add an empty game to the database
-        game->Clear();
-        iE->Init();
-        bbuf->SetBufferSize (BBUF_SIZE); // 32768
-        bbuf->Empty();
-        if (game->Encode (bbuf, NULL) != OK) {
-            resultString.append("Error encoding game.");
-            goto cleanup;
-        }
-        gameNumberT gNumber;
-        if (targetIndex.AddGame (&gNumber, iE, false) != OK) {
-            resultString.append("Error adding empty game.");
-            goto cleanup;
-        }
-        bbuf->BackToStart();
-        // write the game to the gfile:
-        if (targetGFile.AddGame (bbuf, &offset) != OK) {
-            resultString.append("Error writing game file.");
-            goto cleanup;
-        }
-        iE->SetOffset (offset);
-        iE->SetLength (bbuf->GetByteCount());
-        LOGD("Game written to gfile.");
-
-        // write the new idxEntry for game 0
-        if (targetIndex.WriteEntries (iE, gNumber, 1) != OK) {
-            resultString.append("Error writing index file.");
-            goto cleanup;
-        }
         LOGD("Index file written.");
         if (targetIndex.WriteHeader() != OK) {
             resultString.append("Error writing index header.");
