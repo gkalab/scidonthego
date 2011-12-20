@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: rework menu like this:
+(re-think mode menu)
+File
+    - New Database
+    - Open Database
+Game
+    - Add to Favorites
+    - New Game
+    - Delete Game
+    - Save Game
+Game List
+Mode
+    - Study Mode
+    - Analysis Mode
+Search
+Manage UCI Engines
+Settings
+About / Help
+
+-->
 <menu
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<item
@@ -24,13 +44,17 @@
         android:title="Import PGN">
     </item>
     <item
+        android:id="@+id/item_create_database"
+        android:title="@string/create_db_title">
+    </item>
+    <item
+        android:id="@+id/item_new_game"
+        android:title="New Game">
+    </item>
+    <item
         android:id="@+id/item_search"
         android:title="Search"
         android:icon="@drawable/ic_menu_search">
-    </item>
-    <item
-        android:id="@+id/item_create_database"
-        android:title="@string/create_db_title">
     </item>
     <item
         android:id="@+id/item_manage_engines"
