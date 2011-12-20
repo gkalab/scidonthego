@@ -45,9 +45,10 @@ public class SaveGameActivity extends Activity {
 		setContentView(R.layout.save_game);
 		final TreeMap<String, String> headers = new TreeMap<String, String>();
 		getScidAppContext().getController().getHeaders(headers);
-		// disable save game if the database is empty
+		// disable save game if the database is empty or if it's a new game (gameNo=-1)
 		Button save_game_button = (Button) findViewById(R.id.save_game_save);
-		if (getScidAppContext().getNoGames() == 0) {
+		if (getScidAppContext().getNoGames() == 0
+				|| getScidAppContext().getCurrentGameNo() < 0) {
 			save_game_button.setEnabled(false);
 		}
 		event = (EditText) findViewById(R.id.ed_header_event);
@@ -71,8 +72,7 @@ public class SaveGameActivity extends Activity {
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
 				this, R.array.result_array,
 				android.R.layout.simple_spinner_item);
-		adapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 		spinner.setSelection(adapter.getPosition(resultString));
 		spinner.setOnItemSelectedListener(new OnResultSelectedListener());

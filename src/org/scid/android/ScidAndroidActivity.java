@@ -214,14 +214,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			cursor = this.getCursor();
 		}
 		if (cursor != null) {
+			lastEndOfVariation = null;
 			startManagingCursor(cursor);
+			boolean result = false;
 			if (cursor.isBeforeFirst()) {
-				cursor.moveToFirst();
+				result = cursor.moveToFirst();
+			} else {
+				result = cursor.moveToNext();
 			}
-			if (cursor.moveToNext()) {
+			if (result) {
 				setPgnFromCursor(cursor);
 			}
-			lastEndOfVariation = null;
 		}
 	}
 
@@ -242,10 +245,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		this.getScidAppContext().setDeleted(isDeleted);
 		setFavoriteRating();
 
-		Editor editor = settings.edit();
-		editor.putInt("currentGameNo", this.getScidAppContext()
-				.getCurrentGameNo());
-		editor.commit();
+		saveCurrentGameNo();
 		Log.d("SCID", "loading pgn for game "
 				+ this.getScidAppContext().getCurrentGameNo());
 		String pgn = cursor.getString(cursor
@@ -768,6 +768,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case R.id.item_analysis_mode: {
 			setAnalysisMode();
+			return true;
+		}
+		case R.id.item_new_game: {
+			getScidAppContext().setGamesCursor(this.getCursor());
+			newGame();
 			return true;
 		}
 		case R.id.item_import_pgn: {
@@ -1630,6 +1635,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void newGame() {
+		getScidAppContext().setCurrentGameNo(-1);
+		saveCurrentGameNo();
 		ctrl.newGame(gameMode);
 		getScidAppContext().setFavorite(false);
 		getScidAppContext().setDeleted(false);
@@ -1637,6 +1644,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		ctrl.setGuiPaused(false);
 		ctrl.startGame();
 		setFavoriteRating();
+	}
+
+	private void saveCurrentGameNo() {
+		Editor editor = settings.edit();
+		editor.putInt("currentGameNo", this.getScidAppContext()
+				.getCurrentGameNo());
+		editor.commit();
 	}
 
 	private void updateFavoriteFlag(boolean value, String successMsg,
