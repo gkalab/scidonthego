@@ -31,6 +31,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -43,6 +44,7 @@ import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
@@ -57,6 +59,10 @@ import android.widget.Toast;
 
 public class ScidAndroidActivity extends Activity implements GUIInterface {
 
+	private static final int MENU_ITEM_GAME_NEW = 1;
+	private static final int MENU_ITEM_GAME_SAVE = 2;
+	private static final int MENU_ITEM_GAME_DELETED = 3;
+	private static final int MENU_ITEM_GAME_FAVORITE = 4;
 	private ChessBoard cb;
 	private EngineManager engineManager;
 	private ChessController ctrl = null;
@@ -115,7 +121,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 		});
 
-		initUI(true);
+		// do not use custom titles on Honeycomb and above - don't work with
+		// the Holo Theme
+		initUI(Build.VERSION.SDK_INT < 11);
 
 		gameTextListener = new PgnScreenText(pgnOptions);
 		ctrl = new ChessController(this, gameTextListener, pgnOptions);
@@ -274,6 +282,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 						.show();
 			}
 		}
+		updateMenu();
 	}
 
 	private void setFavoriteRating() {
@@ -744,6 +753,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					SelectFileActivity.class);
 			intent.setAction(".si4");
 			startActivityForResult(intent, RESULT_LOAD_SCID_FILE);
+			updateMenu();
 			return true;
 		case R.id.item_settings: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
@@ -756,6 +766,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case R.id.item_create_database: {
 			showDialog(SELECT_CREATE_DATABASE_DIALOG);
+			updateMenu();
 			return true;
 		}
 		case R.id.item_search: {
@@ -764,20 +775,60 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		case R.id.item_study_mode: {
 			setStudyMode();
+			updateMenu();
 			return true;
 		}
 		case R.id.item_analysis_mode: {
 			setAnalysisMode();
+			updateMenu();
 			return true;
 		}
-		case R.id.item_new_game: {
+		case R.id.item_mode: {
+			SubMenu submenu = item.getSubMenu();
+			submenu.findItem(R.id.item_analysis_mode).setChecked(
+					gameMode.analysisMode());
+			submenu.findItem(R.id.item_study_mode).setChecked(
+					gameMode.studyMode());
+			return true;
+		}
+		case MENU_ITEM_GAME_NEW: {
 			getScidAppContext().setGamesCursor(this.getCursor());
 			newGame();
 			return true;
 		}
+		case MENU_ITEM_GAME_SAVE: {
+			saveGame();
+			updateMenu();
+			return true;
+		}
+		case MENU_ITEM_GAME_DELETED:
+			if (getScidAppContext().isDeleted()) {
+				updateDeletedFlag(false,
+						getString(R.string.undelete_game_success),
+						getString(R.string.undelete_game_failure));
+			} else {
+				updateDeletedFlag(true,
+						getString(R.string.delete_game_success),
+						getString(R.string.delete_game_failure));
+			}
+			updateMenu();
+			return true;
+		case MENU_ITEM_GAME_FAVORITE:
+			if (getScidAppContext().isFavorite()) {
+				updateFavoriteFlag(false,
+						getString(R.string.remove_favorites_success),
+						getString(R.string.remove_favorites_failure));
+			} else {
+				updateFavoriteFlag(true,
+						getString(R.string.add_favorites_success),
+						getString(R.string.add_favorites_failure));
+			}
+			updateMenu();
+			return true;
 		case R.id.item_import_pgn: {
 			removeDialog(IMPORT_PGN_DIALOG);
 			showDialog(IMPORT_PGN_DIALOG);
+			updateMenu();
 			return true;
 		}
 		case R.id.item_gamelist: {
@@ -798,6 +849,42 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		}
 		return false;
+	}
+
+	private void updateMenu() {
+		if (Build.VERSION.SDK_INT >= 11)
+		{
+		    VersionHelper.refreshActionBarMenu(this);
+		}
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		// dynamically change game menu
+		boolean isSaveVisible = getScidAppContext().getCurrentFileName()
+				.length() > 0;
+		boolean isRestVisible = getScidAppContext().getCurrentGameNo() >= 0
+				&& getScidAppContext().getNoGames() > 0;
+		SubMenu subMenu = menu.findItem(R.id.item_game).getSubMenu();
+		subMenu.clear();
+		subMenu.add(Menu.NONE, MENU_ITEM_GAME_NEW, Menu.NONE, "New Game");
+		if (isSaveVisible) {
+			subMenu.add(Menu.NONE, MENU_ITEM_GAME_SAVE, Menu.NONE,
+					"Save Game (experimental)");
+		}
+		if (isRestVisible) {
+			subMenu.add(Menu.NONE, MENU_ITEM_GAME_DELETED, Menu.NONE,
+					"Game Deleted");
+			subMenu.findItem(MENU_ITEM_GAME_DELETED).setCheckable(true);
+			subMenu.findItem(MENU_ITEM_GAME_DELETED).setChecked(
+					getScidAppContext().isDeleted());
+			subMenu.add(Menu.NONE, MENU_ITEM_GAME_FAVORITE, Menu.NONE,
+					"Favorite Game");
+			subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setCheckable(true);
+			subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setChecked(
+					getScidAppContext().isFavorite());
+		}
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	private void saveGame() {
@@ -1369,39 +1456,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			final int COPY_POSITION = 1;
 			final int PASTE = 2;
 			final int EDIT_BOARD = 3;
-			final int ADD_FAVORITES = 4;
-			final int REMOVE_FAVORITES = 5;
-			final int SAVE_GAME = 6;
-			final int DELETE_GAME = 7;
-			final int UNDELETE_GAME = 8;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
-			// check if "add to favorites" or "remove from favorites" is needed
-			if (getScidAppContext().getCurrentGameNo() >= 0
-					&& getScidAppContext().getNoGames() > 0) {
-				if (!getScidAppContext().isFavorite()) {
-					lst.add(getString(R.string.add_favorites));
-					actions.add(ADD_FAVORITES);
-				} else {
-					lst.add(getString(R.string.remove_favorites));
-					actions.add(REMOVE_FAVORITES);
-				}
-			}
-			if (getScidAppContext().getCurrentFileName().length() > 0) {
-				lst.add(getString(R.string.save_game));
-				actions.add(SAVE_GAME);
-			}
-			if (getScidAppContext().getCurrentGameNo() >= 0
-					&& getScidAppContext().getNoGames() > 0) {
-				if (!getScidAppContext().isDeleted()) {
-					lst.add(getString(R.string.delete_game));
-					actions.add(DELETE_GAME);
-				} else {
-					lst.add(getString(R.string.undelete_game));
-					actions.add(UNDELETE_GAME);
-				}
-			}
 			ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 			if (clipboard.hasText()) {
 				lst.add(getString(R.string.paste));
@@ -1420,43 +1477,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
-							case ADD_FAVORITES: {
-								updateFavoriteFlag(
-										true,
-										getString(R.string.add_favorites_success),
-										getString(R.string.add_favorites_failure));
-								break;
-							}
-							case REMOVE_FAVORITES: {
-								updateFavoriteFlag(
-										false,
-										getString(R.string.remove_favorites_success),
-										getString(R.string.remove_favorites_failure));
-								break;
-							}
 							case EDIT_BOARD: {
 								Intent i = new Intent(ScidAndroidActivity.this,
 										EditBoard.class);
 								i.setAction(ctrl.getFEN());
 								startActivityForResult(i, RESULT_EDITBOARD);
-								break;
-							}
-							case SAVE_GAME: {
-								saveGame();
-								break;
-							}
-							case DELETE_GAME: {
-								updateDeletedFlag(
-										true,
-										getString(R.string.delete_game_success),
-										getString(R.string.delete_game_failure));
-								break;
-							}
-							case UNDELETE_GAME: {
-								updateDeletedFlag(
-										false,
-										getString(R.string.undelete_game_success),
-										getString(R.string.undelete_game_failure));
 								break;
 							}
 							case COPY_GAME: {
@@ -1635,6 +1660,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 	}
 
 	private void newGame() {
+		updateMenu();
 		getScidAppContext().setCurrentGameNo(-1);
 		saveCurrentGameNo();
 		ctrl.newGame(gameMode);
@@ -1872,9 +1898,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (!gameMode.studyMode()) {
 			flipBoardForPlayerNames(white, black);
 		}
-		whitePlayer.setText(white);
-		blackPlayer.setText(black);
-		this.gameNo.setText(gameNo);
+		if (whitePlayer != null) {
+			whitePlayer.setText(white);
+			blackPlayer.setText(black);
+			this.gameNo.setText(gameNo);
+		} else {
+			setTitle(gameNo + "   " + white + " - " + black);
+		}
 	}
 
 	public ScidApplication getScidAppContext() {

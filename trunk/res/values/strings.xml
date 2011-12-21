@@ -223,6 +223,6 @@ GNU GPL v2\n\
     <string name="move_var_down">Move variation down</string>
     <string name="create_db_exists">Error: There is already a database with the same name (%s).</string>
     <string name="create_db_success">The new database file has been created.</string>
-    <string name="create_db_title">Create Database File</string>
+    <string name="create_db_title">New Database</string>
     <string name="create_db_message">Please specify the name of the new database file:</string>
 </resources>

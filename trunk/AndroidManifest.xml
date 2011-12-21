@@ -5,6 +5,21 @@
     android:versionCode="25"
     android:versionName="1.24" >
 
+    <uses-sdk android:minSdkVersion="4"
+        android:targetSdkVersion="11" />
+    
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" >
+    </uses-permission>
+
+    <supports-screens 
+	    android:smallScreens="true" 
+	    android:largeScreens="true"
+	    android:xlargeScreens="true"  
+	    android:normalScreens="true" 
+	    android:anyDensity="true"
+	/>
+    
     <application
         android:debuggable="false"
         android:icon="@drawable/icon"
@@ -104,11 +119,4 @@
             android:authorities="org.scid.database.scidprovider"
             android:name="org.scid.database.ScidProvider" />
     </application>
-
-    <uses-sdk android:minSdkVersion="4" />
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.INTERNET" >
-    </uses-permission>
-
 </manifest>
