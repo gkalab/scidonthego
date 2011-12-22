@@ -860,30 +860,32 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		// dynamically change game menu
-		boolean isSaveVisible = getScidAppContext().getCurrentFileName()
+		// dynamically change enabled state of some items in game menu
+		boolean isSaveEnabled = getScidAppContext().getCurrentFileName()
 				.length() > 0;
-		boolean isRestVisible = getScidAppContext().getCurrentGameNo() >= 0
+		boolean isRestOfGameMenuEnabled = getScidAppContext()
+				.getCurrentGameNo() >= 0
 				&& getScidAppContext().getNoGames() > 0;
 		SubMenu subMenu = menu.findItem(R.id.item_game).getSubMenu();
 		subMenu.clear();
 		subMenu.add(Menu.NONE, MENU_ITEM_GAME_NEW, Menu.NONE, "New Game");
-		if (isSaveVisible) {
-			subMenu.add(Menu.NONE, MENU_ITEM_GAME_SAVE, Menu.NONE,
-					"Save Game (experimental)");
-		}
-		if (isRestVisible) {
-			subMenu.add(Menu.NONE, MENU_ITEM_GAME_DELETED, Menu.NONE,
-					"Game Deleted");
-			subMenu.findItem(MENU_ITEM_GAME_DELETED).setCheckable(true);
-			subMenu.findItem(MENU_ITEM_GAME_DELETED).setChecked(
-					getScidAppContext().isDeleted());
-			subMenu.add(Menu.NONE, MENU_ITEM_GAME_FAVORITE, Menu.NONE,
-					"Favorite Game");
-			subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setCheckable(true);
-			subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setChecked(
-					getScidAppContext().isFavorite());
-		}
+		subMenu.add(Menu.NONE, MENU_ITEM_GAME_SAVE, Menu.NONE,
+				"Save Game (experimental)");
+		subMenu.findItem(MENU_ITEM_GAME_SAVE).setEnabled(isSaveEnabled);
+		subMenu.add(Menu.NONE, MENU_ITEM_GAME_DELETED, Menu.NONE,
+				"Game Deleted");
+		subMenu.findItem(MENU_ITEM_GAME_DELETED).setCheckable(true);
+		subMenu.findItem(MENU_ITEM_GAME_DELETED).setChecked(
+				getScidAppContext().isDeleted());
+		subMenu.findItem(MENU_ITEM_GAME_DELETED).setEnabled(
+				isRestOfGameMenuEnabled);
+		subMenu.add(Menu.NONE, MENU_ITEM_GAME_FAVORITE, Menu.NONE,
+				"Favorite Game");
+		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setCheckable(true);
+		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setChecked(
+				getScidAppContext().isFavorite());
+		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setEnabled(
+				isRestOfGameMenuEnabled);
 		return super.onPrepareOptionsMenu(menu);
 	}
 
