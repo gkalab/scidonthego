@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO:
+add menu:
+Edit
+	- Paste from Clipboard
+	- Copy Game to Clipboard
+	- Copy Position to Clipboard
+	- Edit Board
+	- Strip Moves to the End
+	- Move Variation Up
+	- Move Variation Down
+ -->
 <menu
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<item
