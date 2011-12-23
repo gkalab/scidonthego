@@ -848,8 +848,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 			ctrl.moveVariation(1);
 			return true;
 		}
-		case R.id.item_manage_engines: {
-			showDialog(MANAGE_ENGINES_DIALOG);
+		case R.id.item_add_engine: {
+			addEngine();
+			return true;
+		}
+		case R.id.item_remove_engine: {
+			removeEngine();
 			return true;
 		}
 		case R.id.item_about: {
@@ -1379,7 +1383,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 	static final int SELECT_CREATE_DATABASE_DIALOG = 4;
 	static final int SEARCH_DIALOG = 5;
 	static final int IMPORT_PGN_DIALOG = 6;
-	static final int MANAGE_ENGINES_DIALOG = 8;
 	static final int MOVELIST_MENU_DIALOG = 9;
 
 	@Override
@@ -1645,36 +1648,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 							}
 						}
 
-					});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case MANAGE_ENGINES_DIALOG: {
-			final int ADD_ENGINE = 0;
-			final int REMOVE_ENGINE = 1;
-			List<CharSequence> lst = new ArrayList<CharSequence>();
-			List<Integer> actions = new ArrayList<Integer>();
-			lst.add(getString(R.string.add_engine));
-			actions.add(ADD_ENGINE);
-			lst.add(getString(R.string.remove_engine));
-			actions.add(REMOVE_ENGINE);
-			final List<Integer> finalActions = actions;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.manage_engines_title);
-			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							switch (finalActions.get(item)) {
-							case ADD_ENGINE: {
-								addEngine();
-								break;
-							}
-							case REMOVE_ENGINE: {
-								removeEngine();
-								break;
-							}
-							}
-						}
 					});
 			AlertDialog alert = builder.create();
 			return alert;

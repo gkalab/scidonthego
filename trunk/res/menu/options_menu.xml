@@ -117,6 +117,16 @@
         android:id="@+id/item_manage_engines"
         android:title="UCI Engines"
         android:icon="@drawable/ic_menu_manage">
+        <menu>
+            <item
+                android:id="@+id/item_add_engine"
+                android:title="@string/add_engine">
+            </item>
+            <item
+                android:id="@+id/item_remove_engine"
+                android:title="@string/remove_engine">
+            </item>
+        </menu>
 	</item>
     <item
         android:id="@+id/item_settings"
