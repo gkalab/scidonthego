@@ -801,28 +801,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 			return true;
 		}
 		case R.id.item_game_deleted:
-			if (getScidAppContext().isDeleted()) {
-				updateDeletedFlag(false,
-						getString(R.string.undelete_game_success),
-						getString(R.string.undelete_game_failure));
-			} else {
-				updateDeletedFlag(true,
-						getString(R.string.delete_game_success),
-						getString(R.string.delete_game_failure));
-			}
-			updateMenu();
+			updateDelete();
 			return true;
 		case R.id.item_game_isfavorite:
-			if (getScidAppContext().isFavorite()) {
-				updateFavoriteFlag(false,
-						getString(R.string.remove_favorites_success),
-						getString(R.string.remove_favorites_failure));
-			} else {
-				updateFavoriteFlag(true,
-						getString(R.string.add_favorites_success),
-						getString(R.string.add_favorites_failure));
-			}
-			updateMenu();
+			updateFavorite();
 			return true;
 		case R.id.item_import_pgn: {
 			removeDialog(IMPORT_PGN_DIALOG);
@@ -876,6 +858,32 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 		}
 		}
 		return false;
+	}
+
+	private void updateDelete() {
+		if (getScidAppContext().isDeleted()) {
+			updateDeletedFlag(false,
+					getString(R.string.undelete_game_success),
+					getString(R.string.undelete_game_failure));
+		} else {
+			updateDeletedFlag(true,
+					getString(R.string.delete_game_success),
+					getString(R.string.delete_game_failure));
+		}
+		updateMenu();
+	}
+
+	private void updateFavorite() {
+		if (getScidAppContext().isFavorite()) {
+			updateFavoriteFlag(false,
+					getString(R.string.remove_favorites_success),
+					getString(R.string.remove_favorites_failure));
+		} else {
+			updateFavoriteFlag(true,
+					getString(R.string.add_favorites_success),
+					getString(R.string.add_favorites_failure));
+		}
+		updateMenu();
 	}
 
 	private void updateMenu() {
@@ -1484,9 +1492,29 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 			final int COPY_POSITION = 1;
 			final int PASTE = 2;
 			final int EDIT_BOARD = 3;
+			final int ADD_FAVORITES = 4;
+			final int REMOVE_FAVORITES = 5;
+			final int SAVE_GAME = 6;
+			final int DELETE_GAME = 7;
+			final int UNDELETE_GAME = 8;
 
 			List<CharSequence> lst = new ArrayList<CharSequence>();
 			List<Integer> actions = new ArrayList<Integer>();
+			// check if "add to favorites" or "remove from favorites" is needed
+			if (getScidAppContext().getCurrentGameNo() >= 0
+					&& getScidAppContext().getNoGames() > 0) {
+				if (!getScidAppContext().isFavorite()) {
+					lst.add(getString(R.string.add_favorites));
+					actions.add(ADD_FAVORITES);
+				} else {
+					lst.add(getString(R.string.remove_favorites));
+					actions.add(REMOVE_FAVORITES);
+				}
+			}
+			if (getScidAppContext().getCurrentFileName().length() > 0) {
+				lst.add(getString(R.string.save_game));
+				actions.add(SAVE_GAME);
+			}
 			ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 			if (clipboard.hasText()) {
 				lst.add(getString(R.string.paste));
@@ -1498,6 +1526,16 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 			actions.add(COPY_POSITION);
 			lst.add(getString(R.string.edit_board));
 			actions.add(EDIT_BOARD);
+			if (getScidAppContext().getCurrentGameNo() >= 0
+					&& getScidAppContext().getNoGames() > 0) {
+				if (!getScidAppContext().isDeleted()) {
+					lst.add(getString(R.string.delete_game));
+					actions.add(DELETE_GAME);
+				} else {
+					lst.add(getString(R.string.undelete_game));
+					actions.add(UNDELETE_GAME);
+				}
+			}
 			final List<Integer> finalActions = actions;
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.tools_menu);
@@ -1505,6 +1543,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
+							case SAVE_GAME:
+								saveGame();
+								break;
 							case EDIT_BOARD:
 								editBoard();
 								break;
@@ -1516,6 +1557,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 								break;
 							case PASTE:
 								pasteFromClipboard();
+								break;
+							case ADD_FAVORITES:
+							case REMOVE_FAVORITES:
+								updateFavorite();
+								break;
+							case DELETE_GAME:
+							case UNDELETE_GAME:
+								updateDelete();
 								break;
 							}
 						}
