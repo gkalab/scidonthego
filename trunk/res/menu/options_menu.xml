@@ -1,15 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- TODO:
-add menu:
-Edit
-	- Paste from Clipboard
-	- Copy Game to Clipboard
-	- Copy Position to Clipboard
-	- Edit Board
-	- Strip Moves to the End
-	- Move Variation Up
-	- Move Variation Down
- -->
 <menu
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<item
@@ -45,7 +34,26 @@ Edit
   		android:showAsAction="ifRoom">
   		<!-- android:icon="@drawable/ic_menu_archive"-->
 	    <!-- create empty sub-menu for easy access within code -->
-        <menu></menu>
+        <menu>
+		    <item
+		        android:id="@+id/item_new_game"
+		        android:title="New Game">
+		    </item>
+		    <item
+		        android:id="@+id/item_save_game"
+		        android:title="Save Game (experimental)">
+		    </item>
+		    <group android:checkableBehavior="all">
+		        <item
+                    android:id="@+id/item_game_deleted"
+                    android:title="Game Deleted">
+                </item>
+		        <item
+                    android:id="@+id/item_game_isfavorite"
+                    android:title="Favorite Game">
+                </item>
+		    </group>
+        </menu>
     </item>
     <item
         android:id="@+id/item_mode"
@@ -63,6 +71,41 @@ Edit
 			    </item>
 			</group>
 		</menu>
+    </item>
+    <item
+        android:id="@+id/item_edit"
+        android:title="Edit"
+        android:showAsAction="ifRoom">
+        <menu>
+		    <item
+		        android:id="@+id/item_paste_clipboard"
+		        android:title="Paste from Clipboard">
+		    </item>
+		    <item
+		        android:id="@+id/item_copy_game_clipboard"
+		        android:title="Copy Game to Clipboard">
+		    </item>
+            <item
+                android:id="@+id/item_copy_position_clipboard"
+                android:title="Copy Position to Clipboard">
+            </item>
+            <item
+                android:id="@+id/item_edit_board"
+                android:title="Edit Board">
+            </item>
+            <item
+                android:id="@+id/item_strip_moves"
+                android:title="Strip Moves to the End">
+            </item>
+            <item
+                android:id="@+id/item_variation_up"
+                android:title="Move Variation Up">
+            </item>
+            <item
+                android:id="@+id/item_variation_down"
+                android:title="Move Variation Down">
+            </item>
+   		</menu>
     </item>
     <item
         android:id="@+id/item_search"

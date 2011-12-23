@@ -57,12 +57,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ScidAndroidActivity extends Activity implements GUIInterface {
+public class ScidAndroidActivity extends Activity implements GUIInterface, ClipboardChangedListener {
 
-	private static final int MENU_ITEM_GAME_NEW = 1;
-	private static final int MENU_ITEM_GAME_SAVE = 2;
-	private static final int MENU_ITEM_GAME_DELETED = 3;
-	private static final int MENU_ITEM_GAME_FAVORITE = 4;
 	private ChessBoard cb;
 	private EngineManager engineManager;
 	private ChessController ctrl = null;
@@ -124,6 +120,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		// do not use custom titles on Honeycomb and above - don't work with
 		// the Holo Theme
 		initUI(Build.VERSION.SDK_INT < 11);
+		if (Build.VERSION.SDK_INT>=11) {
+			VersionHelper.registerClipChangedListener(this);
+		}
 
 		gameTextListener = new PgnScreenText(pgnOptions);
 		ctrl = new ChessController(this, gameTextListener, pgnOptions);
@@ -791,17 +790,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					gameMode.studyMode());
 			return true;
 		}
-		case MENU_ITEM_GAME_NEW: {
+		case R.id.item_new_game: {
 			getScidAppContext().setGamesCursor(this.getCursor());
 			newGame();
 			return true;
 		}
-		case MENU_ITEM_GAME_SAVE: {
+		case R.id.item_save_game: {
 			saveGame();
 			updateMenu();
 			return true;
 		}
-		case MENU_ITEM_GAME_DELETED:
+		case R.id.item_game_deleted:
 			if (getScidAppContext().isDeleted()) {
 				updateDeletedFlag(false,
 						getString(R.string.undelete_game_success),
@@ -813,7 +812,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			}
 			updateMenu();
 			return true;
-		case MENU_ITEM_GAME_FAVORITE:
+		case R.id.item_game_isfavorite:
 			if (getScidAppContext().isFavorite()) {
 				updateFavoriteFlag(false,
 						getString(R.string.remove_favorites_success),
@@ -837,6 +836,34 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 			i.setAction("" + reloadGameList);
 			startActivityForResult(i, RESULT_GAMELIST);
 			reloadGameList = false;
+			return true;
+		}
+		case R.id.item_paste_clipboard: {
+			pasteFromClipboard();
+			return true;
+		}
+		case R.id.item_copy_game_clipboard: {
+			copyGameToClipboard();
+			return true;
+		}
+		case R.id.item_copy_position_clipboard: {
+			copyPositionToClipboard();
+			return true;
+		}
+		case R.id.item_edit_board: {
+			editBoard();
+			return true;
+		}
+		case R.id.item_strip_moves: {
+			ctrl.removeSubTree();
+			return true;
+		}
+		case R.id.item_variation_up: {
+			ctrl.moveVariation(-1);
+			return true;
+		}
+		case R.id.item_variation_down: {
+			ctrl.moveVariation(1);
 			return true;
 		}
 		case R.id.item_manage_engines: {
@@ -866,26 +893,25 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		boolean isRestOfGameMenuEnabled = getScidAppContext()
 				.getCurrentGameNo() >= 0
 				&& getScidAppContext().getNoGames() > 0;
-		SubMenu subMenu = menu.findItem(R.id.item_game).getSubMenu();
-		subMenu.clear();
-		subMenu.add(Menu.NONE, MENU_ITEM_GAME_NEW, Menu.NONE, "New Game");
-		subMenu.add(Menu.NONE, MENU_ITEM_GAME_SAVE, Menu.NONE,
-				"Save Game (experimental)");
-		subMenu.findItem(MENU_ITEM_GAME_SAVE).setEnabled(isSaveEnabled);
-		subMenu.add(Menu.NONE, MENU_ITEM_GAME_DELETED, Menu.NONE,
-				"Game Deleted");
-		subMenu.findItem(MENU_ITEM_GAME_DELETED).setCheckable(true);
-		subMenu.findItem(MENU_ITEM_GAME_DELETED).setChecked(
+		SubMenu gameMenu = menu.findItem(R.id.item_game).getSubMenu();
+		gameMenu.findItem(R.id.item_save_game).setEnabled(isSaveEnabled);
+		gameMenu.findItem(R.id.item_game_deleted).setChecked(
 				getScidAppContext().isDeleted());
-		subMenu.findItem(MENU_ITEM_GAME_DELETED).setEnabled(
+		gameMenu.findItem(R.id.item_game_deleted).setEnabled(
 				isRestOfGameMenuEnabled);
-		subMenu.add(Menu.NONE, MENU_ITEM_GAME_FAVORITE, Menu.NONE,
-				"Favorite Game");
-		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setCheckable(true);
-		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setChecked(
+		gameMenu.findItem(R.id.item_game_isfavorite).setChecked(
 				getScidAppContext().isFavorite());
-		subMenu.findItem(MENU_ITEM_GAME_FAVORITE).setEnabled(
+		gameMenu.findItem(R.id.item_game_isfavorite).setEnabled(
 				isRestOfGameMenuEnabled);
+		// adapt edit menu
+		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		editMenu.findItem(R.id.item_paste_clipboard).setEnabled(
+					clipboard.hasText());
+		boolean enableVariationMenuItems = ctrl.numVariations() > 1;
+		editMenu.findItem(R.id.item_variation_up).setEnabled(enableVariationMenuItems);
+		editMenu.findItem(R.id.item_variation_down).setEnabled(enableVariationMenuItems);
+		
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -1479,45 +1505,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (finalActions.get(item)) {
-							case EDIT_BOARD: {
-								Intent i = new Intent(ScidAndroidActivity.this,
-										EditBoard.class);
-								i.setAction(ctrl.getFEN());
-								startActivityForResult(i, RESULT_EDITBOARD);
+							case EDIT_BOARD:
+								editBoard();
 								break;
-							}
-							case COPY_GAME: {
-								String pgn = ctrl.getPGN();
-								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-								clipboard.setText(pgn);
+							case COPY_GAME:
+								copyGameToClipboard();
 								break;
-							}
-							case COPY_POSITION: {
-								String fen = ctrl.getFEN() + "\n";
-								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-								clipboard.setText(fen);
+							case COPY_POSITION:
+								copyPositionToClipboard();
 								break;
-							}
-							case PASTE: {
-								ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-								if (clipboard.hasText()) {
-									String fenPgn = clipboard.getText()
-											.toString()
-											.replaceAll("\n|\r|\t", " ");
-									try {
-										ctrl.setFENOrPGN(fenPgn);
-									} catch (ChessParseError e) {
-										Log.i("SCID", "ChessParseError", e);
-										Toast.makeText(getApplicationContext(),
-												e.getMessage(),
-												Toast.LENGTH_SHORT).show();
-									}
-								}
+							case PASTE:
+								pasteFromClipboard();
 								break;
-							}
 							}
 						}
-
 					});
 			AlertDialog alert = builder.create();
 			return alert;
@@ -1631,6 +1632,42 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		}
 		}
 		return null;
+	}
+
+	private void editBoard() {
+		Intent i = new Intent(ScidAndroidActivity.this,
+				EditBoard.class);
+		i.setAction(ctrl.getFEN());
+		startActivityForResult(i, RESULT_EDITBOARD);
+	}
+
+	private void pasteFromClipboard() {
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		if (clipboard.hasText()) {
+			String fenPgn = clipboard.getText()
+					.toString()
+					.replaceAll("\n|\r|\t", " ");
+			try {
+				ctrl.setFENOrPGN(fenPgn);
+			} catch (ChessParseError e) {
+				Log.i("SCID", "ChessParseError", e);
+				Toast.makeText(getApplicationContext(),
+						e.getMessage(),
+						Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
+	private void copyPositionToClipboard() {
+		String fen = ctrl.getFEN() + "\n";
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		clipboard.setText(fen);
+	}
+
+	private void copyGameToClipboard() {
+		String pgn = ctrl.getPGN();
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		clipboard.setText(pgn);
 	}
 
 	private void createDatabase(String fileName) {
@@ -1924,5 +1961,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface {
 		if (move != null) {
 			cb.setAnimMove(sourcePos, move, forward);
 		}
+	}
+
+	@Override
+	public void clipboardChanged() {
+		updateMenu();
 	}
 }
