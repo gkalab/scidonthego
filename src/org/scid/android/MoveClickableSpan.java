@@ -2,7 +2,6 @@ package org.scid.android;
 
 import org.scid.android.gamelogic.GameTree.Node;
 
-import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;

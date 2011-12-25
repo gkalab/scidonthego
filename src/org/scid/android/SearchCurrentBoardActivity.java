@@ -3,15 +3,13 @@ package org.scid.android;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 public class SearchCurrentBoardActivity extends Activity {
 	private String fen;

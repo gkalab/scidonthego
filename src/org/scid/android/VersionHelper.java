@@ -10,18 +10,18 @@ import android.content.ClipboardManager.OnPrimaryClipChangedListener;
  * Utility class to hide methods that are not available on SDK versions < 11
  */
 public class VersionHelper {
-	static Set<ClipboardChangedListener> clipChangedListeners = new HashSet<ClipboardChangedListener>();
+	static Set<IClipboardChangedListener> clipChangedListeners = new HashSet<IClipboardChangedListener>();
 	OnPrimaryClipChangedListener clipBoardListener = new OnPrimaryClipChangedListener() {
 
 		@Override
 		public void onPrimaryClipChanged() {
-			for (ClipboardChangedListener listener : clipChangedListeners) {
+			for (IClipboardChangedListener listener : clipChangedListeners) {
 				listener.clipboardChanged();
 			}
 		}
 	};
 
-	static void registerClipChangedListener(ClipboardChangedListener listener) {
+	static void registerClipChangedListener(IClipboardChangedListener listener) {
 		clipChangedListeners.add(listener);
 	}
 
