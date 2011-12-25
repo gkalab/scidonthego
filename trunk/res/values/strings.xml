@@ -144,6 +144,7 @@ GNU GPL v2\n\
     <string name="filter_no_games">No games found. Filter is reset.</string>
     <string name="filter_numberof_games">games in current filter</string>
     <string name="downloading">Downloading...</string>
+    <string name="download_started">Download started in the background.</string>
     <string name="twic_downloading">Downloading from TWIC</string>
     <string name="chessok_downloading">Downloading from ChessOK</string>
     <string name="get_twic_information">Getting information from TWIC</string>

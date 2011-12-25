@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import org.scid.android.DownloadTask;
+import org.scid.android.IDownloadCallback;
 import org.scid.android.Link;
 import org.scid.android.R;
 import org.scid.android.ScidAndroidActivity;
@@ -21,13 +23,12 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 
-public class PgnLinkListActivity extends ListActivity {
-	private ProgressDialog progressDlg;
+public class PgnLinkListActivity extends ListActivity implements IDownloadCallback {
+	private static ProgressDialog progressDlg;
 	final static int PROGRESS_DIALOG = 0;
 	static private final int RESULT_PGN_IMPORT = 5;
 
@@ -37,7 +38,7 @@ public class PgnLinkListActivity extends ListActivity {
 		LinkList linkList = (LinkList) this.getIntent().getSerializableExtra(
 				"linklist");
 		final PgnLinkListActivity chessOkList = this;
-		this.progressDlg = ProgressDialog.show(this,
+		progressDlg = ProgressDialog.show(this,
 				getString(R.string.get_chessok_information),
 				getString(R.string.downloading), true, false);
 		chessOkList.showList(linkList.getLinkList());
@@ -57,49 +58,12 @@ public class PgnLinkListActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
 				Link item = aa.getItem(pos);
-				File pgnFile = null;
-				try {
-					pgnFile = Tools.downloadFile(item.getLink());
-				} catch (IOException e) {
-					Tools.showErrorMessage(PgnLinkListActivity.this,
-							getText(R.string.download_error) + " ("
-									+ e.getMessage() + ")");
-				}
-				if (pgnFile != null) {
-					if (pgnFile.length() == 0) {
-						pgnFile.delete();
-						Tools.showErrorMessage(PgnLinkListActivity.this,
-								getString(R.string.download_error_file_empty));
-					} else {
-						Log.d("SCID", "replacing comments");
-						replacePgn(pgnFile.getAbsolutePath());
-						String pgnFileName = pgnFile.getName();
-						Log.d("SCID", "moving downloaded file from "
-								+ pgnFile.getAbsolutePath() + " to "
-								+ Environment.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY
-								+ File.separator + pgnFileName);
-						// move to scid directory and rename to ... name +
-						// ".pgn"
-						pgnFile.renameTo(new File(Environment
-								.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY,
-								pgnFileName));
-						Tools.importPgn(PgnLinkListActivity.this, Tools
-								.getFullScidFileName(pgnFileName), 
-								RESULT_PGN_IMPORT);
-					}
-
-				} else {
-					Toast
-							.makeText(getApplicationContext(),
-									getText(R.string.download_error),
-									Toast.LENGTH_LONG).show();
-				}
+				PgnLinkListActivity.progressDlg = ProgressDialog.show(PgnLinkListActivity.this,
+						getString(R.string.please_wait),
+						getString(R.string.downloading), true, false);
+				new DownloadTask().execute(PgnLinkListActivity.this,
+						item.getLink());
 			}
-
 		});
 	}
 
@@ -154,5 +118,48 @@ public class PgnLinkListActivity extends ListActivity {
 			}
 			break;
 		}
+	}
+
+	@Override
+	public void downloadSuccess(File pgnFile) {
+		progressDlg.dismiss();
+		if (pgnFile != null) {
+			if (pgnFile.length() == 0) {
+				pgnFile.delete();
+				Tools.showErrorMessage(PgnLinkListActivity.this,
+						getString(R.string.download_error_file_empty));
+			} else {
+				Log.d("SCID", "replacing comments");
+				replacePgn(pgnFile.getAbsolutePath());
+				String pgnFileName = pgnFile.getName();
+				Log.d("SCID",
+						"moving downloaded file from "
+								+ pgnFile.getAbsolutePath()
+								+ " to "
+								+ Environment
+										.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY
+								+ File.separator + pgnFileName);
+				// move to scid directory and rename to ... name +
+				// ".pgn"
+				pgnFile.renameTo(new File(Environment
+						.getExternalStorageDirectory()
+						+ File.separator
+						+ ScidAndroidActivity.SCID_DIRECTORY,
+						pgnFileName));
+				Tools.importPgn(PgnLinkListActivity.this,
+						Tools.getFullScidFileName(pgnFileName),
+						RESULT_PGN_IMPORT);
+			}
+		} 		
+	}
+
+	@Override
+	public void downloadFailure(String message) {
+		progressDlg.dismiss();
+		Tools.showErrorMessage(this, this
+				.getText(R.string.download_error)
+				+ " (" + message + ")");
 	}
 }

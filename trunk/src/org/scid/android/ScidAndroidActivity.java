@@ -57,7 +57,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ScidAndroidActivity extends Activity implements GUIInterface, ClipboardChangedListener {
+public class ScidAndroidActivity extends Activity implements GUIInterface,
+		IClipboardChangedListener, IDownloadCallback {
 
 	private ChessBoard cb;
 	private EngineManager engineManager;
@@ -1841,45 +1842,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String urlString = input.getText().toString().trim();
-						File pgnFile = null;
-						try {
-							pgnFile = Tools.downloadFile(urlString);
-						} catch (IOException e) {
-							Tools.showErrorMessage(
-									ScidAndroidActivity.this,
-									getText(R.string.download_error) + " ("
-											+ e.getMessage() + ")");
-						}
-						if (pgnFile != null) {
-							String pgnFileName = pgnFile.getName();
-							if (!pgnFileName.endsWith(".pgn")) {
-								// replace suffix with .pgn
-								int pos = pgnFileName.lastIndexOf(".");
-								if (pos > 0) {
-									pgnFileName = pgnFileName.substring(0,
-											pos - 1) + ".pgn";
-								}
-							}
-							Log.d("SCID", "moving downloaded file from "
-									+ pgnFile.getAbsolutePath() + " to "
-									+ Environment.getExternalStorageDirectory()
-									+ File.separator + SCID_DIRECTORY
-									+ File.separator + pgnFileName);
-							// move to scid directory and rename to ... name +
-							// ".pgn"
-							pgnFile.renameTo(new File(Environment
-									.getExternalStorageDirectory()
-									+ File.separator + SCID_DIRECTORY,
-									pgnFileName));
-							Tools.importPgn(ScidAndroidActivity.this,
-									Tools.getFullScidFileName(pgnFileName),
-									RESULT_PGN_IMPORT);
-
-						} else {
-							Toast.makeText(getApplicationContext(),
-									getText(R.string.download_error),
-									Toast.LENGTH_LONG).show();
-						}
+						new DownloadTask().execute(ScidAndroidActivity.this,
+								urlString);
+						Toast.makeText(getApplicationContext(),
+								getString(R.string.download_started),
+								Toast.LENGTH_LONG).show();
 					}
 				});
 
@@ -1988,5 +1955,40 @@ public class ScidAndroidActivity extends Activity implements GUIInterface, Clipb
 	@Override
 	public void clipboardChanged() {
 		updateMenu();
+	}
+
+	@Override
+	public void downloadSuccess(File pgnFile) {
+		if (pgnFile != null) {
+			String pgnFileName = pgnFile.getName();
+			if (!pgnFileName.endsWith(".pgn")) {
+				// replace suffix with .pgn
+				int pos = pgnFileName.lastIndexOf(".");
+				if (pos > 0) {
+					pgnFileName = pgnFileName.substring(0,
+							pos - 1) + ".pgn";
+				}
+			}
+			Log.d("SCID", "moving downloaded file from "
+					+ pgnFile.getAbsolutePath() + " to "
+					+ Environment.getExternalStorageDirectory()
+					+ File.separator + SCID_DIRECTORY
+					+ File.separator + pgnFileName);
+			// move to scid directory and rename to ... name +
+			// ".pgn"
+			pgnFile.renameTo(new File(Environment
+					.getExternalStorageDirectory()
+					+ File.separator + SCID_DIRECTORY,
+					pgnFileName));
+			Tools.importPgn(ScidAndroidActivity.this,
+					Tools.getFullScidFileName(pgnFileName),
+					RESULT_PGN_IMPORT);
+		}
+	}
+
+	@Override
+	public void downloadFailure(String message) {
+		Tools.showErrorMessage(this, this.getText(R.string.download_error)
+				+ " (" + message + ")");
 	}
 }

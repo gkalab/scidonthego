@@ -1,5 +1,5 @@
 package org.scid.android;
 
-public interface ClipboardChangedListener {
+public interface IClipboardChangedListener {
 	void clipboardChanged();
 }

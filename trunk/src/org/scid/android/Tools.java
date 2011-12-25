@@ -23,7 +23,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ScrollView;
 import android.widget.TextView;
