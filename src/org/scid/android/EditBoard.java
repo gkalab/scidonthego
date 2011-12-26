@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.ClipboardManager;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -84,18 +85,34 @@ public class EditBoard extends Activity {
         cb.setFocusable(true);
         cb.requestFocus();
         cb.setClickable(true);
-        cb.setOnTouchListener(new OnTouchListener() {
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-		        if (event.getAction() == MotionEvent.ACTION_UP) {
-		            int sq = cb.eventToSquare(event);
+        final GestureDetector gd = new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
+            public boolean onDown(MotionEvent e) {
+                return false;
+            }
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                cb.cancelLongPress();
+                return true;
+            }
+            public boolean onSingleTapUp(MotionEvent e) {
+                cb.cancelLongPress();
+                handleClick(e);
+                return true;
+            }
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                if (e.getAction() == MotionEvent.ACTION_UP)
+                    handleClick(e);
+                return true;
+            }
+            private final void handleClick(MotionEvent e) {
+                int sq = cb.eventToSquare(e);
 		            Move m = cb.mousePressed(sq);
-		            if (m != null) {
+                if (m != null)
 		                doMove(m);
 		            }
-		            return false;
-		        }
-		        return false;
+        });
+        cb.setOnTouchListener(new OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                return gd.onTouchEvent(event);
 			}
 		});
         cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
@@ -134,7 +151,10 @@ public class EditBoard extends Activity {
 		if (m.from >= 0)
 			pos.setPiece(m.from, Piece.EMPTY);
 		cb.setPosition(pos);
+        if (m.from >= 0)
 		cb.setSelection(-1);
+        else
+            cb.setSelection(m.from);
 		checkValid();
 	}
 
@@ -187,10 +207,17 @@ public class EditBoard extends Activity {
 			status.setText("");
 			return true;
 		} catch (ChessParseError e) {
-			status.setText(e.getMessage());
+            status.setText(getParseErrString(e));
 		}
 		return false;
 	}
+
+    private final String getParseErrString(ChessParseError e) {
+        if (e.resourceId == -1)
+            return e.getMessage();
+        else
+            return getString(e.resourceId);
+    }
 
 	static final int EDIT_DIALOG = 0; 
 	static final int SIDE_DIALOG = 1; 
@@ -272,7 +299,7 @@ public class EditBoard extends Activity {
 			    			} catch (ChessParseError e) {
 			    				if (e.pos != null)
 					    			cb.setPosition(e.pos);
-								Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), getParseErrString(e), Toast.LENGTH_SHORT).show();
 			    			}
 			    			cb.setSelection(-1);
 			    			checkValid();
@@ -287,20 +314,20 @@ public class EditBoard extends Activity {
 		}
 		case SIDE_DIALOG: {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage(R.string.select_side_to_move_first)
-			       .setPositiveButton(R.string.white, new DialogInterface.OnClickListener() {
+            builder.setTitle(R.string.select_side_to_move_first);
+            final int selectedItem = (cb.pos.whiteMove) ? 0 : 1;
+            builder.setSingleChoiceItems(new String[]{getString(R.string.white), getString(R.string.black)}, selectedItem, new Dialog.OnClickListener() {
 			           public void onClick(DialogInterface dialog, int id) {
+                    if (id == 0) { // white to move
 			        	   cb.pos.setWhiteMove(true);
 			        	   checkValid();
 			        	   dialog.cancel();
-			           }
-			       })
-			       .setNegativeButton(R.string.black, new DialogInterface.OnClickListener() {
-			           public void onClick(DialogInterface dialog, int id) {
+                    } else {
 			        	   cb.pos.setWhiteMove(false);
 			        	   checkValid();
 			        	   dialog.cancel();
 			           }
+				}
 			       });
 			AlertDialog alert = builder.create();
 			return alert;
@@ -352,19 +379,20 @@ public class EditBoard extends Activity {
 			builder.setSingleChoiceItems(items, getEPFile(), new DialogInterface.OnClickListener() {
 			    public void onClick(DialogInterface dialog, int item) {
 			    	setEPFile(item);
+                    dialog.cancel();
 			    }
 			});
 			AlertDialog alert = builder.create();
 			return alert;
 		}
 		case MOVCNT_DIALOG: {
-			final Dialog dialog = new Dialog(this);
-			dialog.setContentView(R.layout.edit_move_counters);
-			dialog.setTitle(R.string.edit_move_counters);
-			final EditText halfMoveClock = (EditText)dialog.findViewById(R.id.ed_cnt_halfmove);
-			final EditText fullMoveCounter = (EditText)dialog.findViewById(R.id.ed_cnt_fullmove);
-			Button ok = (Button)dialog.findViewById(R.id.ed_cnt_ok);
-			Button cancel = (Button)dialog.findViewById(R.id.ed_cnt_cancel);
+        	View content = View.inflate(this, R.layout.edit_move_counters, null);
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            
+            builder.setView(content);
+            builder.setTitle(R.string.edit_move_counters);
+            final EditText halfMoveClock = (EditText)content.findViewById(R.id.ed_cnt_halfmove);
+            final EditText fullMoveCounter = (EditText)content.findViewById(R.id.ed_cnt_fullmove);
 			halfMoveClock.setText(String.format("%d", cb.pos.halfMoveClock));
 			fullMoveCounter.setText(String.format("%d", cb.pos.fullMoveCounter));
 			final Runnable setCounters = new Runnable() {
@@ -374,31 +402,30 @@ public class EditBoard extends Activity {
 				        int fullCount = Integer.parseInt(fullMoveCounter.getText().toString());
 				        cb.pos.halfMoveClock = halfClock;
 				        cb.pos.fullMoveCounter = fullCount;
-						dialog.cancel();
 					} catch (NumberFormatException nfe) {
 						Toast.makeText(getApplicationContext(), R.string.invalid_number_format, Toast.LENGTH_SHORT).show();
 					}
 				}
 			};
+            builder.setPositiveButton("Ok", new Dialog.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					setCounters.run();
+				}
+            });
+            builder.setNegativeButton("Cancel", null);
+            
+            final Dialog dialog = builder.create();
+            
 			fullMoveCounter.setOnKeyListener(new OnKeyListener() {
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
 					if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
 						setCounters.run();
+                        dialog.cancel();
 						return true;
 					}
 					return false;
 				}
 	        });
-			ok.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					setCounters.run();
-				}
-			});
-			cancel.setOnClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					dialog.cancel();
-				}
-			});
 			return dialog;
 		}
 		}

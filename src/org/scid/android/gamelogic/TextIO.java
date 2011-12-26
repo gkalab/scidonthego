@@ -8,6 +8,8 @@ package org.scid.android.gamelogic;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.scid.android.R;
+
 
 /**
  * 
@@ -21,7 +23,7 @@ public class TextIO {
 		Position pos = new Position();
 		String[] words = fen.split(" ");
 		if (words.length < 2) {
-			throw new ChessParseError("Too few spaces");
+            throw new ChessParseError(R.string.err_too_few_spaces);
 		}
 		for (int i = 0; i < words.length; i++) {
 			words[i] = words[i].trim();
@@ -54,11 +56,11 @@ public class TextIO {
         case 'r': safeSetPiece(pos, col, row, Piece.BROOK);   col++; break;
         case 'q': safeSetPiece(pos, col, row, Piece.BQUEEN);  col++; break;
         case 'k': safeSetPiece(pos, col, row, Piece.BKING);   col++; break;
-                default: throw new ChessParseError("Invalid piece", pos);
+                default: throw new ChessParseError(R.string.err_invalid_piece, pos);
 			}
 		}
 		if (words[1].length() == 0) {
-			throw new ChessParseError("Invalid side", pos);
+            throw new ChessParseError(R.string.err_invalid_side, pos);
 		}
 		pos.setWhiteMove(words[1].charAt(0) == 'w');
 
@@ -83,7 +85,7 @@ public class TextIO {
 				case '-':
 					break;
 				default:
-					throw new ChessParseError("Invalid castling flags", pos);
+                        throw new ChessParseError(R.string.err_invalid_castling_flags, pos);
 				}
 			}
 		}
@@ -95,7 +97,7 @@ public class TextIO {
 			String epString = words[3];
 			if (!epString.equals("-")) {
 				if (epString.length() < 2) {
-					throw new ChessParseError("Invalid en passant square", pos);
+                    throw new ChessParseError(R.string.err_invalid_en_passant_square, pos);
 				}
 				pos.setEpSquare(getSquare(epString));
 			}
@@ -113,30 +115,40 @@ public class TextIO {
 		}
 
 		// Each side must have exactly one king
-		int wKings = 0;
-		int bKings = 0;
-		for (int x = 0; x < 8; x++) {
-			for (int y = 0; y < 8; y++) {
-				int p = pos.getPiece(Position.getSquare(x, y));
-				if (p == Piece.WKING) {
-					wKings++;
-				} else if (p == Piece.BKING) {
-					bKings++;
-				}
-			}
-		}
-		if (wKings != 1) {
-			throw new ChessParseError("White must have exactly one king", pos);
-		}
-		if (bKings != 1) {
-			throw new ChessParseError("Black must have exactly one king", pos);
-		}
+        int[] nPieces = new int[Piece.nPieceTypes];
+        for (int i = 0; i < Piece.nPieceTypes; i++)
+            nPieces[i] = 0;
+        for (int x = 0; x < 8; x++)
+            for (int y = 0; y < 8; y++)
+                nPieces[pos.getPiece(Position.getSquare(x, y))]++;
+        if (nPieces[Piece.WKING] != 1)
+            throw new ChessParseError(R.string.err_white_num_kings, pos);
+        if (nPieces[Piece.BKING] != 1)
+            throw new ChessParseError(R.string.err_black_num_kings, pos);
+
+        // White must not have too many pieces
+        int maxWPawns = 8;
+        maxWPawns -= Math.max(0, nPieces[Piece.WKNIGHT] - 2);
+        maxWPawns -= Math.max(0, nPieces[Piece.WBISHOP] - 2);
+        maxWPawns -= Math.max(0, nPieces[Piece.WROOK  ] - 2);
+        maxWPawns -= Math.max(0, nPieces[Piece.WQUEEN ] - 1);
+        if (nPieces[Piece.WPAWN] > maxWPawns)
+            throw new ChessParseError(R.string.err_too_many_white_pieces, pos);
+
+        // Black must not have too many pieces
+        int maxBPawns = 8;
+        maxBPawns -= Math.max(0, nPieces[Piece.BKNIGHT] - 2);
+        maxBPawns -= Math.max(0, nPieces[Piece.BBISHOP] - 2);
+        maxBPawns -= Math.max(0, nPieces[Piece.BROOK  ] - 2);
+        maxBPawns -= Math.max(0, nPieces[Piece.BQUEEN ] - 1);
+        if (nPieces[Piece.BPAWN] > maxBPawns)
+            throw new ChessParseError(R.string.err_too_many_black_pieces, pos);
 
 		// Make sure king can not be captured
 		Position pos2 = new Position(pos);
 		pos2.setWhiteMove(!pos.whiteMove);
 		if (MoveGen.inCheck(pos2)) {
-			throw new ChessParseError("King capture possible", pos);
+            throw new ChessParseError(R.string.err_king_capture_possible, pos);
 		}
 
 		fixupEPSquare(pos);
@@ -174,18 +186,17 @@ public class TextIO {
 					}
 				}
 			}
-			if (!epValid) {
+            if (!epValid)
 				pos.setEpSquare(-1);
 			}
 		}
-	}
 
     private static final void safeSetPiece(Position pos, int col, int row, int p) throws ChessParseError {
-        if (row < 0) throw new ChessParseError("Too many rows");
-        if (col > 7) throw new ChessParseError("Too many columns");
+        if (row < 0) throw new ChessParseError(R.string.err_too_many_rows);
+        if (col > 7) throw new ChessParseError(R.string.err_too_many_columns);
 		if ((p == Piece.WPAWN) || (p == Piece.BPAWN)) {
 			if ((row == 0) || (row == 7))
-				throw new ChessParseError("Pawn on first/last rank");
+                throw new ChessParseError(R.string.err_pawn_on_first_last_rank);
 		}
 		pos.setPiece(Position.getSquare(col, row), p);
 	}

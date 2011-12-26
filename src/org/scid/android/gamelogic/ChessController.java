@@ -358,14 +358,13 @@ public class ChessController {
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss.SSS");
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Date d1 = new Date();
-		if (!newGame.readPGN(pgn, pgnOptions)) {
-			throw new ChessParseError();
+		if (newGame.readPGN(pgn, pgnOptions)) {
+			Date d2 = new Date();
+			Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
+					+ df.format(d2));
+			game = newGame;
+			updateGame();
 		}
-		Date d2 = new Date();
-		Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
-				+ df.format(d2));
-		game = newGame;
-		updateGame();
 	}
 
 	public void updateGame() {
