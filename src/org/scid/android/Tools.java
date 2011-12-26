@@ -3,6 +3,7 @@ package org.scid.android;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,11 +130,11 @@ public class Tools {
 					fileName = fileName.substring(
 							fileName.indexOf("filename=") + 9).trim();
 					if (fileName.length() > 0)
-						result = new File(
-								Environment.getExternalStorageDirectory()
-										+ File.separator
-										+ ScidAndroidActivity.SCID_DIRECTORY
-										+ File.separator + fileName);
+						result = new File(Environment
+								.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY
+								+ File.separator + fileName);
 				}
 			} else {
 				fileName = getFileNameFromUrl(path);
@@ -157,8 +158,8 @@ public class Tools {
 			if (result == null) {
 				result = File.createTempFile("temp", ".tmp");
 			}
-			FileOutputStream out = new FileOutputStream(
-					result.getAbsolutePath());
+			FileOutputStream out = new FileOutputStream(result
+					.getAbsolutePath());
 			while ((bufferLength = in.read(buffer)) > 0) {
 				out.write(buffer, 0, bufferLength);
 				downloadedSize += bufferLength;
@@ -190,9 +191,9 @@ public class Tools {
 			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
 					activity).create();
 			fileExistsDialog.setTitle("Database exists");
-			String message = String.format(
-					activity.getString(R.string.pgn_import_db_exists),
-					scidFile.getName());
+			String message = String.format(activity
+					.getString(R.string.pgn_import_db_exists), scidFile
+					.getName());
 			fileExistsDialog.setMessage(message);
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
 			fileExistsDialog.setButton(activity.getString(R.string.ok),
@@ -204,10 +205,12 @@ public class Tools {
 			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							Toast.makeText(
-									activity.getApplicationContext(),
-									activity.getString(R.string.pgn_import_cancel),
-									Toast.LENGTH_SHORT).show();
+							Toast
+									.makeText(
+											activity.getApplicationContext(),
+											activity
+													.getString(R.string.pgn_import_cancel),
+											Toast.LENGTH_SHORT).show();
 						}
 					});
 			fileExistsDialog.show();
@@ -267,7 +270,9 @@ public class Tools {
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
 				builder.setIcon(android.R.drawable.ic_dialog_alert);
-				builder.setPositiveButton(activity.getString(R.string.ok), null);
+				builder
+						.setPositiveButton(activity.getString(R.string.ok),
+								null);
 				builder.show();
 			}
 		});
@@ -287,9 +292,50 @@ public class Tools {
 			activity.getWindow().addFlags(
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		} else {
-			activity.getWindow()
+			activity
+					.getWindow()
 					.clearFlags(
 							android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		}
+	}
+
+	public static boolean copyFile(File sourceFile, File destFile) {
+		FileInputStream istream = null;
+		FileOutputStream fout = null;
+		String errorMsg;
+		boolean copied = false;
+		try {
+			istream = new FileInputStream(sourceFile);
+			fout = new FileOutputStream(destFile);
+			byte[] b = new byte[4096];
+			int cnt = 0;
+			while ((cnt = istream.read(b)) != -1) {
+				fout.write(b, 0, cnt);
+			}
+			istream.close();
+			fout.close();
+			copied = true;
+		} catch (IOException e) {
+			errorMsg = e.getLocalizedMessage();
+			Log.e("SCID", errorMsg, e);
+		} catch (SecurityException se) {
+			errorMsg = se.getLocalizedMessage();
+			Log.e("SCID", errorMsg, se);
+		} finally {
+			// Ensure streams are closed should an exception occur.
+			if (fout != null) {
+				try {
+					fout.close();
+				} catch (IOException e) { /* Ignore */
+				}
+			}
+			if (istream != null) {
+				try {
+					istream.close();
+				} catch (IOException e) { /* Ignore */
+				}
+			}
+		}
+		return copied;
 	}
 }
