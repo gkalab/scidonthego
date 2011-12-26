@@ -2,24 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
     package="org.scid.android"
-    android:versionCode="27"
-    android:versionName="1.26" >
+    android:versionCode="28"
+    android:versionName="1.27" >
 
-    <uses-sdk android:minSdkVersion="3"
+    <uses-sdk
+        android:minSdkVersion="3"
         android:targetSdkVersion="11" />
-    
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
-    <supports-screens 
-	    android:smallScreens="true" 
-	    android:largeScreens="true"
-	    android:xlargeScreens="true"  
-	    android:normalScreens="true" 
-	    android:anyDensity="true"
-	/>
-    
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
     <application
         android:debuggable="false"
         android:icon="@drawable/icon"
@@ -33,6 +36,20 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/x-chess-pgn" />
+                <data android:scheme="http" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="https" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="content" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="file" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
             </intent-filter>
         </activity>
         <activity
@@ -119,4 +136,5 @@
             android:authorities="org.scid.database.scidprovider"
             android:name="org.scid.database.ScidProvider" />
     </application>
+
 </manifest>

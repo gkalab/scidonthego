@@ -46,10 +46,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.View.OnLongClickListener;
-import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RatingBar;
@@ -622,6 +622,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	protected void onResume() {
+		getIntentData();
 		if (ctrl != null) {
 			ctrl.setGuiPaused(false);
 		}
@@ -629,6 +630,46 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			startAnalysis();
 		}
 		super.onResume();
+	}
+
+	private void getIntentData() {
+		Uri data = getIntent().getData();
+		if (data != null) {
+			Log.i("SCID", "Intent data=" + data);
+			if (data.getScheme().startsWith("http")) {
+				String url = data.toString();
+				new DownloadTask().execute(ScidAndroidActivity.this, url);
+				Toast
+						.makeText(getApplicationContext(),
+								getString(R.string.download_started),
+								Toast.LENGTH_LONG).show();
+			} else {
+				String filePath = data.getEncodedPath();
+				File pgnFile = new File(filePath);
+				Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
+						+ " to " + Environment.getExternalStorageDirectory()
+						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
+						+ File.separator + pgnFile.getName());
+				File importFile = new File(Environment
+						.getExternalStorageDirectory()
+						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
+						pgnFile.getName());
+				boolean fileOk = true;
+				if (pgnFile.getAbsolutePath().equals(
+						importFile.getAbsolutePath())) {
+					// source is in the same directory as destination file
+					importFile = pgnFile;
+				} else {
+					fileOk = Tools.copyFile(pgnFile, importFile);
+				}
+				if (fileOk) {
+					Tools.importPgn(this, importFile.getAbsolutePath(), RESULT_PGN_IMPORT);
+				}
+			}
+			// the data was handled, set it to null to not enter this again in
+			// onResume()
+			getIntent().setData(null);
+		}
 	}
 
 	@Override
@@ -1115,6 +1156,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				if (pgnFileName != null) {
 					new File(pgnFileName).delete();
 				}
+				String scidFileName = Tools.stripExtension(pgnFileName)
+						+ ".si4";
+				loadScidFile(scidFileName, 0);
 			}
 			break;
 		case RESULT_ADD_ENGINE:
@@ -1389,272 +1433,282 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
-		case MOVELIST_MENU_DIALOG: {
-			final int REMOVE_SUBTREE = 0;
-			final int MOVE_VAR_UP = 1;
-			final int MOVE_VAR_DOWN = 2;
-
-			List<CharSequence> lst = new ArrayList<CharSequence>();
-			List<Integer> actions = new ArrayList<Integer>();
-			lst.add(getString(R.string.truncate_gametree));
-			actions.add(REMOVE_SUBTREE);
-			if (ctrl.numVariations() > 1) {
-				lst.add(getString(R.string.move_var_up));
-				actions.add(MOVE_VAR_UP);
-				lst.add(getString(R.string.move_var_down));
-				actions.add(MOVE_VAR_DOWN);
-			}
-			final List<Integer> finalActions = actions;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.edit_game);
-			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							switch (finalActions.get(item)) {
-							case REMOVE_SUBTREE:
-								ctrl.removeSubTree();
-								break;
-							case MOVE_VAR_UP:
-								ctrl.moveVariation(-1);
-								break;
-							case MOVE_VAR_DOWN:
-								ctrl.moveVariation(1);
-								break;
-							}
-						}
-					});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case PROMOTE_DIALOG: {
-			final CharSequence[] items = { getString(R.string.queen),
-					getString(R.string.rook), getString(R.string.bishop),
-					getString(R.string.knight) };
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.promote_pawn_to);
-			builder.setItems(items, new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int item) {
-					ctrl.reportPromotePiece(item);
-				}
-			});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case SEARCH_DIALOG: {
-			final int RESET_FILTER = 0;
-			final int SEARCH_CURRENT_BOARD = 1;
-			final int SEARCH_HEADER = 2;
-			final int SHOW_FAVORITES = 3;
-			List<CharSequence> lst = new ArrayList<CharSequence>();
-			List<Integer> actions = new ArrayList<Integer>();
-			lst.add(getString(R.string.reset_filter));
-			actions.add(RESET_FILTER);
-			lst.add(getString(R.string.search_current_board));
-			actions.add(SEARCH_CURRENT_BOARD);
-			lst.add(getString(R.string.search_header));
-			actions.add(SEARCH_HEADER);
-			lst.add(getString(R.string.favorites));
-			actions.add(SHOW_FAVORITES);
-			final List<Integer> finalActions = actions;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.search);
-			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							switch (finalActions.get(item)) {
-							case RESET_FILTER: {
-								resetFilter();
-								break;
-							}
-							case SEARCH_CURRENT_BOARD: {
-								Intent i = new Intent(ScidAndroidActivity.this,
-										SearchCurrentBoardActivity.class);
-								i.setAction(ctrl.getFEN());
-								startActivityForResult(i, RESULT_SEARCH);
-								break;
-							}
-							case SEARCH_HEADER: {
-								Intent i = new Intent(ScidAndroidActivity.this,
-										SearchHeaderActivity.class);
-								startActivityForResult(i, RESULT_SEARCH);
-								break;
-							}
-							case SHOW_FAVORITES: {
-								Intent i = new Intent(ScidAndroidActivity.this,
-										FavoritesSearchActivity.class);
-								startActivityForResult(i, RESULT_SEARCH);
-								break;
-							}
-							}
-						}
-					});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case CLIPBOARD_DIALOG: {
-			final int COPY_GAME = 0;
-			final int COPY_POSITION = 1;
-			final int PASTE = 2;
-			final int EDIT_BOARD = 3;
-			final int ADD_FAVORITES = 4;
-			final int REMOVE_FAVORITES = 5;
-			final int SAVE_GAME = 6;
-			final int DELETE_GAME = 7;
-			final int UNDELETE_GAME = 8;
-
-			List<CharSequence> lst = new ArrayList<CharSequence>();
-			List<Integer> actions = new ArrayList<Integer>();
-			// check if "add to favorites" or "remove from favorites" is needed
-			if (getScidAppContext().getCurrentGameNo() >= 0
-					&& getScidAppContext().getNoGames() > 0) {
-				if (!getScidAppContext().isFavorite()) {
-					lst.add(getString(R.string.add_favorites));
-					actions.add(ADD_FAVORITES);
-				} else {
-					lst.add(getString(R.string.remove_favorites));
-					actions.add(REMOVE_FAVORITES);
-				}
-			}
-			if (getScidAppContext().getCurrentFileName().length() > 0) {
-				lst.add(getString(R.string.save_game));
-				actions.add(SAVE_GAME);
-			}
-			ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-			if (clipboard.hasText()) {
-				lst.add(getString(R.string.paste));
-				actions.add(PASTE);
-			}
-			lst.add(getString(R.string.copy_game));
-			actions.add(COPY_GAME);
-			lst.add(getString(R.string.copy_position));
-			actions.add(COPY_POSITION);
-			lst.add(getString(R.string.edit_board));
-			actions.add(EDIT_BOARD);
-			if (getScidAppContext().getCurrentGameNo() >= 0
-					&& getScidAppContext().getNoGames() > 0) {
-				if (!getScidAppContext().isDeleted()) {
-					lst.add(getString(R.string.delete_game));
-					actions.add(DELETE_GAME);
-				} else {
-					lst.add(getString(R.string.undelete_game));
-					actions.add(UNDELETE_GAME);
-				}
-			}
-			final List<Integer> finalActions = actions;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.tools_menu);
-			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							switch (finalActions.get(item)) {
-							case SAVE_GAME:
-								saveGame();
-								break;
-							case EDIT_BOARD:
-								editBoard();
-								break;
-							case COPY_GAME:
-								copyGameToClipboard();
-								break;
-							case COPY_POSITION:
-								copyPositionToClipboard();
-								break;
-							case PASTE:
-								pasteFromClipboard();
-								break;
-							case ADD_FAVORITES:
-							case REMOVE_FAVORITES:
-								updateFavorite();
-								break;
-							case DELETE_GAME:
-							case UNDELETE_GAME:
-								updateDelete();
-								break;
-							}
-						}
-					});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case ABOUT_DIALOG: {
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.app_name).setMessage(R.string.about_info);
-			AlertDialog alert = builder.create();
-			return alert;
-		}
-		case SELECT_CREATE_DATABASE_DIALOG: {
-			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			final EditText input = new EditText(this);
-			builder.setTitle(getText(R.string.create_db_title));
-			builder.setMessage(getText(R.string.create_db_message));
-			builder.setView(input);
-			builder.setPositiveButton(R.string.ok,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog,
-								int whichButton) {
-							String value = input.getText().toString().trim();
-							createDatabase(value);
-						}
-					});
-
-			builder.setNegativeButton(R.string.cancel,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog,
-								int whichButton) {
-							dialog.cancel();
-						}
-					});
-			AlertDialog alert = builder.create();
-
-			return alert;
-		}
-		case IMPORT_PGN_DIALOG: {
-			final int IMPORT_PGN_FILE = 0;
-			final int IMPORT_TWIC = 1;
-			final int IMPORT_CHESSOK = 2;
-			final int IMPORT_URL = 3;
-
-			List<CharSequence> lst = new ArrayList<CharSequence>();
-			List<Integer> actions = new ArrayList<Integer>();
-			lst.add(getString(R.string.import_pgn_file));
-			actions.add(IMPORT_PGN_FILE);
-			lst.add(getString(R.string.import_twic));
-			actions.add(IMPORT_TWIC);
-			lst.add(getString(R.string.import_chessok));
-			actions.add(IMPORT_CHESSOK);
-			lst.add(getString(R.string.import_url));
-			actions.add(IMPORT_URL);
-			final List<Integer> finalActions = actions;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.import_pgn_title);
-			builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							switch (finalActions.get(item)) {
-							case IMPORT_PGN_FILE: {
-								importPgnFile();
-								break;
-							}
-							case IMPORT_TWIC: {
-								importTwic();
-								break;
-							}
-							case IMPORT_CHESSOK: {
-								importChessOk();
-								break;
-							}
-							case IMPORT_URL:
-								importUrl();
-								break;
-							}
-						}
-
-					});
-			AlertDialog alert = builder.create();
-			return alert;
-		}
+		case MOVELIST_MENU_DIALOG:
+			return createMovelistDialog();
+		case PROMOTE_DIALOG:
+			return createPromoteDialog();
+		case SEARCH_DIALOG:
+			return createSearchDialog();
+		case CLIPBOARD_DIALOG:
+			return createClipboardDialog();
+		case ABOUT_DIALOG:
+			return createAboutDialog();
+		case SELECT_CREATE_DATABASE_DIALOG:
+			return createCreateDatabaseDialog();
+		case IMPORT_PGN_DIALOG:
+			return createImportDialog();
 		}
 		return null;
+	}
+
+	private AlertDialog createAboutDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.app_name).setMessage(R.string.about_info);
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createPromoteDialog() {
+		final CharSequence[] items = { getString(R.string.queen),
+				getString(R.string.rook), getString(R.string.bishop),
+				getString(R.string.knight) };
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.promote_pawn_to);
+		builder.setItems(items, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int item) {
+				ctrl.reportPromotePiece(item);
+			}
+		});
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createCreateDatabaseDialog() {
+		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		final EditText input = new EditText(this);
+		builder.setTitle(getText(R.string.create_db_title));
+		builder.setMessage(getText(R.string.create_db_message));
+		builder.setView(input);
+		builder.setPositiveButton(R.string.ok,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int whichButton) {
+						String value = input.getText().toString().trim();
+						createDatabase(value);
+					}
+				});
+
+		builder.setNegativeButton(R.string.cancel,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int whichButton) {
+						dialog.cancel();
+					}
+				});
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createMovelistDialog() {
+		final int REMOVE_SUBTREE = 0;
+		final int MOVE_VAR_UP = 1;
+		final int MOVE_VAR_DOWN = 2;
+
+		List<CharSequence> lst = new ArrayList<CharSequence>();
+		List<Integer> actions = new ArrayList<Integer>();
+		lst.add(getString(R.string.truncate_gametree));
+		actions.add(REMOVE_SUBTREE);
+		if (ctrl.numVariations() > 1) {
+			lst.add(getString(R.string.move_var_up));
+			actions.add(MOVE_VAR_UP);
+			lst.add(getString(R.string.move_var_down));
+			actions.add(MOVE_VAR_DOWN);
+		}
+		final List<Integer> finalActions = actions;
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.edit_game);
+		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						switch (finalActions.get(item)) {
+						case REMOVE_SUBTREE:
+							ctrl.removeSubTree();
+							break;
+						case MOVE_VAR_UP:
+							ctrl.moveVariation(-1);
+							break;
+						case MOVE_VAR_DOWN:
+							ctrl.moveVariation(1);
+							break;
+						}
+					}
+				});
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createSearchDialog() {
+		final int RESET_FILTER = 0;
+		final int SEARCH_CURRENT_BOARD = 1;
+		final int SEARCH_HEADER = 2;
+		final int SHOW_FAVORITES = 3;
+		List<CharSequence> lst = new ArrayList<CharSequence>();
+		List<Integer> actions = new ArrayList<Integer>();
+		lst.add(getString(R.string.reset_filter));
+		actions.add(RESET_FILTER);
+		lst.add(getString(R.string.search_current_board));
+		actions.add(SEARCH_CURRENT_BOARD);
+		lst.add(getString(R.string.search_header));
+		actions.add(SEARCH_HEADER);
+		lst.add(getString(R.string.favorites));
+		actions.add(SHOW_FAVORITES);
+		final List<Integer> finalActions = actions;
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.search);
+		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						switch (finalActions.get(item)) {
+						case RESET_FILTER: {
+							resetFilter();
+							break;
+						}
+						case SEARCH_CURRENT_BOARD: {
+							Intent i = new Intent(ScidAndroidActivity.this,
+									SearchCurrentBoardActivity.class);
+							i.setAction(ctrl.getFEN());
+							startActivityForResult(i, RESULT_SEARCH);
+							break;
+						}
+						case SEARCH_HEADER: {
+							Intent i = new Intent(ScidAndroidActivity.this,
+									SearchHeaderActivity.class);
+							startActivityForResult(i, RESULT_SEARCH);
+							break;
+						}
+						case SHOW_FAVORITES: {
+							Intent i = new Intent(ScidAndroidActivity.this,
+									FavoritesSearchActivity.class);
+							startActivityForResult(i, RESULT_SEARCH);
+							break;
+						}
+						}
+					}
+				});
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createClipboardDialog() {
+		final int COPY_GAME = 0;
+		final int COPY_POSITION = 1;
+		final int PASTE = 2;
+		final int EDIT_BOARD = 3;
+		final int ADD_FAVORITES = 4;
+		final int REMOVE_FAVORITES = 5;
+		final int SAVE_GAME = 6;
+		final int DELETE_GAME = 7;
+		final int UNDELETE_GAME = 8;
+
+		List<CharSequence> lst = new ArrayList<CharSequence>();
+		List<Integer> actions = new ArrayList<Integer>();
+		// check if "add to favorites" or "remove from favorites" is needed
+		if (getScidAppContext().getCurrentGameNo() >= 0
+				&& getScidAppContext().getNoGames() > 0) {
+			if (!getScidAppContext().isFavorite()) {
+				lst.add(getString(R.string.add_favorites));
+				actions.add(ADD_FAVORITES);
+			} else {
+				lst.add(getString(R.string.remove_favorites));
+				actions.add(REMOVE_FAVORITES);
+			}
+		}
+		if (getScidAppContext().getCurrentFileName().length() > 0) {
+			lst.add(getString(R.string.save_game));
+			actions.add(SAVE_GAME);
+		}
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		if (clipboard.hasText()) {
+			lst.add(getString(R.string.paste));
+			actions.add(PASTE);
+		}
+		lst.add(getString(R.string.copy_game));
+		actions.add(COPY_GAME);
+		lst.add(getString(R.string.copy_position));
+		actions.add(COPY_POSITION);
+		lst.add(getString(R.string.edit_board));
+		actions.add(EDIT_BOARD);
+		if (getScidAppContext().getCurrentGameNo() >= 0
+				&& getScidAppContext().getNoGames() > 0) {
+			if (!getScidAppContext().isDeleted()) {
+				lst.add(getString(R.string.delete_game));
+				actions.add(DELETE_GAME);
+			} else {
+				lst.add(getString(R.string.undelete_game));
+				actions.add(UNDELETE_GAME);
+			}
+		}
+		final List<Integer> finalActions = actions;
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.tools_menu);
+		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						switch (finalActions.get(item)) {
+						case SAVE_GAME:
+							saveGame();
+							break;
+						case EDIT_BOARD:
+							editBoard();
+							break;
+						case COPY_GAME:
+							copyGameToClipboard();
+							break;
+						case COPY_POSITION:
+							copyPositionToClipboard();
+							break;
+						case PASTE:
+							pasteFromClipboard();
+							break;
+						case ADD_FAVORITES:
+						case REMOVE_FAVORITES:
+							updateFavorite();
+							break;
+						case DELETE_GAME:
+						case UNDELETE_GAME:
+							updateDelete();
+							break;
+						}
+					}
+				});
+		AlertDialog alert = builder.create();
+		return alert;
+	}
+
+	private AlertDialog createImportDialog() {
+		final int IMPORT_PGN_FILE = 0;
+		final int IMPORT_TWIC = 1;
+		final int IMPORT_CHESSOK = 2;
+
+		List<CharSequence> lst = new ArrayList<CharSequence>();
+		List<Integer> actions = new ArrayList<Integer>();
+		lst.add(getString(R.string.import_pgn_file));
+		actions.add(IMPORT_PGN_FILE);
+		lst.add(getString(R.string.import_twic));
+		actions.add(IMPORT_TWIC);
+		lst.add(getString(R.string.import_chessok));
+		actions.add(IMPORT_CHESSOK);
+		final List<Integer> finalActions = actions;
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.import_pgn_title);
+		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						switch (finalActions.get(item)) {
+						case IMPORT_PGN_FILE:
+							importPgnFile();
+							break;
+						case IMPORT_TWIC:
+							importTwic();
+							break;
+						case IMPORT_CHESSOK:
+							importChessOk();
+							break;
+						}
+					}
+				});
+		AlertDialog alert = builder.create();
+		return alert;
 	}
 
 	private void editBoard() {
@@ -1830,38 +1884,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		Intent i = new Intent(ScidAndroidActivity.this,
 				ImportChessOkActivity.class);
 		startActivityForResult(i, RESULT_TWIC_IMPORT);
-	}
-
-	private void importUrl() {
-		final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-		final EditText input = new EditText(this);
-		alert.setView(input);
-		input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-		input.setText("http://");
-		alert.setPositiveButton(getText(R.string.ok),
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-						String urlString = input.getText().toString().trim();
-						new DownloadTask().execute(ScidAndroidActivity.this,
-								urlString);
-						Toast.makeText(getApplicationContext(),
-								getString(R.string.download_started),
-								Toast.LENGTH_LONG).show();
-					}
-				});
-
-		alert.setNegativeButton(getText(R.string.cancel),
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-						dialog.cancel();
-					}
-				});
-		AlertDialog dlg = alert.create();
-		dlg.show();
-		WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-		lp.copyFrom(dlg.getWindow().getAttributes());
-		lp.width = WindowManager.LayoutParams.FILL_PARENT;
-		dlg.getWindow().setAttributes(lp);
 	}
 
 	private void addEngine() {
