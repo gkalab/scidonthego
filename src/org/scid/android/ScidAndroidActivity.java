@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scid.android.chessok.ImportChessOkActivity;
+import org.scid.android.dialog.MoveListDialog;
+import org.scid.android.dialog.PromoteDialog;
 import org.scid.android.engine.EngineManager;
 import org.scid.android.engine.EngineManager.EngineChangeEvent;
 import org.scid.android.gamelogic.ChessController;
@@ -37,7 +39,6 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
-import android.text.InputType;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -632,40 +633,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		super.onResume();
 	}
 
+	/**
+	 * Called after onResume to support the registered *.pgn extension
+	 */
 	private void getIntentData() {
 		Uri data = getIntent().getData();
 		if (data != null) {
-			Log.i("SCID", "Intent data=" + data);
-			if (data.getScheme().startsWith("http")) {
-				String url = data.toString();
-				new DownloadTask().execute(ScidAndroidActivity.this, url);
-				Toast
-						.makeText(getApplicationContext(),
-								getString(R.string.download_started),
-								Toast.LENGTH_LONG).show();
-			} else {
-				String filePath = data.getEncodedPath();
-				File pgnFile = new File(filePath);
-				Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
-						+ " to " + Environment.getExternalStorageDirectory()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
-						+ File.separator + pgnFile.getName());
-				File importFile = new File(Environment
-						.getExternalStorageDirectory()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
-						pgnFile.getName());
-				boolean fileOk = true;
-				if (pgnFile.getAbsolutePath().equals(
-						importFile.getAbsolutePath())) {
-					// source is in the same directory as destination file
-					importFile = pgnFile;
-				} else {
-					fileOk = Tools.copyFile(pgnFile, importFile);
-				}
-				if (fileOk) {
-					Tools.importPgn(this, importFile.getAbsolutePath(), RESULT_PGN_IMPORT);
-				}
-			}
+			Tools.processUri(this, data, RESULT_PGN_IMPORT);
 			// the data was handled, set it to null to not enter this again in
 			// onResume()
 			getIntent().setData(null);
@@ -1434,9 +1408,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case MOVELIST_MENU_DIALOG:
-			return createMovelistDialog();
+			MoveListDialog dialog = new MoveListDialog(this);
+			return dialog.create(ctrl);
 		case PROMOTE_DIALOG:
-			return createPromoteDialog();
+			PromoteDialog promoteDialog = new PromoteDialog(this);
+			return promoteDialog.create(ctrl);
 		case SEARCH_DIALOG:
 			return createSearchDialog();
 		case CLIPBOARD_DIALOG:
@@ -1454,21 +1430,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private AlertDialog createAboutDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.app_name).setMessage(R.string.about_info);
-		AlertDialog alert = builder.create();
-		return alert;
-	}
-
-	private AlertDialog createPromoteDialog() {
-		final CharSequence[] items = { getString(R.string.queen),
-				getString(R.string.rook), getString(R.string.bishop),
-				getString(R.string.knight) };
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.promote_pawn_to);
-		builder.setItems(items, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int item) {
-				ctrl.reportPromotePiece(item);
-			}
-		});
 		AlertDialog alert = builder.create();
 		return alert;
 	}
@@ -1493,44 +1454,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					public void onClick(DialogInterface dialog,
 							int whichButton) {
 						dialog.cancel();
-					}
-				});
-		AlertDialog alert = builder.create();
-		return alert;
-	}
-
-	private AlertDialog createMovelistDialog() {
-		final int REMOVE_SUBTREE = 0;
-		final int MOVE_VAR_UP = 1;
-		final int MOVE_VAR_DOWN = 2;
-
-		List<CharSequence> lst = new ArrayList<CharSequence>();
-		List<Integer> actions = new ArrayList<Integer>();
-		lst.add(getString(R.string.truncate_gametree));
-		actions.add(REMOVE_SUBTREE);
-		if (ctrl.numVariations() > 1) {
-			lst.add(getString(R.string.move_var_up));
-			actions.add(MOVE_VAR_UP);
-			lst.add(getString(R.string.move_var_down));
-			actions.add(MOVE_VAR_DOWN);
-		}
-		final List<Integer> finalActions = actions;
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.edit_game);
-		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int item) {
-						switch (finalActions.get(item)) {
-						case REMOVE_SUBTREE:
-							ctrl.removeSubTree();
-							break;
-						case MOVE_VAR_UP:
-							ctrl.moveVariation(-1);
-							break;
-						case MOVE_VAR_DOWN:
-							ctrl.moveVariation(1);
-							break;
-						}
 					}
 				});
 		AlertDialog alert = builder.create();
@@ -1918,7 +1841,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public void requestPromotePiece() {
-		runOnUIThread(new Runnable() {
+		runOnUiThread(new Runnable() {
 			public void run() {
 				showDialog(PROMOTE_DIALOG);
 			}
