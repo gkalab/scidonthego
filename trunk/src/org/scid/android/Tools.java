@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 import android.view.WindowManager;
@@ -337,5 +338,39 @@ public class Tools {
 			}
 		}
 		return copied;
+	}
+
+	public static void processUri(Activity activity, Uri data,
+			final int resultCode) {
+		Log.i("SCID", "Intent data=" + data);
+		if (data.getScheme().startsWith("http")) {
+			String url = data.toString();
+			new DownloadTask().execute(activity, url);
+			Toast.makeText(activity,
+					activity.getString(R.string.download_started),
+					Toast.LENGTH_LONG).show();
+		} else {
+			String filePath = data.getEncodedPath();
+			File pgnFile = new File(filePath);
+			Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
+					+ " to " + Environment.getExternalStorageDirectory()
+					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
+					+ File.separator + pgnFile.getName());
+			File importFile = new File(Environment
+					.getExternalStorageDirectory()
+					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
+					pgnFile.getName());
+			boolean fileOk = true;
+			if (pgnFile.getAbsolutePath().equals(importFile.getAbsolutePath())) {
+				// source is in the same directory as destination file
+				importFile = pgnFile;
+			} else {
+				fileOk = Tools.copyFile(pgnFile, importFile);
+			}
+			if (fileOk) {
+				Tools.importPgn(activity, importFile.getAbsolutePath(),
+						resultCode);
+			}
+		}
 	}
 }
