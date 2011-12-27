@@ -51,6 +51,20 @@
                 <data android:scheme="file" android:host="*"
                     android:pathPattern=".*\\.pgn" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/zip" />
+                <data android:scheme="http" android:host="*"
+                    android:pathPattern=".*\\.zip" />
+                <data android:scheme="https" android:host="*"
+                    android:pathPattern=".*\\.zip" />
+                <data android:scheme="content" android:host="*"
+                    android:pathPattern=".*\\.zip" />
+                <data android:scheme="file" android:host="*"
+                    android:pathPattern=".*\\.zip" />
+            </intent-filter>
         </activity>
         <activity
             android:label="Preferences"

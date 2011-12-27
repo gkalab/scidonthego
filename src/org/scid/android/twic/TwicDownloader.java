@@ -31,7 +31,6 @@ public class TwicDownloader {
 
 	private static String TWIC_SITE = "http://www.chess.co.uk/twic/twic";
 	private Set<String> linkList = new HashSet<String>();
-	private static final int BUFFER = 2048;
 
 	public File getCurrentTwic(String directory) throws IOException {
 		parseTwicSite();
@@ -42,45 +41,10 @@ public class TwicDownloader {
 	public File getPgnFromZipUrl(String directory, String zipUrl) throws IOException {
 		File f = Tools.downloadFile(zipUrl);
 		if (f != null) {
-			return unzip(directory, f);
+			return Tools.unzip(directory, f, true);
 		} else {
 			return null;
 		}
-	}
-
-	private File unzip(String directory, File f) {
-		File result = null;
-		try {
-			BufferedOutputStream dest = null;
-			FileInputStream fis = new FileInputStream(f.getAbsolutePath());
-			ZipInputStream zis = new ZipInputStream(
-					new BufferedInputStream(fis));
-			ZipEntry entry;
-			boolean extracted = false;
-			while ((!extracted && (entry = zis.getNextEntry()) != null)) {
-				if (entry.getName().toLowerCase().endsWith(".pgn")) {
-					Log.d("SCID", "Extracting: " + entry);
-					int count;
-					byte data[] = new byte[BUFFER];
-					// write the files to the disk
-					result = new File(directory, entry.getName());
-					FileOutputStream fos = new FileOutputStream(result);
-					dest = new BufferedOutputStream(fos, BUFFER);
-					while ((count = zis.read(data, 0, BUFFER)) != -1) {
-						dest.write(data, 0, count);
-					}
-					dest.flush();
-					dest.close();
-					extracted = true;
-				}
-			}
-			zis.close();
-		} catch (Exception e) {
-			Log.e("SCID", e.getMessage(), e);
-		} finally {
-			f.delete();
-		}
-		return result;
 	}
 
 	public List<TwicItem> getLinkList() {

@@ -1,21 +1,27 @@
 package org.scid.android.twic;
 
+import java.io.File;
+
+import org.scid.android.IDownloadCallback;
 import org.scid.android.R;
+import org.scid.android.Tools;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 
-public class ImportTwicActivity extends ListActivity {
+public class ImportTwicActivity extends ListActivity implements
+		IDownloadCallback {
 	private ProgressDialog progressDlg;
 	private TwicDownloader downloader;
-	final static int PROGRESS_DIALOG = 0;
+	private static final int RESULT_PGN_IMPORT = 1;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +70,7 @@ public class ImportTwicActivity extends ListActivity {
 				progressDlg = ProgressDialog.show(ImportTwicActivity.this,
 						getString(R.string.twic_downloading),
 						getString(R.string.downloading), true, false);
-				new ImportTwicTask().execute(ImportTwicActivity.this,
+				new ImportZipTask().execute(ImportTwicActivity.this,
 						progressDlg, item.getLink());
 			}
 		});
@@ -77,6 +83,32 @@ public class ImportTwicActivity extends ListActivity {
 		// need to destroy progress dialog in case user turns device
 		if (progressDlg != null) {
 			progressDlg.dismiss();
+		}
+	}
+
+	@Override
+	public void downloadSuccess(File pgnFile) {
+		Tools.importPgnFile(ImportTwicActivity.this, pgnFile, RESULT_PGN_IMPORT);
+	}
+
+	@Override
+	public void downloadFailure(String message) {
+		Tools.showErrorMessage(this, this.getText(R.string.download_error)
+				+ " (" + message + ")");
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case RESULT_PGN_IMPORT:
+			// the result after importing the pgn file - delete pgn file
+			if (resultCode == RESULT_OK && data != null) {
+				String pgnFileName = data.getAction();
+				if (pgnFileName != null) {
+					new File(pgnFileName).delete();
+				}
+			}
+			break;
 		}
 	}
 }
