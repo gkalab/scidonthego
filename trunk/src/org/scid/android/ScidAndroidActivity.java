@@ -1904,31 +1904,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public void downloadSuccess(File pgnFile) {
-		if (pgnFile != null) {
-			String pgnFileName = pgnFile.getName();
-			if (!pgnFileName.endsWith(".pgn")) {
-				// replace suffix with .pgn
-				int pos = pgnFileName.lastIndexOf(".");
-				if (pos > 0) {
-					pgnFileName = pgnFileName.substring(0,
-							pos - 1) + ".pgn";
-				}
-			}
-			Log.d("SCID", "moving downloaded file from "
-					+ pgnFile.getAbsolutePath() + " to "
-					+ Environment.getExternalStorageDirectory()
-					+ File.separator + SCID_DIRECTORY
-					+ File.separator + pgnFileName);
-			// move to scid directory and rename to ... name +
-			// ".pgn"
-			pgnFile.renameTo(new File(Environment
-					.getExternalStorageDirectory()
-					+ File.separator + SCID_DIRECTORY,
-					pgnFileName));
-			Tools.importPgn(ScidAndroidActivity.this,
-					Tools.getFullScidFileName(pgnFileName),
-					RESULT_PGN_IMPORT);
-		}
+		Tools.importPgnFile(ScidAndroidActivity.this, pgnFile, RESULT_PGN_IMPORT);
 	}
 
 	@Override

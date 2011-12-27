@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -17,9 +18,14 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.scid.android.twic.ImportZipTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -131,11 +137,11 @@ public class Tools {
 					fileName = fileName.substring(
 							fileName.indexOf("filename=") + 9).trim();
 					if (fileName.length() > 0)
-						result = new File(Environment
-								.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY
-								+ File.separator + fileName);
+						result = new File(
+								Environment.getExternalStorageDirectory()
+										+ File.separator
+										+ ScidAndroidActivity.SCID_DIRECTORY
+										+ File.separator + fileName);
 				}
 			} else {
 				fileName = getFileNameFromUrl(path);
@@ -159,8 +165,8 @@ public class Tools {
 			if (result == null) {
 				result = File.createTempFile("temp", ".tmp");
 			}
-			FileOutputStream out = new FileOutputStream(result
-					.getAbsolutePath());
+			FileOutputStream out = new FileOutputStream(
+					result.getAbsolutePath());
 			while ((bufferLength = in.read(buffer)) > 0) {
 				out.write(buffer, 0, bufferLength);
 				downloadedSize += bufferLength;
@@ -192,9 +198,9 @@ public class Tools {
 			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
 					activity).create();
 			fileExistsDialog.setTitle("Database exists");
-			String message = String.format(activity
-					.getString(R.string.pgn_import_db_exists), scidFile
-					.getName());
+			String message = String.format(
+					activity.getString(R.string.pgn_import_db_exists),
+					scidFile.getName());
 			fileExistsDialog.setMessage(message);
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
 			fileExistsDialog.setButton(activity.getString(R.string.ok),
@@ -206,12 +212,10 @@ public class Tools {
 			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
-							Toast
-									.makeText(
-											activity.getApplicationContext(),
-											activity
-													.getString(R.string.pgn_import_cancel),
-											Toast.LENGTH_SHORT).show();
+							Toast.makeText(
+									activity.getApplicationContext(),
+									activity.getString(R.string.pgn_import_cancel),
+									Toast.LENGTH_SHORT).show();
 						}
 					});
 			fileExistsDialog.show();
@@ -271,9 +275,7 @@ public class Tools {
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
 				builder.setIcon(android.R.drawable.ic_dialog_alert);
-				builder
-						.setPositiveButton(activity.getString(R.string.ok),
-								null);
+				builder.setPositiveButton(activity.getString(R.string.ok), null);
 				builder.show();
 			}
 		});
@@ -293,8 +295,7 @@ public class Tools {
 			activity.getWindow().addFlags(
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		} else {
-			activity
-					.getWindow()
+			activity.getWindow()
 					.clearFlags(
 							android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		}
@@ -345,32 +346,121 @@ public class Tools {
 		Log.i("SCID", "Intent data=" + data);
 		if (data.getScheme().startsWith("http")) {
 			String url = data.toString();
-			new DownloadTask().execute(activity, url);
-			Toast.makeText(activity,
-					activity.getString(R.string.download_started),
-					Toast.LENGTH_LONG).show();
+			if (url.endsWith(".zip")) {
+				ProgressDialog progressDlg = ProgressDialog.show(activity,
+						activity.getString(R.string.downloading),
+						activity.getString(R.string.downloading) + " " + url,
+						true, false);
+				new ImportZipTask().execute(activity, progressDlg, url);
+			} else {
+				new DownloadTask().execute(activity, url);
+				Toast.makeText(activity,
+						activity.getString(R.string.download_started),
+						Toast.LENGTH_LONG).show();
+			}
 		} else {
 			String filePath = data.getEncodedPath();
-			File pgnFile = new File(filePath);
-			Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
-					+ " to " + Environment.getExternalStorageDirectory()
-					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
-					+ File.separator + pgnFile.getName());
-			File importFile = new File(Environment
-					.getExternalStorageDirectory()
-					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
-					pgnFile.getName());
-			boolean fileOk = true;
-			if (pgnFile.getAbsolutePath().equals(importFile.getAbsolutePath())) {
-				// source is in the same directory as destination file
-				importFile = pgnFile;
+			if (filePath.endsWith(".zip")) {
+				// do not delete zip file because it was not downloaded by scid
+				// itself
+				File pgnFile = unzip(Environment.getExternalStorageDirectory()
+						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
+						new File(filePath), false);
+				if (pgnFile != null) {
+					Tools.importPgn(activity, pgnFile.getAbsolutePath(),
+							resultCode);
+				}
 			} else {
-				fileOk = Tools.copyFile(pgnFile, importFile);
-			}
-			if (fileOk) {
-				Tools.importPgn(activity, importFile.getAbsolutePath(),
-						resultCode);
+				File pgnFile = new File(filePath);
+				Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
+						+ " to " + Environment.getExternalStorageDirectory()
+						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
+						+ File.separator + pgnFile.getName());
+				File importFile = new File(
+						Environment.getExternalStorageDirectory()
+								+ File.separator
+								+ ScidAndroidActivity.SCID_DIRECTORY,
+						pgnFile.getName());
+				boolean fileOk = true;
+				if (pgnFile.getAbsolutePath().equals(
+						importFile.getAbsolutePath())) {
+					// source is in the same directory as destination file
+					importFile = pgnFile;
+				} else {
+					fileOk = Tools.copyFile(pgnFile, importFile);
+				}
+				if (fileOk) {
+					Tools.importPgn(activity, importFile.getAbsolutePath(),
+							resultCode);
+				}
 			}
 		}
 	}
+
+	public static void importPgnFile(Activity activity, File pgnFile,
+			int resultCode) {
+		if (pgnFile != null) {
+			String pgnFileName = pgnFile.getName();
+			if (!pgnFileName.endsWith(".pgn")) {
+				// replace suffix with .pgn
+				int pos = pgnFileName.lastIndexOf(".");
+				if (pos > 0) {
+					pgnFileName = pgnFileName.substring(0, pos - 1) + ".pgn";
+				}
+			}
+			Log.d("SCID",
+					"moving downloaded file from " + pgnFile.getAbsolutePath()
+							+ " to "
+							+ Environment.getExternalStorageDirectory()
+							+ File.separator
+							+ ScidAndroidActivity.SCID_DIRECTORY
+							+ File.separator + pgnFileName);
+			// move to scid directory and rename to ... name +
+			// ".pgn"
+			pgnFile.renameTo(new File(Environment.getExternalStorageDirectory()
+					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
+					pgnFileName));
+			Tools.importPgn(activity, Tools.getFullScidFileName(pgnFileName),
+					resultCode);
+		}
+	}
+
+	public static File unzip(String directory, File f, boolean deleteAfterUnzip) {
+		final int BUFFER = 2048;
+		File result = null;
+		try {
+			BufferedOutputStream dest = null;
+			FileInputStream fis = new FileInputStream(f.getAbsolutePath());
+			ZipInputStream zis = new ZipInputStream(
+					new BufferedInputStream(fis));
+			ZipEntry entry;
+			boolean extracted = false;
+			while ((!extracted && (entry = zis.getNextEntry()) != null)) {
+				if (entry.getName().toLowerCase().endsWith(".pgn")) {
+					Log.d("SCID", "Extracting: " + entry);
+					int count;
+					byte data[] = new byte[BUFFER];
+					// write the files to the disk
+					result = new File(directory, entry.getName());
+					FileOutputStream fos = new FileOutputStream(result);
+					dest = new BufferedOutputStream(fos, BUFFER);
+					while ((count = zis.read(data, 0, BUFFER)) != -1) {
+						dest.write(data, 0, count);
+					}
+					dest.flush();
+					dest.close();
+					extracted = true;
+				}
+			}
+			zis.close();
+		} catch (Exception e) {
+			Log.e("SCID", e.getMessage(), e);
+		} finally {
+			if (deleteAfterUnzip) {
+				f.delete();
+			}
+		}
+		return result;
+	}
+
 }
