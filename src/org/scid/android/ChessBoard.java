@@ -362,6 +362,8 @@ public class ChessBoard extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+        if (isInEditMode())
+            return;
 		boolean animActive = anim.updateState();
 		final int width = getWidth();
 		final int height = getHeight();
@@ -433,6 +435,8 @@ public class ChessBoard extends View {
 		int n = Math.min(moveMarkPaint.size(), moveHints.size());
 		for (int i = 0; i < n; i++) {
 			Move m = moveHints.get(i);
+            if (m.from == m.to)
+                continue;
 			float x0 = getXCrd(Position.getX(m.from)) + h;
 			float y0 = getYCrd(Position.getY(m.from)) + h;
 			float x1 = getXCrd(Position.getX(m.to)) + h;
@@ -460,8 +464,7 @@ public class ChessBoard extends View {
 			path.lineTo(x3, -y3);
 			path.close();
 			Matrix mtx = new Matrix();
-			mtx
-					.postRotate((float) (Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI));
+            mtx.postRotate((float)(Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI));
 			mtx.postTranslate(x0, y0);
 			path.transform(mtx);
 			Paint p = moveMarkPaint.get(i);
@@ -476,58 +479,19 @@ public class ChessBoard extends View {
 		String psb, psw;
 		switch (p) {
 		default:
-		case Piece.EMPTY:
-			psb = null;
-			psw = null;
-			break;
-		case Piece.WKING:
-			psb = "H";
-			psw = "k";
-			break;
-		case Piece.WQUEEN:
-			psb = "I";
-			psw = "l";
-			break;
-		case Piece.WROOK:
-			psb = "J";
-			psw = "m";
-			break;
-		case Piece.WBISHOP:
-			psb = "K";
-			psw = "n";
-			break;
-		case Piece.WKNIGHT:
-			psb = "L";
-			psw = "o";
-			break;
-		case Piece.WPAWN:
-			psb = "M";
-			psw = "p";
-			break;
-		case Piece.BKING:
-			psb = "N";
-			psw = "q";
-			break;
-		case Piece.BQUEEN:
-			psb = "O";
-			psw = "r";
-			break;
-		case Piece.BROOK:
-			psb = "P";
-			psw = "s";
-			break;
-		case Piece.BBISHOP:
-			psb = "Q";
-			psw = "t";
-			break;
-		case Piece.BKNIGHT:
-			psb = "R";
-			psw = "u";
-			break;
-		case Piece.BPAWN:
-			psb = "S";
-			psw = "v";
-			break;
+            case Piece.EMPTY:   psb = null; psw = null; break;
+            case Piece.WKING:   psb = "H"; psw = "k"; break;
+            case Piece.WQUEEN:  psb = "I"; psw = "l"; break;
+            case Piece.WROOK:   psb = "J"; psw = "m"; break;
+            case Piece.WBISHOP: psb = "K"; psw = "n"; break;
+            case Piece.WKNIGHT: psb = "L"; psw = "o"; break;
+            case Piece.WPAWN:   psb = "M"; psw = "p"; break;
+            case Piece.BKING:   psb = "N"; psw = "q"; break;
+            case Piece.BQUEEN:  psb = "O"; psw = "r"; break;
+            case Piece.BROOK:   psb = "P"; psw = "s"; break;
+            case Piece.BBISHOP: psb = "Q"; psw = "t"; break;
+            case Piece.BKNIGHT: psb = "R"; psw = "u"; break;
+            case Piece.BPAWN:   psb = "S"; psw = "v"; break;
 		}
 		if (psb != null) {
 			if (pieceXDelta < 0) {
@@ -569,7 +533,7 @@ public class ChessBoard extends View {
 	 * @return The square corresponding to the mouse event, or -1 if outside
 	 *         board.
 	 */
-	int eventToSquare(MotionEvent evt) {
+    public int eventToSquare(MotionEvent evt) {
 		int xCrd = (int) (evt.getX());
 		int yCrd = (int) (evt.getY());
 
@@ -585,11 +549,10 @@ public class ChessBoard extends View {
 	}
 
 	final private boolean myColor(int piece) {
-		return (piece != Piece.EMPTY)
-				&& (Piece.isWhite(piece) == pos.whiteMove);
+        return (piece != Piece.EMPTY) && (Piece.isWhite(piece) == pos.whiteMove);
 	}
 
-	Move mousePressed(int sq) {
+    public Move mousePressed(int sq) {
 		if (sq < 0)
 			return null;
 		cursorVisible = false;
@@ -642,14 +605,11 @@ public class ChessBoard extends View {
 	}
 
 	public static class OnTrackballListener {
-		public void onTrackballEvent(MotionEvent event) {
-		}
+        public void onTrackballEvent(MotionEvent event) { }
 	}
 
 	private OnTrackballListener otbl = null;
-
-	public final void setOnTrackballListener(
-			OnTrackballListener onTrackballListener) {
+    public final void setOnTrackballListener(OnTrackballListener onTrackballListener) {
 		otbl = onTrackballListener;
 	}
 
@@ -662,13 +622,8 @@ public class ChessBoard extends View {
 		return false;
 	}
 
-	protected int minValidY() {
-		return 0;
-	}
-
-	protected int getSquare(int x, int y) {
-		return Position.getSquare(x, y);
-	}
+    protected int minValidY() { return 0; }
+    protected int getSquare(int x, int y) { return Position.getSquare(x, y); }
 
 	public final Move handleTrackballEvent(MotionEvent event) {
 		switch (event.getAction()) {
@@ -688,14 +643,10 @@ public class ChessBoard extends View {
 		int c = flipped ? -1 : 1;
 		cursorX += c * event.getX();
 		cursorY -= c * event.getY();
-		if (cursorX < 0)
-			cursorX = 0;
-		if (cursorX > 7)
-			cursorX = 7;
-		if (cursorY < minValidY())
-			cursorY = minValidY();
-		if (cursorY > 7)
-			cursorY = 7;
+        if (cursorX < 0) cursorX = 0;
+        if (cursorX > 7) cursorX = 7;
+        if (cursorY < minValidY()) cursorY = minValidY();
+        if (cursorY > 7) cursorY = 7;
 		invalidate();
 		return null;
 	}
