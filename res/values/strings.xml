@@ -64,7 +64,6 @@ GNU GPL v2\n\
 * Scid integration by Gerhard Kalab.\n\
 * Manage UCI engines by Larry Isaacs.
 	</string>
-	<string name="offer_draw">Offer Draw</string>
 	<string name="queen">Queen</string>
 	<string name="rook">Rook</string>
 	<string name="bishop">Bishop</string>
@@ -73,10 +72,7 @@ GNU GPL v2\n\
 	<string name="copy_game">Copy Game to Clipboard</string>
 	<string name="copy_position">Copy Position to Clipboard</string>
 	<string name="paste">Paste from Clipboard</string>
-	<string name="load_scid_game">Open a Scid file</string>
 	<string name="tools_menu">Tools</string>
-	<string name="goto_move">Goto move</string>
-    <string name="goto_game">Goto game</string>
 	<string name="invalid_number_format">Invalid number format</string>
 	<string name="side_to_move">Side to Move</string>
 	<string name="clear_board">Clear Board</string>
@@ -96,16 +92,8 @@ GNU GPL v2\n\
 	<string name="none">None</string>
 	<string name="select_en_passant_file">Select En Passant File</string>
 	<string name="edit_move_counters">Edit Move Counters</string>
-	<string name="internal_book">&lt;Internal Book&gt;</string>
-	<string name="select_opening_book_file">Select opening book file</string>
-	<string name="select_pgn_file">Select file to open</string>
-	<string name="select_pgn_game">Select game to open</string>
-	<string name="reading_pgn_file">Reading PGN file</string>
-	<string name="reading_scid_file">Reading Scid file</string>
 	<string name="please_wait">Please wait...</string>
-	<string name="no_pgn_files">No PGN files found in directory\n/scid on the SD card.\nPlease put a PGN file\nin this directory.</string>
 	<string name="no_scid_files">No files found in directory\n/scid on the SD card.\n</string>
-	<string name="select_color_theme">Select Color Theme</string>
     <string name="reset_filter">Reset search filter</string>
     <string name="search_current_board">Search current board</string>
     <string name="search_header">Search header</string>
@@ -120,10 +108,8 @@ GNU GPL v2\n\
     <string name="result">Result:</string>
     <string name="event">Event</string>
     <string name="site">Site</string>
-    <string name="game_number">Game number</string>
-    <string name="move_number">Move number</string>
-    <string name="halfmove_clock">Halfmove clock</string>
-    <string name="fullmove_counter">Fullmove counter</string>
+    <string name="halfmove">Halfmove clock</string>
+    <string name="fullmove">Fullmove counter</string>
     <string name="search_year_from">Year from</string>
     <string name="search_year_to">Year to</string>
     <string name="eco_code">ECO:</string>
@@ -146,7 +132,6 @@ GNU GPL v2\n\
     <string name="downloading">Downloading...</string>
     <string name="download_started">Download started in the background.</string>
     <string name="twic_downloading">Downloading from TWIC</string>
-    <string name="chessok_downloading">Downloading from ChessOK</string>
     <string name="get_twic_information">Getting information from TWIC</string>
     <string name="get_chessok_information">Getting information from ChessOK</string>
     <string name="import_pgn_title">PGN Import</string>
@@ -162,7 +147,6 @@ GNU GPL v2\n\
     <string name="gamelist">Game List</string>
     <string name="gamelist_filter">Game List - Filter:</string>
     <string name="gamelist_loading">Loading game information.</string>
-    <string name="url">URL</string>
     <string name="invalid_move">Invalid move %1$s-%2$s</string>
     <string name="wrong_move">Wrong move %1$s-%2$s</string>
     <string name="add_favorites">Add to Favorites</string>
