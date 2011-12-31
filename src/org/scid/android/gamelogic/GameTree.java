@@ -964,7 +964,7 @@ public class GameTree {
 			List<Integer> ret = new ArrayList<Integer>(64);
 			Node node = this;
 			while (node.parent != null) {
-				ret.add(node.parent.defaultChild);
+				ret.add(node.getVariation());
 				node = node.parent;
 			}
 			Collections.reverse(ret);
@@ -1369,7 +1369,7 @@ public class GameTree {
 		 */
 		private Integer getVariation() {
 			Node parent = this.parent;
-			for (int i=0;i<parent.children.size();i++) {
+			for (int i = 0; i < parent.children.size(); i++) {
 				if (parent.children.get(i).equals(this)) {
 					return i;
 				}
@@ -1389,13 +1389,9 @@ public class GameTree {
 	}
 
 	public final void gotoNode(Node node) {
-		List<Integer> path = new ArrayList<Integer>(64);
-		Node n = node;
-		while (n.parent != null) {
-			path.add(n.getVariation());
-			n = n.parent;
-		}
-		Collections.reverse(path);
+        if (node == currentNode)
+            return;
+        List<Integer> path = node.getPathFromRoot();
 		gotoFirstNode();
 		for (Integer variation : path) {
 			goForward(variation);
