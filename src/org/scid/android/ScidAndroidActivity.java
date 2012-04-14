@@ -39,6 +39,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
+import android.text.InputType;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -47,10 +48,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RatingBar;
@@ -122,7 +123,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		// do not use custom titles on Honeycomb and above - don't work with
 		// the Holo Theme
 		initUI(Build.VERSION.SDK_INT < 11);
-		if (Build.VERSION.SDK_INT>=11) {
+		if (Build.VERSION.SDK_INT >= 11) {
 			VersionHelper.registerClipChangedListener(this);
 		}
 
@@ -784,6 +785,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			updateMenu();
 			return true;
 		}
+		case R.id.item_goto_game: {
+			showDialog(SELECT_GOTO_GAME_DIALOG);
+			return true;
+		}
 		case R.id.item_search: {
 			showDialog(SEARCH_DIALOG);
 			return true;
@@ -882,12 +887,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void updateDelete() {
 		if (getScidAppContext().isDeleted()) {
-			updateDeletedFlag(false,
-					getString(R.string.undelete_game_success),
+			updateDeletedFlag(false, getString(R.string.undelete_game_success),
 					getString(R.string.undelete_game_failure));
 		} else {
-			updateDeletedFlag(true,
-					getString(R.string.delete_game_success),
+			updateDeletedFlag(true, getString(R.string.delete_game_success),
 					getString(R.string.delete_game_failure));
 		}
 		updateMenu();
@@ -899,17 +902,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					getString(R.string.remove_favorites_success),
 					getString(R.string.remove_favorites_failure));
 		} else {
-			updateFavoriteFlag(true,
-					getString(R.string.add_favorites_success),
+			updateFavoriteFlag(true, getString(R.string.add_favorites_success),
 					getString(R.string.add_favorites_failure));
 		}
 		updateMenu();
 	}
 
 	private void updateMenu() {
-		if (Build.VERSION.SDK_INT >= 11)
-		{
-		    VersionHelper.refreshActionBarMenu(this);
+		if (Build.VERSION.SDK_INT >= 11) {
+			VersionHelper.refreshActionBarMenu(this);
 		}
 	}
 
@@ -935,11 +936,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		editMenu.findItem(R.id.item_paste_clipboard).setEnabled(
-					clipboard.hasText());
+				clipboard.hasText());
 		boolean enableVariationMenuItems = ctrl.numVariations() > 1;
-		editMenu.findItem(R.id.item_variation_up).setEnabled(enableVariationMenuItems);
-		editMenu.findItem(R.id.item_variation_down).setEnabled(enableVariationMenuItems);
-		
+		editMenu.findItem(R.id.item_variation_up).setEnabled(
+				enableVariationMenuItems);
+		editMenu.findItem(R.id.item_variation_down).setEnabled(
+				enableVariationMenuItems);
+
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -1399,6 +1402,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	static final int PROMOTE_DIALOG = 0;
 	static final int CLIPBOARD_DIALOG = 1;
 	static final int ABOUT_DIALOG = 2;
+	static final int SELECT_GOTO_GAME_DIALOG = 3;
 	static final int SELECT_CREATE_DATABASE_DIALOG = 4;
 	static final int SEARCH_DIALOG = 5;
 	static final int IMPORT_PGN_DIALOG = 6;
@@ -1419,12 +1423,43 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return createClipboardDialog();
 		case ABOUT_DIALOG:
 			return createAboutDialog();
+		case SELECT_GOTO_GAME_DIALOG:
+			return createGotoGameDialog();
 		case SELECT_CREATE_DATABASE_DIALOG:
 			return createCreateDatabaseDialog();
 		case IMPORT_PGN_DIALOG:
 			return createImportDialog();
 		}
 		return null;
+	}
+
+	private Dialog createGotoGameDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.goto_game_title);
+		builder.setMessage(R.string.goto_game_number);
+		final EditText input = new EditText(this);
+		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+		builder.setView(input);
+		builder.setPositiveButton(android.R.string.ok,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						try {
+							int gameNo = Integer.parseInt(input.getText()
+									.toString()) - 1;
+							Cursor cursor = getCursor();
+							if (cursor != null && cursor.moveToPosition(gameNo)) {
+								setPgnFromCursor(cursor);
+							}
+						} catch (NumberFormatException nfe) {
+							Toast.makeText(getApplicationContext(),
+									R.string.invalid_number_format,
+									Toast.LENGTH_SHORT).show();
+						}
+					}
+				});
+		builder.setNegativeButton(android.R.string.cancel, null);
+		AlertDialog alert = builder.create();
+		return alert;
 	}
 
 	private AlertDialog createAboutDialog() {
@@ -1442,8 +1477,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setView(input);
 		builder.setPositiveButton(R.string.ok,
 				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int whichButton) {
+					public void onClick(DialogInterface dialog, int whichButton) {
 						String value = input.getText().toString().trim();
 						createDatabase(value);
 					}
@@ -1451,8 +1485,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 		builder.setNegativeButton(R.string.cancel,
 				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,
-							int whichButton) {
+					public void onClick(DialogInterface dialog, int whichButton) {
 						dialog.cancel();
 					}
 				});
@@ -1635,8 +1668,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void editBoard() {
-		Intent i = new Intent(ScidAndroidActivity.this,
-				EditBoard.class);
+		Intent i = new Intent(ScidAndroidActivity.this, EditBoard.class);
 		i.setAction(ctrl.getFEN());
 		startActivityForResult(i, RESULT_EDITBOARD);
 	}
@@ -1644,15 +1676,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void pasteFromClipboard() {
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		if (clipboard.hasText()) {
-			String fenPgn = clipboard.getText()
-					.toString()
+			String fenPgn = clipboard.getText().toString()
 					.replaceAll("\n|\r|\t", " ");
 			try {
 				ctrl.setFENOrPGN(fenPgn);
 			} catch (ChessParseError e) {
 				Log.i("SCID", "ChessParseError", e);
-				Toast.makeText(getApplicationContext(),
-						e.getMessage(),
+				Toast.makeText(getApplicationContext(), e.getMessage(),
 						Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -1904,7 +1934,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public void downloadSuccess(File pgnFile) {
-		Tools.importPgnFile(ScidAndroidActivity.this, pgnFile, RESULT_PGN_IMPORT);
+		Tools.importPgnFile(ScidAndroidActivity.this, pgnFile,
+				RESULT_PGN_IMPORT);
 	}
 
 	@Override
