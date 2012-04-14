@@ -1,90 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu
-	xmlns:android="http://schemas.android.com/apk/res/android">
-	<item
-  		android:id="@+id/item_file"
-	  	android:title="File"
-  		android:showAsAction="ifRoom">
-  		<!-- android:icon="@drawable/ic_menu_archive"-->
-	    <menu>
-		    <item
-		        android:id="@+id/item_create_database"
-		        android:title="@string/create_db_title">
-		    </item>
-			<item
-		  		android:id="@+id/item_open_file"
-			  	android:title="Open Database"
-		  		android:icon="@drawable/ic_menu_archive">
-			</item>
-		    <item
-		        android:id="@+id/item_import_pgn"
-		        android:title="Import PGN">
-		    </item>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/item_file"
+        android:showAsAction="ifRoom"
+        android:title="File">
+
+        <!-- android:icon="@drawable/ic_menu_archive" -->
+        <menu>
+            <item
+                android:id="@+id/item_create_database"
+                android:title="@string/create_db_title">
+            </item>
+            <item
+                android:id="@+id/item_open_file"
+                android:icon="@drawable/ic_menu_archive"
+                android:title="Open Database">
+            </item>
+            <item
+                android:id="@+id/item_import_pgn"
+                android:title="Import PGN">
+            </item>
         </menu>
-	</item>
+    </item>
     <item
         android:id="@+id/item_gamelist"
-        android:title="Game List"
         android:icon="@drawable/ic_menu_list"
-        android:showAsAction="ifRoom">
+        android:showAsAction="ifRoom"
+        android:title="Game List">
     </item>
-	<item
-  		android:id="@+id/item_game"
-	  	android:title="Game"
-  		android:showAsAction="ifRoom">
-  		<!-- android:icon="@drawable/ic_menu_archive"-->
-	    <!-- create empty sub-menu for easy access within code -->
+    <item
+        android:id="@+id/item_game"
+        android:showAsAction="ifRoom"
+        android:title="Game">
+
+        <!-- android:icon="@drawable/ic_menu_archive" -->
+        <!-- create empty sub-menu for easy access within code -->
         <menu>
-		    <item
-		        android:id="@+id/item_new_game"
-		        android:title="New Game">
-		    </item>
-		    <item
-		        android:id="@+id/item_save_game"
-		        android:title="Save Game (experimental)">
-		    </item>
-		    <group android:checkableBehavior="all">
-		        <item
+            <item
+                android:id="@+id/item_goto_game"
+                android:title="Goto Game">
+            </item>
+            <item
+                android:id="@+id/item_new_game"
+                android:title="New Game">
+            </item>
+            <item
+                android:id="@+id/item_save_game"
+                android:title="Save Game (experimental)">
+            </item>
+
+            <group android:checkableBehavior="all" >
+                <item
                     android:id="@+id/item_game_deleted"
                     android:title="Game Deleted">
                 </item>
-		        <item
+                <item
                     android:id="@+id/item_game_isfavorite"
                     android:title="Favorite Game">
                 </item>
-		    </group>
+            </group>
         </menu>
     </item>
     <item
         android:id="@+id/item_mode"
-        android:title="Mode"
-        android:showAsAction="ifRoom">
+        android:showAsAction="ifRoom"
+        android:title="Mode">
         <menu>
-		    <group android:checkableBehavior="all">
-			    <item
-			        android:id="@+id/item_analysis_mode"
-			        android:title="Analysis">
-			    </item>
-			    <item
-			        android:id="@+id/item_study_mode"
-			        android:title="Study">
-			    </item>
-			</group>
-		</menu>
+            <group android:checkableBehavior="all" >
+                <item
+                    android:id="@+id/item_analysis_mode"
+                    android:title="Analysis">
+                </item>
+                <item
+                    android:id="@+id/item_study_mode"
+                    android:title="Study">
+                </item>
+            </group>
+        </menu>
     </item>
     <item
         android:id="@+id/item_edit"
-        android:title="Edit"
-        android:showAsAction="ifRoom">
+        android:showAsAction="ifRoom"
+        android:title="Edit">
         <menu>
-		    <item
-		        android:id="@+id/item_paste_clipboard"
-		        android:title="Paste from Clipboard">
-		    </item>
-		    <item
-		        android:id="@+id/item_copy_game_clipboard"
-		        android:title="Copy Game to Clipboard">
-		    </item>
+            <item
+                android:id="@+id/item_paste_clipboard"
+                android:title="Paste from Clipboard">
+            </item>
+            <item
+                android:id="@+id/item_copy_game_clipboard"
+                android:title="Copy Game to Clipboard">
+            </item>
             <item
                 android:id="@+id/item_copy_position_clipboard"
                 android:title="Copy Position to Clipboard">
@@ -105,18 +112,18 @@
                 android:id="@+id/item_variation_down"
                 android:title="Move Variation Down">
             </item>
-   		</menu>
+        </menu>
     </item>
     <item
         android:id="@+id/item_search"
-        android:title="Search"
         android:icon="@drawable/ic_menu_search"
-        android:showAsAction="ifRoom">
+        android:showAsAction="ifRoom"
+        android:title="Search">
     </item>
     <item
         android:id="@+id/item_manage_engines"
-        android:title="UCI Engines"
-        android:icon="@drawable/ic_menu_manage">
+        android:icon="@drawable/ic_menu_manage"
+        android:title="UCI Engines">
         <menu>
             <item
                 android:id="@+id/item_add_engine"
@@ -127,16 +134,16 @@
                 android:title="@string/remove_engine">
             </item>
         </menu>
-	</item>
+    </item>
     <item
         android:id="@+id/item_settings"
-        android:title="Settings"
-        android:icon="@drawable/ic_menu_preferences">
+        android:icon="@drawable/ic_menu_preferences"
+        android:title="Settings">
     </item>
-	<item
-		android:id="@+id/item_about"
-		android:title="About / Help"
-  		android:icon="@drawable/ic_menu_help">
-	</item>
-	
+    <item
+        android:id="@+id/item_about"
+        android:icon="@drawable/ic_menu_help"
+        android:title="About / Help">
+    </item>
+
 </menu>
