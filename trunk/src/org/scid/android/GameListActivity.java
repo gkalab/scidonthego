@@ -13,9 +13,9 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.AdapterView.OnItemClickListener;
 
 public class GameListActivity extends ListActivity {
 	/**
@@ -135,15 +135,19 @@ public class GameListActivity extends ListActivity {
 			} else {
 				int allGames = ((ScidApplication) getApplicationContext())
 						.getNoGames();
+				final String title;
 				if (allGames > noGames) {
 					// there's currently a filter
-					String title = getString(R.string.gamelist_filter) + " "
-							+ noGames + "/" + allGames;
-					setTitle(title);
-					GameListActivity.title = title;
+					title = getString(R.string.gamelist_filter) + " " + noGames
+							+ "/" + allGames;
 				} else {
-					setTitle(getString(R.string.gamelist));
+					title = getString(R.string.gamelist);
 				}
+				runOnUiThread(new Runnable() {
+					public void run() {
+						setTitle(title);
+					}
+				});
 			}
 			final int games = noGames;
 			gamesInFile.ensureCapacity(games);
@@ -203,18 +207,14 @@ public class GameListActivity extends ListActivity {
 		final GameInfo info = new GameInfo();
 		info.setDetails(cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.DETAILS)));
-		info
-				.setTitle(cursor
-						.getString(cursor
-								.getColumnIndex(ScidProviderMetaData.ScidMetaData.WHITE))
-						+ " - "
-						+ cursor
-								.getString(cursor
-										.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
+		info.setTitle(cursor.getString(cursor
+				.getColumnIndex(ScidProviderMetaData.ScidMetaData.WHITE))
+				+ " - "
+				+ cursor.getString(cursor
+						.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
 		boolean isFavorite = Boolean
-				.parseBoolean(cursor
-						.getString(cursor
-								.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
+				.parseBoolean(cursor.getString(cursor
+						.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
 		info.setFavorite(isFavorite);
 		boolean isDeleted = Boolean.parseBoolean(cursor.getString(cursor
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_DELETED)));

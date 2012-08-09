@@ -3,6 +3,7 @@
 
     <item
         android:id="@+id/item_file"
+        android:showAsAction="ifRoom"
         android:title="File">
 
         <!-- android:icon="@drawable/ic_menu_archive" -->
@@ -25,10 +26,12 @@
     <item
         android:id="@+id/item_gamelist"
         android:icon="@drawable/ic_menu_list"
+        android:showAsAction="ifRoom"
         android:title="Game List">
     </item>
     <item
         android:id="@+id/item_game"
+        android:showAsAction="ifRoom"
         android:title="Game">
 
         <!-- android:icon="@drawable/ic_menu_archive" -->
@@ -61,6 +64,7 @@
     </item>
     <item
         android:id="@+id/item_mode"
+        android:showAsAction="ifRoom"
         android:title="Mode">
         <menu>
             <group android:checkableBehavior="all" >
@@ -77,6 +81,7 @@
     </item>
     <item
         android:id="@+id/item_edit"
+        android:showAsAction="ifRoom"
         android:title="Edit">
         <menu>
             <item
@@ -103,6 +108,7 @@
     </item>
     <item
         android:id="@+id/item_share"
+        android:showAsAction="ifRoom"
         android:icon="@drawable/ic_menu_share"
         android:title="Share">
         <menu>
@@ -123,6 +129,7 @@
     <item
         android:id="@+id/item_search"
         android:icon="@drawable/ic_menu_search"
+        android:showAsAction="ifRoom"
         android:title="Search">
     </item>
     <item
