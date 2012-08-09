@@ -161,7 +161,10 @@ public class SelectFileActivity extends ListActivity {
 		File[] files = dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				return pathname.isFile()
-						&& ((pathname.getAbsolutePath().endsWith(extension)) || extension
+						&& (pathname.getAbsolutePath().endsWith(
+								extension.toLowerCase())
+								|| pathname.getAbsolutePath().endsWith(
+										extension.toUpperCase()) || extension
 								.equals("*"));
 			}
 		});
