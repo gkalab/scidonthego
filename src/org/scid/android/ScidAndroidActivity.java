@@ -33,10 +33,10 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ShareCompat;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
@@ -122,8 +122,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 		// do not use custom titles on Honeycomb and above - don't work with
 		// the Holo Theme
-		initUI(Build.VERSION.SDK_INT < 11);
-		if (Build.VERSION.SDK_INT >= 11) {
+		initUI(Integer.valueOf(android.os.Build.VERSION.SDK) < 11);
+		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
 			VersionHelper.registerClipChangedListener(this);
 		}
 
@@ -744,7 +744,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.options_menu, menu);
+		if (ScreenTools.isTabletLayout(this)) {
+			getMenuInflater().inflate(R.menu.options_menu_tablet, menu);
+		} else {
+			getMenuInflater().inflate(R.menu.options_menu, menu);
+		}
 		return true;
 	}
 
@@ -853,6 +857,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			copyPositionToClipboard();
 			return true;
 		}
+		case R.id.item_share_game:
+			shareGame();
+			return true;
 		case R.id.item_edit_board: {
 			editBoard();
 			return true;
@@ -909,7 +916,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void updateMenu() {
-		if (Build.VERSION.SDK_INT >= 11) {
+		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
 			VersionHelper.refreshActionBarMenu(this);
 		}
 	}
@@ -1698,6 +1705,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		String pgn = ctrl.getPGN();
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		clipboard.setText(pgn);
+	}
+
+	private void shareGame() {
+		String data = ctrl.getPGN();
+		if (data != null) {
+			Intent shareIntent = ShareCompat.IntentBuilder.from(this)
+					.setText(data).setType("text/plain").getIntent();
+			startActivity(shareIntent);
+		}
 	}
 
 	private void createDatabase(String fileName) {
