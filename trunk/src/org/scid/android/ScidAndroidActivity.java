@@ -125,6 +125,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		initUI(Integer.valueOf(android.os.Build.VERSION.SDK) < 11);
 		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
 			VersionHelper.registerClipChangedListener(this);
+			if (!ScreenTools.isTabletLayout(this)) {
+				// remove Icon from ActionBar if it's a phone and >= Honeycomb
+				VersionHelper.removeIconFromActionbar(this);
+			}
 		}
 
 		gameTextListener = new PgnScreenText(pgnOptions);
