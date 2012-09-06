@@ -21,11 +21,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.scid.android.twic.ImportZipTask;
-
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -346,18 +343,10 @@ public class Tools {
 		Log.i("SCID", "Intent data=" + data);
 		if (data.getScheme().startsWith("http")) {
 			String url = data.toString();
-			if (url.endsWith(".zip")) {
-				ProgressDialog progressDlg = ProgressDialog.show(activity,
-						activity.getString(R.string.downloading),
-						activity.getString(R.string.downloading) + " " + url,
-						true, false);
-				new ImportZipTask().execute(activity, progressDlg, url);
-			} else {
-				new DownloadTask().execute(activity, url);
-				Toast.makeText(activity,
-						activity.getString(R.string.download_started),
-						Toast.LENGTH_LONG).show();
-			}
+			new DownloadTask().execute(activity, url);
+			Toast.makeText(activity,
+					activity.getString(R.string.download_started),
+					Toast.LENGTH_LONG).show();
 		} else {
 			String filePath = data.getEncodedPath();
 			if (filePath.endsWith(".zip")) {
