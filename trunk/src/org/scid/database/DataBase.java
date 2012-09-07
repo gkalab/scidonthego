@@ -50,7 +50,7 @@ public class DataBase {
 	public final native int getSize(String fileName);
 
 	/** Get the complete PGN of the current game. */
-	public final native String getPGN();
+	public final native byte[] getPGN();
 
 	/** Get the move list (including the result) of the current game. */
 	public final native String getMoves();
@@ -59,22 +59,22 @@ public class DataBase {
 	public final native String getResult();
 
 	/** Get the header [White] of the current game. */
-	public final native String getWhite();
+	public final native byte[] getWhite();
 
 	/** Get the header [Black] of the current game. */
-	public final native String getBlack();
+	public final native byte[] getBlack();
 
 	/** Get the header [Event] of the current game. */
-	public final native String getEvent();
+	public final native byte[] getEvent();
 
 	/** Get the header [Site] of the current game. */
-	public final native String getSite();
+	public final native byte[] getSite();
 
 	/** Get the header [Date] of the current game. */
 	public final native String getDate();
 
 	/** Get the header [Round] of the current game. */
-	public final native String getRound();
+	public final native byte[] getRound();
 
 	public void callback(int progress) {
 		Log.d("GAME", "Processed up to game number: " + progress);

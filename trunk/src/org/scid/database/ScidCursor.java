@@ -1,13 +1,20 @@
 package org.scid.database;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import android.database.AbstractCursor;
 import android.os.Bundle;
+import android.util.Log;
 
 public class ScidCursor extends AbstractCursor {
+
+	/**
+	 * Scids encoding seems to be CP1252 under Windows and under Linux
+	 */
+	private static final String SCID_ENCODING = "CP1252";
 
 	private int count;
 
@@ -142,10 +149,12 @@ public class ScidCursor extends AbstractCursor {
 		String yearFrom = selectionArgs[13];
 		String yearTo = selectionArgs[14];
 
-		filterMap.put(fileName, new Filter(db.searchHeader(fileName, white,
-				black, ignoreColors, result_win_white, result_draw,
-				result_win_black, result_none, event, site, ecoFrom, ecoTo,
-				ecoNone, yearFrom, yearTo, filterOp, filter)));
+		filterMap.put(
+				fileName,
+				new Filter(db.searchHeader(fileName, white, black,
+						ignoreColors, result_win_white, result_draw,
+						result_win_black, result_none, event, site, ecoFrom,
+						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter)));
 	}
 
 	@Override
@@ -162,8 +171,10 @@ public class ScidCursor extends AbstractCursor {
 			String fen, int searchType) {
 		int[] filter = getFilter(fileName);
 		int filterOp = getFilterOperation(fileName, filterOperation);
-		filterMap.put(fileName, new Filter(db.searchBoard(fileName, fen,
-				searchType, filterOp, filter)));
+		filterMap.put(
+				fileName,
+				new Filter(db.searchBoard(fileName, fen, searchType, filterOp,
+						filter)));
 	}
 
 	private int getFilterOperation(String fileName, String filterOperation) {
@@ -213,35 +224,45 @@ public class ScidCursor extends AbstractCursor {
 
 	private void setGameInfo(int gameNo, boolean isFavorite) {
 		this.gameInfo = new GameInfo();
-		gameInfo.setEvent(this.db.getEvent());
-		if (gameInfo.getEvent().equals("?")) {
-			gameInfo.setEvent("");
+		try {
+			gameInfo.setEvent(getSanitizedString(this.db.getEvent()));
+			if (gameInfo.getEvent().equals("?")) {
+				gameInfo.setEvent("");
+			}
+			gameInfo.setSite(getSanitizedString(this.db.getSite()));
+			if (gameInfo.getSite().equals("?")) {
+				gameInfo.setSite("");
+			}
+			String date = this.db.getDate();
+			if (date.endsWith(".??.??")) {
+				date = date.substring(0, date.length() - 6);
+			} else if (date.endsWith(".??")) {
+				date = date.substring(0, date.length() - 3);
+			}
+			if (date.equals("?") || date.equals("????")) {
+				date = "";
+			}
+			gameInfo.setDate(date);
+			gameInfo.setRound(getSanitizedString(this.db.getRound()));
+			if (gameInfo.getRound().equals("?")) {
+				gameInfo.setRound("");
+			}
+			gameInfo.setWhite(getSanitizedString(this.db.getWhite()));
+			gameInfo.setBlack(getSanitizedString(this.db.getBlack()));
+			gameInfo.setResult(this.db.getResult());
+			gameInfo.setPgn(loadPGN ? new String(this.db.getPGN(),
+					SCID_ENCODING) : null);
+		} catch (UnsupportedEncodingException e) {
+			Log.e("SCID", "Error converting byte[] to String", e);
 		}
-		gameInfo.setSite(this.db.getSite());
-		if (gameInfo.getSite().equals("?")) {
-			gameInfo.setSite("");
-		}
-		String date = this.db.getDate();
-		if (date.endsWith(".??.??")) {
-			date = date.substring(0, date.length() - 6);
-		} else if (date.endsWith(".??")) {
-			date = date.substring(0, date.length() - 3);
-		}
-		if (date.equals("?") || date.equals("????")) {
-			date = "";
-		}
-		gameInfo.setDate(date);
-		gameInfo.setRound(this.db.getRound());
-		if (gameInfo.getRound().equals("?")) {
-			gameInfo.setRound("");
-		}
-		gameInfo.setWhite(this.db.getWhite());
-		gameInfo.setBlack(this.db.getBlack());
-		gameInfo.setResult(this.db.getResult());
-		gameInfo.setPgn(loadPGN ? this.db.getPGN() : null);
 		gameInfo.setId(gameNo);
 		gameInfo.setFavorite(isFavorite);
 		gameInfo.setDeleted(this.db.isDeleted());
+	}
+
+	private String getSanitizedString(byte[] value)
+			throws UnsupportedEncodingException {
+		return Utf8Converter.convertToUTF8(new String(value, SCID_ENCODING));
 	}
 
 	/**
