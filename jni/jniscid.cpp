@@ -154,9 +154,8 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getPGN
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
         (JNIEnv* env, jobject obj)
 {
     TextBuffer tbuf;
@@ -164,15 +163,14 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getPGN
     tbuf.Empty();
     tbuf.SetWrapColumn(99999);
     game->WriteToPGN(&tbuf);
-    // Make sure pgn only contains valid UTF-8 Characters
-    char* bytes = tbuf.GetBuffer();
-    while (*bytes != '\0') {
-        if (*bytes >= 0x80) {
-            *bytes = '?';
-        }
-        bytes++;
+    jbyteArray result = NULL;
+    int length = strlen(tbuf.GetBuffer());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
     }
-    return (*env).NewStringUTF(tbuf.GetBuffer());
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) tbuf.GetBuffer() );
+    return result;
 }
 
 
@@ -223,45 +221,69 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getWhite
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getWhite
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getWhite
                 (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(game->GetWhiteStr());
+    jbyteArray result = NULL;
+    int length = strlen(game->GetWhiteStr());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
+    }
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetWhiteStr() );
+    return result;
 }
 
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getBlack
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getBlack
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getBlack
                 (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(game->GetBlackStr());
+    jbyteArray result = NULL;
+    int length = strlen(game->GetBlackStr());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
+    }
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetBlackStr() );
+    return result;
 }
 
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getEvent
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getEvent
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getEvent
                 (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(game->GetEventStr());
+    jbyteArray result = NULL;
+    int length = strlen(game->GetEventStr());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
+    }
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetEventStr() );
+    return result;
 }
 
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getSite
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getSite
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
                 (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(game->GetSiteStr());
+    jbyteArray result = NULL;
+    int length = strlen(game->GetSiteStr());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
+    }
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetSiteStr() );
+    return result;
 }
 
 /*
@@ -280,12 +302,18 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getRound
- * Signature: (I)Ljava/lang/String;
  */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getRound
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
                 (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(game->GetRoundStr());
+    jbyteArray result = NULL;
+    int length = strlen(game->GetRoundStr());
+    if ( NULL == (result = (*env).NewByteArray( length )) )
+    {
+        LOGE("Error creating byte array.");
+    }
+    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetRoundStr() );
+    return result;
 }
 
 

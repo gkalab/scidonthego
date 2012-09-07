@@ -176,7 +176,6 @@ public class GameInfo {
 			info.append(date);
 		}
 		return info.toString();
-
 	}
 
 	public void setFavorite(boolean isFavorite) {
