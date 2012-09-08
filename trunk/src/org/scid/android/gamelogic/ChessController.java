@@ -128,8 +128,8 @@ public class ChessController {
 			Position tmpPos = new Position(pos);
 			UndoInfo ui = new UndoInfo();
 			for (Move m : pv) {
-				buf.append(String.format(" %s", TextIO.moveToString(tmpPos, m,
-						false)));
+				buf.append(String.format(" %s",
+						TextIO.moveToString(tmpPos, m, false)));
 				tmpPos.makeMove(m, ui);
 			}
 			pvStr = buf.toString();
@@ -270,9 +270,12 @@ public class ChessController {
 				ss = new SearchStatus();
 				final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
 				final Position currPos = new Position(game.currPos());
-				final boolean alive = game.tree.getGameState() == GameState.ALIVE;
+				final boolean valid = game.tree.getGameState() != GameState.WHITE_MATE
+						&& game.tree.getGameState() != GameState.BLACK_MATE
+						&& game.tree.getGameState() != GameState.BLACK_STALEMATE
+						&& game.tree.getGameState() != GameState.WHITE_STALEMATE;
 				listener.clearSearchInfo();
-				if (alive) {
+				if (valid) {
 					analysisTask = (AnalysisTask) new AnalysisTask().execute(
 							computerPlayer.getEngine(), listener, ph.first,
 							ph.second, currPos);
@@ -360,8 +363,9 @@ public class ChessController {
 		Date d1 = new Date();
 		if (newGame.readPGN(pgn, pgnOptions)) {
 			Date d2 = new Date();
-			Log.d("SCID", "before/after readPGN " + df.format(d1) + "/"
-					+ df.format(d2));
+			Log.d("SCID",
+					"before/after readPGN " + df.format(d1) + "/"
+							+ df.format(d2));
 			game = newGame;
 			updateGame();
 		}
@@ -413,27 +417,27 @@ public class ChessController {
 	}
 
 	private final boolean undoMoveNoUpdate() {
-    	if (game.getLastMove() == null)
-    		return false;
-    	ss.searchResultWanted = false;
-    	game.undoMove();
-    	if (!humansTurn()) {
-    		if (game.getLastMove() != null) {
-    			game.undoMove();
-    			if (!humansTurn()) {
-    				game.redoMove();
-    			}
-    		} else {
-    			// Don't undo first white move if playing black vs computer,
-    			// because that would cause computer to immediately make
-    			// a new move and the whole redo history will be lost.
-    			if (gameMode.playerWhite() || gameMode.playerBlack()) {
-    				game.redoMove();
-    				return false;
-    			}
-    		}
-    	}
-    	return true;
+		if (game.getLastMove() == null)
+			return false;
+		ss.searchResultWanted = false;
+		game.undoMove();
+		if (!humansTurn()) {
+			if (game.getLastMove() != null) {
+				game.undoMove();
+				if (!humansTurn()) {
+					game.redoMove();
+				}
+			} else {
+				// Don't undo first white move if playing black vs computer,
+				// because that would cause computer to immediately make
+				// a new move and the whole redo history will be lost.
+				if (gameMode.playerWhite() || gameMode.playerBlack()) {
+					game.redoMove();
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public final void undoMove() {
@@ -443,8 +447,8 @@ public class ChessController {
 			boolean didUndo = undoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
-    		if (didUndo)
-    			setAnimMove(game.currPos(), game.getNextMove(), false);
+			if (didUndo)
+				setAnimMove(game.currPos(), game.getNextMove(), false);
 			updateGUI();
 		}
 	}
@@ -493,20 +497,20 @@ public class ChessController {
 	}
 
 	public final void removeSubTree() {
-			ss.searchResultWanted = false;
-			stopAnalysis();
-			game.removeSubTree();
-			updateComputeThreads(true);
-			setSelection();
-			updateGUI();
+		ss.searchResultWanted = false;
+		stopAnalysis();
+		game.removeSubTree();
+		updateComputeThreads(true);
+		setSelection();
+		updateGUI();
 	}
 
-    public final void moveVariation(int delta) {
-        if (game.numVariations() > 1) {
-            game.moveVariation(delta);
-            updateGUI();
-        }
-    }
+	public final void moveVariation(int delta) {
+		if (game.numVariations() > 1) {
+			game.moveVariation(delta);
+			updateGUI();
+		}
+	}
 
 	public final void gotoMove(int moveNr) {
 		gotoHalfMove(moveNr * 2);
@@ -603,8 +607,8 @@ public class ChessController {
 				}
 				if (m.promoteTo == promoteTo) {
 					String strMove = TextIO.moveToString(pos, m, false);
-					boolean isCorrect = game.processString(strMove, gameMode
-							.studyMode());
+					boolean isCorrect = game.processString(strMove,
+							gameMode.studyMode());
 					if (!isCorrect && this.gameMode.studyMode()) {
 						gui.setSelection(-1);
 						gui.reportInvalidMove(m);
@@ -744,16 +748,16 @@ public class ChessController {
 		return false;
 	}
 
-    public final void setHeaders(Map<String,String> headers) {
-        game.tree.setHeaders(headers);
-        gameTextListener.clear();
-        updateGUI();
-    }
+	public final void setHeaders(Map<String, String> headers) {
+		game.tree.setHeaders(headers);
+		gameTextListener.clear();
+		updateGUI();
+	}
 
-    public final void getHeaders(Map<String,String> headers) {
-        game.tree.getHeaders(headers);
-    }
-	
+	public final void getHeaders(Map<String, String> headers) {
+		game.tree.getHeaders(headers);
+	}
+
 	public final void resignGame() {
 		if (game.getGameState() == GameState.ALIVE) {
 			game.processString("resign", false);
