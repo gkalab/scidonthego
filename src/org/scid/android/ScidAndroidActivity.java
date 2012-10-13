@@ -223,6 +223,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onNextGameClick(View view) {
+		nextGame();
+	}
+
+	private void nextGame() {
 		Cursor cursor = this.getScidAppContext().getGamesCursor();
 		if (cursor == null) {
 			cursor = this.getCursor();
@@ -344,10 +348,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			String currentPosition = ctrl.getFEN();
 			if (lastEndOfVariation == null
 					|| !lastEndOfVariation.equals(currentPosition)) {
-				lastEndOfVariation = currentPosition;
-				Toast.makeText(getApplicationContext(),
+				if (settings.getBoolean("cruiseMode", false)) {
+					nextGame();
+				} else {
+					lastEndOfVariation = currentPosition;
+					Toast.makeText(getApplicationContext(),
 						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
 						.show();
+				}
 			}
 		}
 	}
@@ -607,9 +615,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				ctrl.makeHumanMove(m);
 				// display end of variation if there are no more moves
 				if (gameMode.studyMode() && !ctrl.canRedoMove()) {
-					Toast.makeText(getApplicationContext(),
-							getText(R.string.end_of_variation),
-							Toast.LENGTH_SHORT).show();
+					if (settings.getBoolean("cruiseModeInStudy", false)) {
+						nextGame();
+					} else {
+						Toast.makeText(getApplicationContext(),
+								getText(R.string.end_of_variation),
+								Toast.LENGTH_SHORT).show();
+					}
 				}
 			}
 		}

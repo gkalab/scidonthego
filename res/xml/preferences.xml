@@ -42,5 +42,15 @@
             android:entries="@array/theme_texts"
             android:defaultValue="0">
         </ListPreference>
-	</PreferenceCategory>
+        <CheckBoxPreference
+            android:key="cruiseMode"
+            android:title="Cruise Mode"
+            android:summary='If enabled, "next" acts as "next game" in the end of variation'
+            android:defaultValue="0"/>
+        <CheckBoxPreference
+            android:key="cruiseModeInStudy"
+            android:title="Cruise in Study Mode"
+            android:summary='If enabled, in the study mode making a move in the end of variation goes to the next game'
+            android:defaultValue="0"/>
+      	</PreferenceCategory>
 </PreferenceScreen>
