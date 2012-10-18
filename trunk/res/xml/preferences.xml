@@ -15,7 +15,25 @@
             android:singleLine="false" 
             android:defaultValue="">
         </EditTextPreference>
-	</PreferenceCategory>
+        <ListPreference
+            android:key="studyOrientation"
+            android:title="Orientation in Study Mode..."
+            android:summary="Select initial orientation of the board in the study mode"
+            android:entryValues="@array/study_orientation_values"
+            android:entries="@array/study_orientation_texts"
+            android:defaultValue="0">
+        </ListPreference>
+        <CheckBoxPreference
+            android:key="cruiseMode"
+            android:title="Cruise Mode"
+            android:summary='If enabled, "next" acts as "next game" in the end of variation'
+            android:defaultValue="0"/>
+        <CheckBoxPreference
+            android:key="cruiseModeInStudy"
+            android:title="Cruise in Study Mode"
+            android:summary='If enabled, in the study mode making a move in the end of variation goes to the next game'
+            android:defaultValue="0"/>
+      	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="User Interface">
         <ListPreference
@@ -42,15 +60,5 @@
             android:entries="@array/theme_texts"
             android:defaultValue="0">
         </ListPreference>
-        <CheckBoxPreference
-            android:key="cruiseMode"
-            android:title="Cruise Mode"
-            android:summary='If enabled, "next" acts as "next game" in the end of variation'
-            android:defaultValue="0"/>
-        <CheckBoxPreference
-            android:key="cruiseModeInStudy"
-            android:title="Cruise in Study Mode"
-            android:summary='If enabled, in the study mode making a move in the end of variation goes to the next game'
-            android:defaultValue="0"/>
-      	</PreferenceCategory>
+	</PreferenceCategory>
 </PreferenceScreen>

@@ -91,10 +91,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private String myPlayerNames = "";
 	private String lastWhitePlayerName = "";
 	private String lastBlackPlayerName = "";
-	private String lastEndOfVariation = null; // remember the last position a
+	// remember the last position a "end of variation" message was shown
+	private String lastEndOfVariation = null;
 
-	// "end of variation" message
-	// was shown
+	private int studyOrientation = 0;
+	private static final int SO_MOVING_SIDE = 0, SO_OPPOSITE_SIDE = 1, SO_MY_PLAYER = 2;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -278,8 +279,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					ctrl.gotoHalfMove(moveNo);
 				}
 				if (gameMode.studyMode()) {
-					// auto-flip board to the side which has the move
-					setFlipped(!cb.pos.whiteMove);
+					switch(studyOrientation){
+					case SO_MOVING_SIDE:
+						setFlipped(!cb.pos.whiteMove);
+						break;
+					case SO_OPPOSITE_SIDE:
+						setFlipped(cb.pos.whiteMove);
+						break;
+					// case SO_MY_PLAYER is processed by setGameInformation
+					}
 				}
 				saveGameState();
 			} catch (ChessParseError e) {
@@ -685,6 +693,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private final void readPrefs() {
 		this.myPlayerNames = settings.getString("playerNames", "");
 		setFlipped(settings.getBoolean("boardFlipped", false));
+		studyOrientation = Integer.parseInt(settings.getString("studyOrientation", "0"));
 		cb.oneTouchMoves = settings.getBoolean("oneTouchMoves", false);
 		mShowThinking = settings.getBoolean("showThinking", false);
 		String tmp = settings.getString("thinkingArrows", "6");
@@ -1910,7 +1919,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public void setGameInformation(String white, String black, String gameNo) {
-		if (!gameMode.studyMode()) {
+		if (!gameMode.studyMode() || studyOrientation == SO_MY_PLAYER) {
 			flipBoardForPlayerNames(white, black);
 		}
 		if (whitePlayer != null) {

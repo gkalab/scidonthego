@@ -21,6 +21,16 @@
         <item>0</item>
         <item>1</item>
     </string-array>
+    <string-array name="study_orientation_texts">
+        <item>The side that has the move</item>
+        <item>The opposite side</item>
+        <item>Use my player names</item>
+    </string-array>
+    <string-array name="study_orientation_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
     <string-array name="theme_texts">
         <item>Default</item>
         <item>Brown</item>
