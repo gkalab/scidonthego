@@ -242,7 +242,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onNextGameClick(View view) {
-		nextGame();
+		nextOrRandomGame();
+	}
+
+	private void nextOrRandomGame() {
+		if (settings.getBoolean("nextGameIsRandom", false)) {
+			randomGame();
+		} else {
+			nextGame();
+		}
 	}
 
 	private void nextGame() {
@@ -366,7 +374,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (lastEndOfVariation == null
 					|| !lastEndOfVariation.equals(currentPosition)) {
 				if (settings.getBoolean("cruiseMode", false)) {
-					nextGame();
+					nextOrRandomGame();
 				} else {
 					lastEndOfVariation = currentPosition;
 					Toast.makeText(getApplicationContext(),
@@ -623,7 +631,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				// display end of variation if there are no more moves
 				if (gameMode.studyMode() && !ctrl.canRedoMove()) {
 					if (settings.getBoolean("cruiseModeInStudy", false)) {
-						nextGame();
+						nextOrRandomGame();
 					} else {
 						Toast.makeText(getApplicationContext(),
 								getText(R.string.end_of_variation),
@@ -1886,7 +1894,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		return cursor;
 	}
-	
+
 	private Cursor setCursorFromFile() {
 		final String currentScidFile = settings
 				.getString("currentScidFile", "");
