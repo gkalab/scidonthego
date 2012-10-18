@@ -69,8 +69,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private boolean mShowBookHints;
 	private int maxNumArrows;
 	private GameMode gameMode = new GameMode(GameMode.TWO_PLAYERS);
-	private boolean boardFlipped = false;
-	private boolean autoSwapSides = false;
 	private boolean reloadGameList = false;
 
 	private RatingBar favoriteRating;
@@ -125,7 +123,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		initUI(Integer.valueOf(android.os.Build.VERSION.SDK) < 11);
 		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
 			VersionHelper.registerClipChangedListener(this);
-			if (!ScreenTools.isTabletLayout(this)) {
+			if (!ScreenTools.isLargeScreenLayout(this)) {
 				// remove Icon from ActionBar if it's a phone and >= Honeycomb
 				VersionHelper.removeIconFromActionbar(this);
 			}
@@ -281,8 +279,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				}
 				if (gameMode.studyMode()) {
 					// auto-flip board to the side which has the move
-					boardFlipped = !cb.pos.whiteMove;
-					cb.setFlipped(boardFlipped);
+					setFlipped(!cb.pos.whiteMove);
 				}
 				saveGameState();
 			} catch (ChessParseError e) {
@@ -311,13 +308,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			String[] names = myPlayerNames.split("\\n");
 			for (int i = 0; i < names.length; i++) {
 				String playerName = names[i].trim();
-				if (white.equalsIgnoreCase(playerName) && boardFlipped) {
-					boardFlipped = !boardFlipped;
-					setBoardFlip();
+				if (white.equalsIgnoreCase(playerName)) {
+					setFlipped(false);
 					break;
-				} else if (black.equalsIgnoreCase(playerName) && !boardFlipped) {
-					boardFlipped = !boardFlipped;
-					setBoardFlip();
+				} else if (black.equalsIgnoreCase(playerName)) {
+					setFlipped(true);
 					break;
 				}
 			}
@@ -366,11 +361,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onFlipBoardClick(View view) {
-		boardFlipped = !boardFlipped;
-		Editor editor = settings.edit();
-		editor.putBoolean("boardFlipped", boardFlipped);
-		editor.commit();
-		setBoardFlip();
+		setFlipped(!cb.flipped);
 	}
 
 	private final byte[] strToByteArr(String str) {
@@ -414,7 +405,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		cb.cursorY = oldCB.cursorY;
 		cb.cursorVisible = oldCB.cursorVisible;
 		cb.setPosition(oldCB.pos);
-		cb.setFlipped(oldCB.flipped);
+		setFlipped(oldCB.flipped);
 		cb.oneTouchMoves = oldCB.oneTouchMoves;
 		setSelection(oldCB.selectedSquare);
 		updateThinkingInfo();
@@ -692,9 +683,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private final void readPrefs() {
-		boardFlipped = settings.getBoolean("boardFlipped", false);
 		this.myPlayerNames = settings.getString("playerNames", "");
-		setBoardFlip();
+		setFlipped(settings.getBoolean("boardFlipped", false));
 		cb.oneTouchMoves = settings.getBoolean("oneTouchMoves", false);
 		mShowThinking = settings.getBoolean("showThinking", false);
 		String tmp = settings.getString("thinkingArrows", "6");
@@ -760,7 +750,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		if (ScreenTools.isTabletLayout(this)) {
+		if (ScreenTools.isLargeScreenLayout(this)) {
 			getMenuInflater().inflate(R.menu.options_menu_tablet, menu);
 		} else {
 			getMenuInflater().inflate(R.menu.options_menu, menu);
@@ -1270,27 +1260,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			};
 			engineManager.addEngineChangeListener(_listener);
 		}
-		;
 		engineManager.addEngine(engineName, executable);
 	}
 
-	private final void setBoardFlip() {
-		// check player names
-		boolean flipped = boardFlipped;
-		if (autoSwapSides) {
-			if (gameMode.analysisMode()) {
-				flipped = !cb.pos.whiteMove;
-			} else if (gameMode.playerWhite() && gameMode.playerBlack()) {
-				flipped = !cb.pos.whiteMove;
-			} else if (gameMode.playerWhite()) {
-				flipped = false;
-			} else if (gameMode.playerBlack()) {
-				flipped = true;
-			} else { // two computers
-				flipped = !cb.pos.whiteMove;
-			}
+	private final void setFlipped(boolean flipped) {
+		if(flipped != cb.flipped){
+			cb.setFlipped(flipped);
+			ImageButton flip_button = (ImageButton)findViewById(R.id.flip_board);
+			flip_button.setImageResource(flipped ? R.drawable.flip_flipped : R.drawable.flip_normal);
+			Editor editor = settings.edit();
+			editor.putBoolean("boardFlipped", flipped);
+			editor.commit();
 		}
-		cb.setFlipped(flipped);
 	}
 
 	@Override
@@ -1356,7 +1337,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (view != null) {
 			view.invalidate();
 		}
-		setBoardFlip();
 		updateThinkingInfo();
 	}
 

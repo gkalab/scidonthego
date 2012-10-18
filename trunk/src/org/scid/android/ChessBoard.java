@@ -290,10 +290,8 @@ public class ChessBoard extends View {
 	 * @param flipped
 	 */
 	final public void setFlipped(boolean flipped) {
-		if (this.flipped != flipped) {
-			this.flipped = flipped;
-			invalidate();
-		}
+		this.flipped = flipped;
+		invalidate();
 	}
 
 	/**
