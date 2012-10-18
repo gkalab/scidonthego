@@ -138,7 +138,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ctrl.newGame(gameMode);
 
 		int gameNo = settings.getInt("currentGameNo", 0);
-		Cursor cursor = getCursor();
+		Cursor cursor = setCursorFromFile();
 		if (cursor != null && cursor.moveToPosition(gameNo)) {
 			this.getScidAppContext().setCurrentGameNo(gameNo);
 		}
@@ -226,10 +226,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void nextGame() {
-		Cursor cursor = this.getScidAppContext().getGamesCursor();
-		if (cursor == null) {
-			cursor = this.getCursor();
-		}
+		Cursor cursor = getCursor();
 		if (cursor != null) {
 			lastEndOfVariation = null;
 			startManagingCursor(cursor);
@@ -328,10 +325,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousGameClick(View view) {
-		Cursor cursor = this.getScidAppContext().getGamesCursor();
-		if (cursor == null) {
-			cursor = this.getCursor();
-		}
+		Cursor cursor = getCursor();
 		if (cursor != null) {
 			startManagingCursor(cursor);
 			if (cursor.isAfterLast()) {
@@ -572,10 +566,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		nextGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				Cursor cursor = getScidAppContext().getGamesCursor();
-				if (cursor == null) {
-					cursor = getCursor();
-				}
+				Cursor cursor = getCursor();
 				if (cursor != null) {
 					startManagingCursor(cursor);
 					if (cursor.moveToLast()) {
@@ -589,10 +580,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		previousGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				Cursor cursor = getScidAppContext().getGamesCursor();
-				if (cursor == null) {
-					cursor = getCursor();
-				}
+				Cursor cursor = getCursor();
 				if (cursor != null) {
 					startManagingCursor(cursor);
 					if (cursor.moveToFirst()) {
@@ -831,7 +819,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_new_game: {
-			getScidAppContext().setGamesCursor(this.getCursor());
+			setCursorFromFile();
 			newGame();
 			return true;
 		}
@@ -1082,10 +1070,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			break;
 		case RESULT_SEARCH:
 			if (resultCode == RESULT_OK) {
-				Cursor cursor = this.getScidAppContext().getGamesCursor();
-				if (cursor == null) {
-					cursor = this.getCursor();
-				}
+				Cursor cursor = getCursor();
 				if (cursor != null) {
 					startManagingCursor(cursor);
 					setPgnFromCursor(cursor);
@@ -1098,10 +1083,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (resultCode == RESULT_OK && data != null) {
 				try {
 					int gameNo = Integer.parseInt(data.getAction());
-					Cursor cursor = this.getScidAppContext().getGamesCursor();
-					if (cursor == null) {
-						cursor = this.getCursor();
-					}
+					Cursor cursor = getCursor();
 					if (cursor != null && cursor.moveToPosition(gameNo)) {
 						startManagingCursor(cursor);
 						setPgnFromCursor(cursor);
@@ -1222,7 +1204,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						// TODO: reset cursor for now - saving should be done
 						// within the
 						// data provider and cursor
-						Cursor cursor = getCursor();
+						Cursor cursor = setCursorFromFile();
 						// move to newly added game
 						if (cursor != null && cursor.moveToLast()) {
 							setPgnFromCursor(cursor);
@@ -1240,7 +1222,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		editor.commit();
 		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
 
-		Cursor cursor = getCursor();
+		Cursor cursor = setCursorFromFile();
 		if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
 			setPgnFromCursor(cursor);
 		} else {
@@ -1458,7 +1440,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						try {
 							int gameNo = Integer.parseInt(input.getText()
 									.toString()) - 1;
-							Cursor cursor = getCursor();
+							Cursor cursor = setCursorFromFile();
 							if (cursor != null && cursor.moveToPosition(gameNo)) {
 								setPgnFromCursor(cursor);
 							}
@@ -1743,7 +1725,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				editor.commit();
 				getScidAppContext().setCurrentFileName(
 						Tools.stripExtension(scidFileName));
-				getCursor();
+				setCursorFromFile();
 				newGame();
 			}
 		}
@@ -1832,7 +1814,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void resetFilter() {
 		final String fileName = getScidAppContext().getCurrentFileName();
 		if (fileName.length() != 0) {
-			Cursor cursor = getCursor();
+			Cursor cursor = setCursorFromFile();
 			if (cursor != null) {
 				cursor.moveToPosition(getScidAppContext().getCurrentGameNo());
 			}
@@ -1874,6 +1856,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private Cursor getCursor() {
+		Cursor cursor = getScidAppContext().getGamesCursor();
+		if (cursor == null) {
+			cursor = setCursorFromFile();
+		}
+		return cursor;
+	}
+	
+	private Cursor setCursorFromFile() {
 		final String currentScidFile = settings
 				.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
