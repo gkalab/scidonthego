@@ -62,6 +62,7 @@ GNU GPL v2\n\
 <b>Developers</b>\n\
 * Most of the GUI code was taken from Peter Österlunds DroidFish and re-released under GPL v2 by the authors permission.\n\
 * Scid integration by Gerhard Kalab.\n\
+* Various enhancements by Alexander Klimov.\n\
 * Manage UCI engines by Larry Isaacs.
 	</string>
 	<string name="queen">Queen</string>
