@@ -416,13 +416,12 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             Game g;
             uint gameNum;
 
-            int progress_mod = noGames / 100;
-            int lastCallbackGameNo = -1;
-            for (gameNum=0; gameNum < sourceIndex.GetNumGames(); gameNum++) {
-                //  show progress
+            int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
+            for (gameNum=0; gameNum < noGames; gameNum++) {
+                // show progress
                 // make sure to only call callback not more than 100 times
-                if (gameNum % progress_mod == 0 && gameNum != lastCallbackGameNo) {
-                    lastCallbackGameNo = gameNum;
+                if (gameNum >= nextCallbackGameNo) {
+                    nextCallbackGameNo = gameNum + progressDelta;
                     jclass cls = env->GetObjectClass(obj);
                     jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
                     if (mid != 0) {
@@ -1080,14 +1079,14 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     }
 
     // Here is the loop that searches on each game:
-    int progress_mod = noGames / 100;
+    int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
     uint i=0;
     int lastCallbackGameNo = -1;
     for (; i < noGames; i++) {
         // show progress
         // make sure to only call callback not more than 100 times
-        if (i % progress_mod == 0 && i != lastCallbackGameNo) {
-            lastCallbackGameNo = i;
+        if (i >= nextCallbackGameNo) {
+            nextCallbackGameNo = i + progressDelta;
             jclass cls = env->GetObjectClass(obj);
             jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
             if (mid != 0) {
