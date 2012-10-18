@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.scid.android.chessok.ImportChessOkActivity;
 import org.scid.android.dialog.MoveListDialog;
@@ -217,6 +218,25 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				}
 			} catch (IOException e) {
 				Log.e("SCID", e.getMessage(), e);
+			}
+		}
+	}
+
+	private static Random generator = new Random();
+	private void randomGame() {
+		Cursor cursor = getCursor();
+		if (cursor != null) {
+			int oldGameId = cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
+			int totalGames = cursor.getCount();
+			if(totalGames > 1) {
+				int newGameIndex = generator.nextInt(totalGames - 1); // newGameIndex < totalGames-1
+				cursor.moveToPosition(newGameIndex);
+				int newGameId = cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
+				if (newGameId >= oldGameId) {
+					cursor.moveToPosition(newGameIndex+1); // argument < totalGames
+				}
+				// here newGameId != oldGameId
+				setPgnFromCursor(cursor);
 			}
 		}
 	}
@@ -794,6 +814,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		case R.id.item_goto_game: {
 			showDialog(SELECT_GOTO_GAME_DIALOG);
+			return true;
+		}
+		case R.id.item_random_game: {
+			randomGame();
 			return true;
 		}
 		case R.id.item_search: {

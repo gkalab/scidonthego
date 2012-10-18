@@ -39,7 +39,11 @@
         <menu>
             <item
                 android:id="@+id/item_goto_game"
-                android:title="Goto Game">
+                android:title="Goto Game...">
+            </item>
+            <item
+                android:id="@+id/item_random_game"
+                android:title="Goto Random Game">
             </item>
             <item
                 android:id="@+id/item_new_game"
