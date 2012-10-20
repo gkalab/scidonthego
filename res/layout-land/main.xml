@@ -24,57 +24,54 @@
             class="org.scid.android.MoveIndicator"
             android:layout_width="18dp"
             android:layout_height="28dp"
-            android:layout_weight="1"
             android:layout_marginTop="5dp"
             android:layout_gravity="center_horizontal"
             android:id="@+id/moveindicator">
         </view>
-        <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="bottom" >
-	        <ImageButton
-	            android:id="@+id/previous_game"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:longClickable="true"
-	            android:onClick="onPreviousGameClick"
-	            android:src="@drawable/previous_game"
-	            android:contentDescription="Previous Game" />
-	        <ImageButton
-	            android:id="@+id/next_game"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:longClickable="true"
-	            android:onClick="onNextGameClick"
-	            android:src="@drawable/next_game"
-	            android:contentDescription="Next Game" />
-	        <ImageButton
-	            android:id="@+id/flip_board"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:onClick="onFlipBoardClick"
-	            android:src="@drawable/flip_normal"
-	            android:contentDescription="Flip Board" />
-	        <ImageButton
-	            android:id="@+id/previous_move"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:longClickable="true"
-	            android:onClick="onPreviousMoveClick"
-	            android:src="@drawable/previous"
-	            android:contentDescription="Previous Move" />
-	        <ImageButton
-	            android:id="@+id/next_move"
-	            android:layout_width="48dp"
-	            android:layout_height="48dp"
-	            android:longClickable="true"
-	            android:onClick="onNextMoveClick"
-	            android:src="@drawable/next" 
-	            android:contentDescription="Next Move" />
-	    </LinearLayout>
+        <ImageButton
+            android:id="@+id/previous_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onPreviousGameClick"
+            android:src="@drawable/previous_game"
+            android:contentDescription="Previous Game" />
+        <ImageButton
+            android:id="@+id/next_game"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onNextGameClick"
+            android:src="@drawable/next_game"
+            android:contentDescription="Next Game" />
+        <ImageButton
+            android:id="@+id/flip_board"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:onClick="onFlipBoardClick"
+            android:src="@drawable/flip_normal"
+            android:contentDescription="Flip Board" />
+        <ImageButton
+            android:id="@+id/previous_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onPreviousMoveClick"
+            android:src="@drawable/previous"
+            android:contentDescription="Previous Move" />
+        <ImageButton
+            android:id="@+id/next_move"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:onClick="onNextMoveClick"
+            android:src="@drawable/next" 
+            android:contentDescription="Next Move" />
     </LinearLayout>
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
