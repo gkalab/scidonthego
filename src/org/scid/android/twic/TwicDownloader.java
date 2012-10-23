@@ -29,7 +29,7 @@ import android.util.Log;
 
 public class TwicDownloader {
 
-	private static String TWIC_SITE = "http://www.chess.co.uk/twic/twic";
+	private static String TWIC_SITE = "http://www.theweekinchess.com/twic/";
 	private Set<String> linkList = new HashSet<String>();
 
 	public File getCurrentTwic(String directory) throws IOException {
