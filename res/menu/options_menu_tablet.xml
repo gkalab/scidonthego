@@ -30,6 +30,12 @@
         android:title="Game List">
     </item>
     <item
+        android:id="@+id/item_search"
+        android:icon="@drawable/ic_menu_search"
+        android:showAsAction="ifRoom"
+        android:title="Search">
+    </item>
+    <item
         android:id="@+id/item_game"
         android:showAsAction="ifRoom"
         android:title="Game">
@@ -129,12 +135,6 @@
                 android:title="Copy Position to Clipboard">
             </item>
         </menu>
-    </item>
-    <item
-        android:id="@+id/item_search"
-        android:icon="@drawable/ic_menu_search"
-        android:showAsAction="ifRoom"
-        android:title="Search">
     </item>
     <item
         android:id="@+id/item_manage_engines"
