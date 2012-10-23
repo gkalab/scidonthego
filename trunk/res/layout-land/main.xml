@@ -4,10 +4,40 @@
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:paddingRight="5dp"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="true"
+            android:typeface="monospace"
+            android:textStyle="bold"
+            android:textSize="12dip" />
+        <ScrollView
+            android:id="@+id/moveListScrollView"
+            android:layout_width="fill_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:paddingTop="5dp">
+            <TextView
+                android:id="@+id/moveList"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="true"
+                android:typeface="monospace"
+                android:textSize="10dip" />
+        </ScrollView>
+    </LinearLayout>
     <view
         class="org.scid.android.ChessBoard"
         android:id="@+id/chessboard"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="fill_parent" />
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -70,36 +100,7 @@
             android:layout_weight="1"
             android:longClickable="true"
             android:onClick="onNextMoveClick"
-            android:src="@drawable/next" 
+            android:src="@drawable/next"
             android:contentDescription="Next Move" />
-    </LinearLayout>
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:paddingLeft="5dp"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:includeFontPadding="true"
-            android:typeface="monospace"
-            android:textStyle="bold"
-            android:textSize="12dip" />
-        <ScrollView
-            android:id="@+id/moveListScrollView"
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
-            android:paddingTop="5dp">
-            <TextView
-                android:id="@+id/moveList"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="true"
-                android:typeface="monospace"
-                android:textSize="10dip" />
-        </ScrollView>
     </LinearLayout>
 </LinearLayout>
