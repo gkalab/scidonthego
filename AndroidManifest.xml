@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
     package="org.scid.android"
-    android:versionCode="34"
-    android:versionName="1.33" >
+    android:versionCode="35"
+    android:versionName="1.34" >
 
     <uses-sdk
         android:minSdkVersion="3"
