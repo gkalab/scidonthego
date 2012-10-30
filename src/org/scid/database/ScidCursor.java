@@ -18,8 +18,6 @@ public class ScidCursor extends AbstractCursor {
 
 	private int count;
 
-	private DataBase db;
-
 	private String fileName;
 
 	private GameInfo gameInfo;
@@ -93,8 +91,7 @@ public class ScidCursor extends AbstractCursor {
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
-		this.db = new DataBase();
-		this.count = singleGame ? 1 : db.getSize(fileName);
+		this.count = singleGame ? 1 : DataBase.getSize(fileName);
 		this.startPosition = startPosition;
 		handleProjection(projection);
 	}
@@ -151,7 +148,7 @@ public class ScidCursor extends AbstractCursor {
 
 		filterMap.put(
 				fileName,
-				new Filter(db.searchHeader(fileName, white, black,
+				new Filter(DataBase.searchHeader(fileName, white, black,
 						ignoreColors, result_win_white, result_draw,
 						result_win_black, result_none, event, site, ecoFrom,
 						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter)));
@@ -173,7 +170,7 @@ public class ScidCursor extends AbstractCursor {
 		int filterOp = getFilterOperation(fileName, filterOperation);
 		filterMap.put(
 				fileName,
-				new Filter(db.searchBoard(fileName, fen, searchType, filterOp,
+				new Filter(DataBase.searchBoard(fileName, fen, searchType, filterOp,
 						filter)));
 	}
 
@@ -225,15 +222,15 @@ public class ScidCursor extends AbstractCursor {
 	private void setGameInfo(int gameNo, boolean isFavorite) {
 		this.gameInfo = new GameInfo();
 		try {
-			gameInfo.setEvent(getSanitizedString(this.db.getEvent()));
+			gameInfo.setEvent(getSanitizedString(DataBase.getEvent()));
 			if (gameInfo.getEvent().equals("?")) {
 				gameInfo.setEvent("");
 			}
-			gameInfo.setSite(getSanitizedString(this.db.getSite()));
+			gameInfo.setSite(getSanitizedString(DataBase.getSite()));
 			if (gameInfo.getSite().equals("?")) {
 				gameInfo.setSite("");
 			}
-			String date = this.db.getDate();
+			String date = DataBase.getDate();
 			if (date.endsWith(".??.??")) {
 				date = date.substring(0, date.length() - 6);
 			} else if (date.endsWith(".??")) {
@@ -243,21 +240,21 @@ public class ScidCursor extends AbstractCursor {
 				date = "";
 			}
 			gameInfo.setDate(date);
-			gameInfo.setRound(getSanitizedString(this.db.getRound()));
+			gameInfo.setRound(getSanitizedString(DataBase.getRound()));
 			if (gameInfo.getRound().equals("?")) {
 				gameInfo.setRound("");
 			}
-			gameInfo.setWhite(getSanitizedString(this.db.getWhite()));
-			gameInfo.setBlack(getSanitizedString(this.db.getBlack()));
-			gameInfo.setResult(this.db.getResult());
-			gameInfo.setPgn(loadPGN ? new String(this.db.getPGN(),
+			gameInfo.setWhite(getSanitizedString(DataBase.getWhite()));
+			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
+			gameInfo.setResult(DataBase.getResult());
+			gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
 					SCID_ENCODING) : null);
 		} catch (UnsupportedEncodingException e) {
 			Log.e("SCID", "Error converting byte[] to String", e);
 		}
 		gameInfo.setId(gameNo);
 		gameInfo.setFavorite(isFavorite);
-		gameInfo.setDeleted(this.db.isDeleted());
+		gameInfo.setDeleted(DataBase.isDeleted());
 	}
 
 	private String getSanitizedString(byte[] value)
@@ -280,7 +277,7 @@ public class ScidCursor extends AbstractCursor {
 		} else {
 			int gameNo = startPosition + newPosition;
 			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = this.db.loadGame(fileName, gameNo,
+			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
 					onlyHeaders, this.reloadIndex);
 			setGameInfo(gameNo, isFavorite);
 		}
@@ -294,7 +291,7 @@ public class ScidCursor extends AbstractCursor {
 				startPosition + newPosition);
 		if (gameNo >= 0) {
 			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = this.db.loadGame(fileName, gameNo,
+			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
 					onlyHeaders, this.reloadIndex);
 			setGameInfo(gameNo, isFavorite);
 			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
@@ -376,6 +373,6 @@ public class ScidCursor extends AbstractCursor {
 	}
 
 	private void getFavorites(String fileName) {
-		filterMap.put(fileName, new Filter(db.getFavorites(fileName)));
+		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName)));
 	}
 }

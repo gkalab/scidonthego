@@ -1743,8 +1743,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					String.format(getString(R.string.create_db_exists),
 							fileName), Toast.LENGTH_LONG).show();
 		} else {
-			DataBase db = new DataBase();
-			String result = db.create(scidFileName);
+			String result = DataBase.create(scidFileName);
 			if (result.length() > 0) {
 				Toast.makeText(getApplicationContext(), result,
 						Toast.LENGTH_LONG).show();
