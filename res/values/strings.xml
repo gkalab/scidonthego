@@ -233,7 +233,9 @@ GNU GPL v2\n\
     <string name="err_pawn_on_first_last_rank">Pawn on first/last rank</string>
     <string name="err_too_many_white_pieces">Too many white pieces</string>
     <string name="err_too_many_black_pieces">Too many black pieces</string>
-    <string name="err_nothing_to_filter">No database is currently open.\nPlease, open a database first.</string>
+    <string name="err_no_db">No database is currently open.\nPlease, open a database first.</string>
+    <string name="err_no_prev_game">Cannot go to the previous game.</string>
+    <string name="err_no_next_game">Cannot go to the next game.</string>
     <string name="goto_game_title">Goto game</string>
     <string name="goto_game_number">Enter game number:</string>
 </resources>

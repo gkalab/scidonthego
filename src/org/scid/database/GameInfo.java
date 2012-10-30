@@ -9,7 +9,7 @@ public class GameInfo {
 	private String black = "";
 	private String result = "";
 	private String pgn = "";
-	private int id = -1;
+    private int id = -1; // TODO: used only thru Cursor, to be removed
 	private int currentPly = 0;
 	private Boolean isFavorite = false;
 	private Boolean isDeleted = false;

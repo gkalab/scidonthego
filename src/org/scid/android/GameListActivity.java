@@ -1,15 +1,13 @@
 package org.scid.android;
 
-import java.io.File;
 import java.util.Vector;
 
-import org.scid.database.ScidProviderMetaData;
+import org.scid.database.DataBaseView;
 
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import org.scid.database.DataBaseView;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -20,45 +18,47 @@ import android.widget.ListView;
 public class GameListActivity extends ListActivity {
 	/**
 	 * maximum number of games supported in list
+	 *
+	 * A list with thousand entries takes long time to load and useless anyway.
 	 */
-	private static final int MAX_GAMES = 10000;
+	private static final int MAX_GAMES = 1000;
 
 	private ArrayAdapter<GameInfo> listAdapter;
 	final static int PROGRESS_DIALOG = 0;
 	private static Vector<GameInfo> gamesInFile = new Vector<GameInfo>();
-	private String fileName;
-	private ProgressDialog progress = null;
-	private static int defaultItem = 0;
-	static private long lastModTime = -1;
-	static private String lastFileName = "";
-	static private DataBaseView lastDataBaseView = null;
+	private static DataBaseView previousDataBaseView;
+	private static int previousGeneration;
 	static private String title = "";
+	private ProgressDialog progress = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		final boolean reloadGameList = Boolean.parseBoolean(this.getIntent()
-				.getAction());
-		fileName = ((ScidApplication) this.getApplicationContext())
-				.getCurrentFileName();
+		final DataBaseView dbv = ((ScidApplication) getApplicationContext()).getDataBaseView();
+		if (dbv == null){
+			// TODO: make sure the function can assume this never happen
+			finish();
+			return;
+		}
+
 		listAdapter = new GameListArrayAdapter(this, R.id.item_title);
 		setListAdapter(listAdapter);
 		showDialog(PROGRESS_DIALOG);
 
-		final GameListActivity gameList = this;
 		new Thread(new Runnable() {
 			public void run() {
-				readGameInformation(reloadGameList);
+				final int defaultItem = dbv.getPosition();
+				readGameInformation(dbv);
 				runOnUiThread(new Runnable() {
 					public void run() {
-						gameList.showList();
+						showList(defaultItem);
 					}
 				});
 			}
 		}).start();
 	}
 
-	private final void showList() {
+	private final void showList(int defaultItem) {
 		progress.dismiss();
 		ListView lv = getListView();
 		lv.setSelectionFromTop(defaultItem, 0);
@@ -67,8 +67,7 @@ public class GameListActivity extends ListActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
-				defaultItem = pos;
-				setResult(RESULT_OK, (new Intent()).setAction("" + defaultItem));
+				setResult(RESULT_OK, (new Intent()).setAction("" + pos));
 				finish();
 			}
 		});
@@ -89,18 +88,9 @@ public class GameListActivity extends ListActivity {
 		}
 	}
 
-	private final void readGameInformation(boolean reloadGameList) {
-		if (!fileName.equals(lastFileName)) {
-			defaultItem = 0;
-		}
-		long modTime = new File(fileName).lastModified();
-		if (!reloadGameList
-				&& (modTime == lastModTime)
-				&& fileName.equals(lastFileName)
-				&& lastDataBaseView != null
-				&& lastDataBaseView
-						.equals(((ScidApplication) getApplicationContext())
-								.getGamesDataBaseView())) {
+	private final void readGameInformation(DataBaseView dbv) {
+		if (previousDataBaseView == dbv
+				&& previousGeneration == dbv.getGenerationCounter()) {
 			if (GameListActivity.title.length() > 0) {
 				setTitle(GameListActivity.title);
 			}
@@ -113,111 +103,64 @@ public class GameListActivity extends ListActivity {
 			});
 			return;
 		}
-		lastModTime = modTime;
-		lastFileName = fileName;
-		lastDataBaseView = ((ScidApplication) getApplicationContext())
-				.getGamesDataBaseView();
+
+		// need to (re)load
+		previousDataBaseView = dbv;
+		previousGeneration = dbv.getGenerationCounter();
 		gamesInFile.clear();
-		DataBaseView dbv = getDataBaseView();
-		if (dbv != null) {
-			int lastPosition = dbv.getPosition();
-			// disable loading of PGN information in the dbv to speeding up
-			// the list view
-			setPgnLoading(dbv, false);
-			int noGames = dbv.getCount();
-			if (noGames > MAX_GAMES) {
-				// limit games shown in list
-				String title = getString(R.string.gamelist) + " - " + MAX_GAMES
-						+ "/" + noGames;
-				setTitle(title);
-				GameListActivity.title = title;
-				noGames = MAX_GAMES;
+		int noGames = dbv.getCount();
+		if (noGames > MAX_GAMES) {
+			// limit games shown in list
+			String title = getString(R.string.gamelist) + " - " + MAX_GAMES
+					+ "/" + noGames;
+			setTitle(title);
+			GameListActivity.title = title;
+			noGames = MAX_GAMES;
+		} else {
+			int allGames = dbv.getTotalGamesInFile();
+			final String title;
+			if (allGames > noGames) {
+				// there's currently a filter
+				title = getString(R.string.gamelist_filter) + " " + noGames
+						+ "/" + allGames;
 			} else {
-				int allGames = ((ScidApplication) getApplicationContext())
-						.getNoGames();
-				final String title;
-				if (allGames > noGames) {
-					// there's currently a filter
-					title = getString(R.string.gamelist_filter) + " " + noGames
-							+ "/" + allGames;
-				} else {
-					title = getString(R.string.gamelist);
-				}
-				runOnUiThread(new Runnable() {
-					public void run() {
-						setTitle(title);
-					}
-				});
+				title = getString(R.string.gamelist);
 			}
-			final int games = noGames;
-			gamesInFile.ensureCapacity(games);
+			runOnUiThread(new Runnable() {
+				public void run() {
+					setTitle(title);
+				}
+			});
+		}
+
+		gamesInFile.ensureCapacity(noGames);
+		int percent = -1;
+		if (progress != null)
 			progress.setMax(100);
-			int percent = -1;
-			if (dbv.moveToFirst()) {
-				int gameNo = 0;
-				addGameInfo(dbv);
-				while (gameNo < noGames && dbv.moveToNext()) {
-					gameNo++;
-					addGameInfo(dbv);
-					final int newPercent = (int) (gameNo * 100 / noGames);
-					if (newPercent > percent) {
-						percent = newPercent;
-						if (progress != null) {
-							runOnUiThread(new Runnable() {
-								public void run() {
-									progress.setProgress(newPercent);
-								}
-							});
-						}
-					}
+		int savedPosition = dbv.getPosition();
+		dbv.setLoadPGN(false); // speeding up the list view
+		for (int gameNo = 0; gameNo < noGames; ++gameNo) {
+			if(!dbv.moveToPosition(gameNo))
+				break;
+			addGameInfo(dbv);
+			if (progress != null) {
+				final int newPercent = (int) (gameNo * 100 / noGames);
+				if (newPercent > percent) {
+					percent = newPercent;
+					runOnUiThread(new Runnable() {
+							public void run() {
+								progress.setProgress(newPercent);
+							}
+						});
 				}
-				// re-enable loading of PGN data in the dbv
-				setPgnLoading(dbv, true);
-				// move dbv to last known position before the list view was
-				// called
-				// because a return without selecting an entry would mess up the
-				// dbv position of the
-				// currently displayed game
-				dbv.moveToPosition(lastPosition);
 			}
 		}
-	}
-
-	private void setPgnLoading(DataBaseView dbv, boolean value) {
-		setDataBaseViewValue(dbv, "loadPGN", value);
-	}
-
-	private void setDataBaseViewValue(DataBaseView dbv, String key, boolean value) {
-		Bundle bundle = new Bundle();
-		bundle.putBoolean(key, value);
-		dbv.respond(bundle);
-	}
-
-	private DataBaseView getDataBaseView() {
-		DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
-				.getGamesDataBaseView();
-		if (dbv != null) {
-			setDataBaseViewValue(dbv, "reloadIndex", true);
-		}
-		return dbv;
+		dbv.setLoadPGN(true); // re-enable loading of PGN data in dbv
+		dbv.moveToPosition(savedPosition);
 	}
 
 	private void addGameInfo(DataBaseView dbv) {
-		final GameInfo info = new GameInfo();
-		info.setDetails(dbv.getString(dbv
-				.getColumnIndex(ScidProviderMetaData.ScidMetaData.DETAILS)));
-		info.setTitle(dbv.getString(dbv
-				.getColumnIndex(ScidProviderMetaData.ScidMetaData.WHITE))
-				+ " - "
-				+ dbv.getString(dbv
-						.getColumnIndex(ScidProviderMetaData.ScidMetaData.BLACK)));
-		boolean isFavorite = Boolean
-				.parseBoolean(dbv.getString(dbv
-						.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
-		info.setFavorite(isFavorite);
-		boolean isDeleted = Boolean.parseBoolean(dbv.getString(dbv
-				.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_DELETED)));
-		info.setDeleted(isDeleted);
+		final GameInfo info = new GameInfo(dbv.getGameInfo());
 		gamesInFile.add(info);
 		runOnUiThread(new Runnable() {
 			public void run() {
