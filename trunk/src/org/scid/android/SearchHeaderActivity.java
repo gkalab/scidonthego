@@ -52,46 +52,40 @@ public class SearchHeaderActivity extends Activity {
 		finish();
 	}
 
+    private String ets(int id){ // id of EditText => String
+        return ((EditText) findViewById(id)).getText().toString().trim();
+    }
+    private boolean cbb(int id){ // id of CheckBox => boolean
+        return ((CheckBox) findViewById(id)).isChecked();
+    }
 	public void onOkClick(View view) {
-		final String fileName = ((ScidApplication) this.getApplicationContext())
-				.getCurrentFileName();
-		if (fileName.length() != 0) {
-			EditText white = (EditText) findViewById(R.id.search_white);
-			EditText black = (EditText) findViewById(R.id.search_black);
-			CheckBox ignoreColors = (CheckBox) findViewById(R.id.ignore_colors);
-			CheckBox resultWhiteWins = (CheckBox) findViewById(R.id.result_white_wins);
-			CheckBox resultDraw = (CheckBox) findViewById(R.id.result_draw);
-			CheckBox resultBlackWins = (CheckBox) findViewById(R.id.result_black_wins);
-			CheckBox resultUnspecified = (CheckBox) findViewById(R.id.result_unspecified);
-			EditText event = (EditText) findViewById(R.id.search_event);
-			EditText site = (EditText) findViewById(R.id.search_site);
-			EditText ecoFrom = (EditText) findViewById(R.id.search_eco_from);
-			EditText ecoTo = (EditText) findViewById(R.id.search_eco_to);
-			EditText yearFrom = (EditText) findViewById(R.id.search_year_from);
-			EditText yearTo = (EditText) findViewById(R.id.search_year_to);
-			CheckBox ecoNone = (CheckBox) findViewById(R.id.eco_none);
-			final String[] search = { "" + filterOperation,
-					white.getText().toString().trim(),
-					black.getText().toString().trim(),
-					ignoreColors.isChecked() ? "true" : "false",
-					resultWhiteWins.isChecked() ? "true" : "false",
-					resultDraw.isChecked() ? "true" : "false",
-					resultBlackWins.isChecked() ? "true" : "false",
-					resultUnspecified.isChecked() ? "true" : "false",
-					event.getText().toString().trim(),
-					site.getText().toString().trim(),
-					ecoFrom.getText().toString().trim(),
-					ecoTo.getText().toString().trim(),
-					ecoNone.isChecked() ? "true" : "false",
-					yearFrom.getText().toString().trim(),
-					yearTo.getText().toString().trim() };
+		final DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
+				.getGamesDataBaseView();
+		if (dbv != null) {
+            final String white = ets(R.id.search_white), black = ets(R.id.search_black),
+            		event = ets(R.id.search_event), site = ets(R.id.search_site),
+            		ecoFrom = ets(R.id.search_eco_from), ecoTo = ets(R.id.search_eco_to),
+            		yearFrom = ets(R.id.search_year_from), yearTo = ets(R.id.search_year_to);
+            final boolean ignoreColors = cbb(R.id.ignore_colors),
+            		resultWhiteWins = cbb(R.id.result_white_wins),
+            		resultDraw = cbb(R.id.result_draw),
+            		resultBlackWins = cbb(R.id.result_black_wins),
+            		resultUnspecified = cbb(R.id.result_unspecified),
+            		ecoNone = cbb(R.id.eco_none);
 			(new SearchTask(this){
 				@Override
 				protected DataBaseView doInBackground(Void... params) {
-                  return DataBaseView.getMatchingHeaders(fileName, search);
+					return DataBaseView.getMatchingHeaders(dbv, filterOperation,
+							white, black, ignoreColors,
+                    		resultWhiteWins, resultDraw,
+                    		resultBlackWins, resultUnspecified,
+                    		event, site,
+                    		ecoFrom, ecoTo, ecoNone,
+                    		yearFrom, yearTo);
 				}
 			}).execute();
 		} else {
+            // TODO: this (dbv == null) should be impossible
 			setResult(RESULT_OK);
 			finish();
 		}

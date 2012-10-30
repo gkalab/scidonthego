@@ -3,7 +3,6 @@ package org.scid.android;
 import android.app.Activity;
 import android.content.Intent;
 import org.scid.database.DataBaseView;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -76,17 +75,18 @@ public class SearchCurrentBoardActivity extends Activity {
 	}
 
 	public void currentBoardSearch(View view, final int searchType) {
-		final String fileName = ((ScidApplication) this.getApplicationContext())
-				.getCurrentFileName();
-		if (fileName.length() != 0) {
+		final DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
+				.getGamesDataBaseView();
+		if (dbv != null) {
 			(new SearchTask(this){
 				@Override
 				protected DataBaseView doInBackground(Void... params) {
-					return DataBaseView.getMatchingBoards(fileName,
-							"" + filterOperation, fen, searchType);
+					return DataBaseView.getMatchingBoards(dbv, filterOperation, fen, searchType);
 				}
 			}).execute();
 		} else {
+			// TODO: this should be impossible, since if there is no current dbv,
+			// there was no point to search current board in it
 			setResult(RESULT_OK);
 			finish();
 		}
