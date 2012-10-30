@@ -15,10 +15,6 @@
 
 // An MFile is a file that can be a regular file, or memory-only with
 // no actual file on any device.
-// In addition, an MFile can decode its contents from a GZip (.gz) file
-// and will hopefully in future also be able to extract the contents of
-// all files in a Zip file, as if they were in one large plain file.
-
 
 #ifndef SCID_MFILE_H
 #define SCID_MFILE_H
@@ -28,24 +24,16 @@
 #include "error.h"
 
 enum mfileT {
-    MFILE_REGULAR = 0, MFILE_MEMORY, MFILE_GZIP, MFILE_ZIP
+    MFILE_REGULAR = 0, MFILE_MEMORY
 };
 
 class MFile
 {
   private:
     FILE *      Handle;         // For regular files.
-    gzFile      GzHandle;       // For Gzip files.
     fileModeT   FileMode;
     mfileT      Type;
     char *      FileName;
-
-    // The next few fields are used to improve I/O speed on Gzip files, by
-    // avoiding doing a gzgetc() every character, since the zlib file gzio.c
-    // simply does a (relatively slow) gzread() for each gzgetc().
-    byte *      GzBuffer;
-    int         GzBuffer_Avail;
-    byte *      GzBuffer_Current;
 
     // The next few fields are used for in-memory files.
     uint        Capacity;
@@ -56,7 +44,6 @@ class MFile
     char *      FileBuffer;  // Only for files with unusual buffer size.
 
     void  Extend();
-    int   FillGzBuffer();
 
   public:
     MFile() { Init(); }
@@ -119,9 +106,6 @@ MFile::EndOfFile ()
         return (Location >= Capacity);
     case MFILE_REGULAR:
         return feof(Handle);
-    case MFILE_GZIP:
-        if (GzBuffer_Avail > 0) { return 0; }
-        return gzeof(GzHandle);
     default:
         return false;
     }
@@ -138,9 +122,6 @@ MFile::WriteOneByte (byte value)
         return OK;
     }
     Location++;
-    if (Type == MFILE_GZIP) {
-        return (gzputc(GzHandle, value) == EOF) ? ERROR_FileWrite : OK;
-    }
     return (putc(value, Handle) == EOF) ? ERROR_FileWrite : OK;
 }
 
@@ -156,15 +137,6 @@ MFile::ReadOneByte ()
         return (int) value;
     }
     Location++;
-    if (Type == MFILE_GZIP) {
-        if (GzBuffer_Avail <= 0) {
-            return FillGzBuffer();
-        }
-        GzBuffer_Avail--;
-        int retval = *GzBuffer_Current;
-        GzBuffer_Current++;
-        return retval;
-    }
     return  getc(Handle);
 }
 

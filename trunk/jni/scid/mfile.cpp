@@ -16,15 +16,10 @@
 #include "mfile.h"
 #include "misc.h"
 
-// GZ_BUFFER_SIZE: number of bytes read from a Gzip file at a time.
-const uint GZ_BUFFER_SIZE = 1024;
-
 void
 MFile::Init ()
 {
     Handle = NULL;
-    GzHandle = NULL;
-    GzBuffer = NULL;
     FileMode = FMODE_Both;
     Type = MFILE_MEMORY;
     Capacity = 0;
@@ -78,14 +73,7 @@ MFile::Seek (uint position)
     // already at the position:
     if (FileMode != FMODE_Both  &&  Location == position) { return OK; }
 
-    int result;
-    if (Type == MFILE_GZIP) {
-        result = gzseek (GzHandle, position, 0);
-        GzBuffer_Avail = 0;
-    } else {
-        // handle position > 2GB
-    result = fseek (Handle, position, 0);
-    }
+    int result = fseek (Handle, position, 0);
     if (result != 0) { return ERROR_FileSeek; }
     Location = position;
     return OK;
@@ -101,7 +89,7 @@ MFile::Flush ()
 errorT
 MFile::Open (const char * name, fileModeT fmode)
 {
-    ASSERT (Handle == NULL  &&  GzHandle == NULL);
+    ASSERT (Handle == NULL);
     char * modeStr = NULL;
     switch (fmode) {
         case FMODE_ReadOnly:   modeStr = (char *) "rb";  break;
@@ -110,25 +98,9 @@ MFile::Open (const char * name, fileModeT fmode)
         default:               return ERROR_FileMode;
     }
 
-    const char * suffix = strFileSuffix (name);
-    if (suffix != NULL  &&  strEqual (suffix, GZIP_SUFFIX)) {
-        // We can only open GZip files read-only for now:
-        if (fmode != FMODE_ReadOnly) {
-            return ERROR_FileOpen;
-        }
-        GzHandle = gzopen (name, "rb");
-
-        if (GzHandle == NULL) { return ERROR_FileOpen; }
-        Type = MFILE_GZIP;
-        GzBuffer = new byte [GZ_BUFFER_SIZE];
-
-        GzBuffer_Current = GzBuffer;
-        GzBuffer_Avail = 0;
-    } else {
-        Handle = fopen (name, modeStr);
-        if (Handle == NULL) { return ERROR_FileOpen; }
-        Type = MFILE_REGULAR;
-    }
+    Handle = fopen (name, modeStr);
+    if (Handle == NULL) { return ERROR_FileOpen; }
+    Type = MFILE_REGULAR;
 
     FileMode = fmode;
     FileName = strDuplicate (name);
@@ -139,7 +111,7 @@ MFile::Open (const char * name, fileModeT fmode)
 errorT
 MFile::Create (const char * name, fileModeT fmode)
 {
-    ASSERT (Handle == NULL  &&  GzHandle == NULL);
+    ASSERT (Handle == NULL);
     char * modeStr = NULL;
     switch (fmode) {
         case FMODE_WriteOnly: modeStr = (char *) "wb";  break;
@@ -163,17 +135,7 @@ MFile::Close ()
         Init();
         return OK;
     }
-    int result;
-    if (Type == MFILE_GZIP) {
-        if (GzBuffer != NULL) {
-        delete[] GzBuffer;
-            GzBuffer = GzBuffer_Current = NULL;
-            GzBuffer_Avail = 0;
-        }
-        result = gzclose (GzHandle);
-    } else {
-        result = fclose (Handle);
-    }
+    int result = fclose (Handle);
 
     if (FileBuffer != NULL) {
         delete[] FileBuffer;
@@ -194,12 +156,6 @@ MFile::WriteNBytes (const char * str, uint length)
     ASSERT (FileMode != FMODE_ReadOnly);
 
     errorT err = OK;
-//     while (length-- > 0) {
-//         err = WriteOneByte (*str);
-//         str++;
-//     }
-//     return err;
-
     if (Type == MFILE_MEMORY) {
       while (length-- > 0) {
         if (Location >= Capacity) { Extend(); }
@@ -211,15 +167,6 @@ MFile::WriteNBytes (const char * str, uint length)
     }
 
     Location += length;
-
-    if (Type == MFILE_GZIP) {
-      err = OK;
-      while (length-- > 0 && err == OK) {
-        err = (gzputc(GzHandle, *str) == EOF) ? ERROR_FileWrite : OK;
-        str++;
-      }
-      return err;
-    }
 
     return (fwrite( str, length, 1, Handle) != 1) ? ERROR_FileWrite : OK;
 }
@@ -349,18 +296,6 @@ MFile::ReadFourBytes ()
     result <<= 8;
     result += ReadOneByte();
     return result;
-}
-
-int
-MFile::FillGzBuffer ()
-{
-    ASSERT (Type == MFILE_GZIP  &&  GzBuffer != NULL  &&  GzBuffer_Avail <= 0);
-    int bytesread = gzread (GzHandle, (char*)GzBuffer, GZ_BUFFER_SIZE);
-    if (bytesread <= 0) { return EOF; }
-    GzBuffer_Avail = bytesread - 1;
-    GzBuffer_Current = &(GzBuffer[1]);
-    return GzBuffer[0];
-
 }
 
 //////////////////////////////////////////////////////////////////////

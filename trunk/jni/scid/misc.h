@@ -242,7 +242,6 @@ isPowerOf2 (uint x)
 
 uint    fileSize (const char * name, const char * suffix);
 uint    rawFileSize (const char * name);
-uint    gzipFileSize (const char * name);
 
 // bool    fileExists (const char * fname, const char * suffix);
 errorT  renameFile (const char * oldName, const char * newName,
