@@ -33,7 +33,6 @@ const filterOpT FILTEROP_RESET = 0;
 /*
  * Class:     org_scid_database_DataBase
  * Method:    loadGame
- * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
                 (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
@@ -127,7 +126,6 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getSize
- * Signature: (Ljava/lang/String;)I
  */
 extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
         (JNIEnv* env, jclass cls, jstring fileName)
@@ -177,7 +175,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getMoves
- * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
         (JNIEnv* env, jclass cls)
@@ -210,7 +207,6 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getResult
- * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
         (JNIEnv* env, jclass cls)
@@ -289,7 +285,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
 /*
  * Class:     org_scid_database_DataBase
  * Method:    getDate
- * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
                 (JNIEnv* env, jclass cls)
@@ -1211,7 +1206,6 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 /*
  * Class:     org_scid_database_DataBase
  * Method:    importPgn
- * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
                 (JNIEnv* env, jclass cls, jstring fileName)
