@@ -1,5 +1,7 @@
 package org.scid.android;
 
+import org.scid.database.ScidCursor;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.database.Cursor;
@@ -8,20 +10,26 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
-public class SearchTask extends AsyncTask {
+public abstract class SearchTask extends AsyncTask<Void,Integer,Cursor> {
 	private Activity activity;
-	private ProgressDialog progressDlg;
+	private ProgressDialog progressDialog;
+
+	public SearchTask(Activity activity){
+		this.activity = activity;
+	}
 
 	@Override
-	protected Object doInBackground(Object... params) {
-		Integer filterSize = 0;
-		this.activity = (Activity) params[0];
-		String fileName = (String) params[1];
-		String[] search = (String[]) params[2];
-		this.progressDlg = (ProgressDialog) params[3];
-		Cursor cursor = activity.getContentResolver().query(
-				Uri.parse("content://org.scid.database.scidprovider/games"),
-				null, fileName, search, null);
+	protected void onPreExecute() {
+		progressDialog = ProgressDialog.show(activity, "Search", "Searching...", true, false);
+	}
+
+	@Override
+	protected void onProgressUpdate(Integer... values) {
+	}
+
+	@Override
+	protected void onPostExecute(Cursor cursor) {
+		int filterSize = 0;
 		if (cursor != null) {
 			((ScidApplication) activity.getApplicationContext())
 					.setGamesCursor(cursor);
@@ -36,13 +44,7 @@ public class SearchTask extends AsyncTask {
 				}
 			}
 		}
-		return filterSize;
-	}
-
-	@Override
-	protected void onPostExecute(Object result) {
-		progressDlg.dismiss();
-		Integer filterSize = (Integer) result;
+		progressDialog.dismiss();
 		if (filterSize == 0) {
 			Toast.makeText(activity.getApplicationContext(),
 					activity.getString(R.string.filter_no_games),
@@ -61,5 +63,4 @@ public class SearchTask extends AsyncTask {
 		}
 		activity.finish();
 	}
-
 }
