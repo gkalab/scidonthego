@@ -220,7 +220,6 @@ GNU GPL v2\n\
     <string name="create_db_success">The new database file has been created.</string>
     <string name="create_db_title">New Database</string>
     <string name="create_db_message">Please specify the name of the new database file:</string>
-
     <string name="err_too_few_spaces">Too few spaces</string>
     <string name="err_invalid_piece">Invalid piece</string>
     <string name="err_invalid_side">Invalid side</string>
@@ -234,6 +233,7 @@ GNU GPL v2\n\
     <string name="err_pawn_on_first_last_rank">Pawn on first/last rank</string>
     <string name="err_too_many_white_pieces">Too many white pieces</string>
     <string name="err_too_many_black_pieces">Too many black pieces</string>
+    <string name="err_nothing_to_filter">No database is currently open.\nPlease, open a database first.</string>
     <string name="goto_game_title">Goto game</string>
     <string name="goto_game_number">Enter game number:</string>
 </resources>
