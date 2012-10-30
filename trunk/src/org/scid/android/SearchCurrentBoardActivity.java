@@ -1,8 +1,9 @@
 package org.scid.android;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -14,7 +15,6 @@ import android.widget.Spinner;
 public class SearchCurrentBoardActivity extends Activity {
 	private String fen;
 	private int filterOperation = 0;
-	private ProgressDialog progressDlg;
 
 	private class OnFilterOperationSelectedListener implements
 			OnItemSelectedListener {
@@ -79,22 +79,18 @@ public class SearchCurrentBoardActivity extends Activity {
 		final String fileName = ((ScidApplication) this.getApplicationContext())
 				.getCurrentFileName();
 		if (fileName.length() != 0) {
-			String[] search = { "" + filterOperation, this.fen, "" + searchType };
-			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
-					"Searching...", true, false);
-			new SearchTask().execute(this, fileName, search, progressDlg);
+			final String[] search = { "" + filterOperation, this.fen, "" + searchType };
+			(new SearchTask(this){
+				@Override
+				protected Cursor doInBackground(Void... params) {
+					return SearchCurrentBoardActivity.this.getContentResolver().query(
+							Uri.parse("content://org.scid.database.scidprovider/games"),
+							null, fileName, search, null);
+				}
+			}).execute();
 		} else {
 			setResult(RESULT_OK);
 			finish();
-		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		// need to destroy progress dialog in case user turns device
-		if (progressDlg != null) {
-			progressDlg.dismiss();
 		}
 	}
 }

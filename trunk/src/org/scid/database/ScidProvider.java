@@ -76,11 +76,9 @@ public class ScidProvider extends ContentProvider {
 			if (selectionArgs == null) {
 				result = new ScidCursor(selection, projection, false);
 			} else if (selectionArgs.length == BOARDSEARCH_SELECTION_ARGS_LENGTH) {
-				result = searchBoard(selection, projection, 0, selectionArgs,
-						false);
+				result = searchBoard(selection, projection, 0, selectionArgs, false);
 			} else if (selectionArgs.length > BOARDSEARCH_SELECTION_ARGS_LENGTH) {
-				result = searchHeader(selection, projection, 0, selectionArgs,
-						false);
+				result = searchHeader(selection, projection, 0, selectionArgs, false);
 			} else if (selectionArgs.length == GET_FAVORITES_SELECTION_ARGS_LENGTH) {
 				result = getFavorites(selection, projection);
 			}
@@ -92,14 +90,11 @@ public class ScidProvider extends ContentProvider {
 			}
 			int startPosition = Integer.parseInt(uri.getLastPathSegment());
 			if (selectionArgs == null) {
-				result = new ScidCursor(selection, projection, startPosition,
-						true);
+				result = new ScidCursor(selection, projection, startPosition, true);
 			} else if (selectionArgs.length == 3) {
-				result = searchBoard(selection, projection, startPosition,
-						selectionArgs, true);
+				result = searchBoard(selection, projection, startPosition, selectionArgs, true);
 			} else if (selectionArgs.length == 13) {
-				result = searchHeader(selection, projection, startPosition,
-						selectionArgs, true);
+				result = searchHeader(selection, projection, startPosition, selectionArgs, true);
 			}
 			break;
 		default:
@@ -109,23 +104,20 @@ public class ScidProvider extends ContentProvider {
 		return result;
 	}
 
-	private Cursor getFavorites(String selection, String[] projection) {
-		this.cursor = new ScidCursor(selection, projection);
-		return this.cursor;
+	private static Cursor getFavorites(String selection, String[] projection) {
+		return new ScidCursor(selection, projection);
 	}
 
-	private Cursor searchBoard(String selection, String[] projection,
+	private static Cursor searchBoard(String selection, String[] projection,
 			int startPosition, String[] selectionArgs, boolean singleGame) {
-		this.cursor = new ScidCursor(selection, projection, startPosition,
+		return new ScidCursor(selection, projection, startPosition,
 				selectionArgs[0], selectionArgs[1], Integer.parseInt(selectionArgs[2]), singleGame);
-		return this.cursor;
 	}
 
-	private Cursor searchHeader(String selection, String[] projection,
+	private static Cursor searchHeader(String selection, String[] projection,
 			int startPosition, String[] selectionArgs, boolean singleGame) {
-		this.cursor = new ScidCursor(selection, projection, startPosition,
+		return new ScidCursor(selection, projection, startPosition,
 				selectionArgs, singleGame);
-		return this.cursor;
 	}
 
 	/**

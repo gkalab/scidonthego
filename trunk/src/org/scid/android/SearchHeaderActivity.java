@@ -1,7 +1,8 @@
 package org.scid.android;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,7 +14,6 @@ import android.widget.Spinner;
 
 public class SearchHeaderActivity extends Activity {
 	private int filterOperation = 0;
-	private ProgressDialog progressDlg;
 
 	private class OnFilterOperationSelectedListener implements
 			OnItemSelectedListener {
@@ -71,7 +71,7 @@ public class SearchHeaderActivity extends Activity {
 			EditText yearFrom = (EditText) findViewById(R.id.search_year_from);
 			EditText yearTo = (EditText) findViewById(R.id.search_year_to);
 			CheckBox ecoNone = (CheckBox) findViewById(R.id.eco_none);
-			String[] search = { "" + filterOperation,
+			final String[] search = { "" + filterOperation,
 					white.getText().toString().trim(),
 					black.getText().toString().trim(),
 					ignoreColors.isChecked() ? "true" : "false",
@@ -86,23 +86,17 @@ public class SearchHeaderActivity extends Activity {
 					ecoNone.isChecked() ? "true" : "false",
 					yearFrom.getText().toString().trim(),
 					yearTo.getText().toString().trim() };
-
-			this.progressDlg = ProgressDialog.show(view.getContext(), "Search",
-					"Searching...", true, false);
-			new SearchTask().execute(this, fileName, search, progressDlg);
+			(new SearchTask(this){
+				@Override
+				protected Cursor doInBackground(Void... params) {
+                  return SearchHeaderActivity.this.getContentResolver().query(
+                		  Uri.parse("content://org.scid.database.scidprovider/games"),
+                		  null, fileName, search, null);
+				}
+			}).execute();
 		} else {
 			setResult(RESULT_OK);
 			finish();
-		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		// need to destroy progress dialog in case user turns device
-		// TODO redisplay progress dialog on resume?!
-		if (progressDlg != null) {
-			progressDlg.dismiss();
 		}
 	}
 }
