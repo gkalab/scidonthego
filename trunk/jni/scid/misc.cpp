@@ -16,21 +16,15 @@
 #include "error.h"
 #include "misc.h"
 
-//#include "tkscid.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>     // For isspace() function.
 #include <sys/stat.h>  // Needed for fileSize() function.
-//#include <tcl.h>
-
 
 // Table of direction between any two chessboard squares, initialised
 // in scid_Init():
 directionT sqDir[66][66];
-
-int logMemory = 0;
 
 //////////////////////////////////////////////////////////////////////
 //   Scid Initialisation Routine
@@ -72,15 +66,6 @@ scid_Init ()
         }
     }
 }
-
-//////////////////////////////////////////////////////////////////////
-//   my_ functions for I/O debugging and memory allocation
-//
-// =======================================================
-
-//#include <tcl.h>
-
-
 
 //////////////////////////////////////////////////////////////////////
 //   ECO Code Routines
