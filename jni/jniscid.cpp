@@ -377,7 +377,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 for (int i=0; i<noGames; i++) {
                     fill[i] = arr[i];
                 }
-                env->ReleaseIntArrayElements(currentFilter, arr, 0);
+                // free the buffer without copying back the possible changes
+                env->ReleaseIntArrayElements(currentFilter, arr, JNI_ABORT);
             }
 
             // setup FEN position
@@ -861,7 +862,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         for (int i=0; i<noGames; i++) {
             fill[i] = arr[i];
         }
-        env->ReleaseIntArrayElements(currentFilter, arr, 0);
+        env->ReleaseIntArrayElements(currentFilter, arr, JNI_ABORT);
     }
 
     char * sWhite = NULL;
