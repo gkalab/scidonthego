@@ -1,7 +1,7 @@
 package org.scid.android;
 
 import android.app.Activity;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -88,7 +88,7 @@ public class SearchHeaderActivity extends Activity {
 					yearTo.getText().toString().trim() };
 			(new SearchTask(this){
 				@Override
-				protected Cursor doInBackground(Void... params) {
+				protected DataBaseView doInBackground(Void... params) {
                   return SearchHeaderActivity.this.getContentResolver().query(
                 		  Uri.parse("content://org.scid.database.scidprovider/games"),
                 		  null, fileName, search, null);

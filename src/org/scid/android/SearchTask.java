@@ -1,16 +1,14 @@
 package org.scid.android;
 
-import org.scid.database.ScidCursor;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
-public abstract class SearchTask extends AsyncTask<Void,Integer,Cursor> {
+public abstract class SearchTask extends AsyncTask<Void,Integer,DataBaseView> {
 	private Activity activity;
 	private ProgressDialog progressDialog;
 
@@ -28,19 +26,18 @@ public abstract class SearchTask extends AsyncTask<Void,Integer,Cursor> {
 	}
 
 	@Override
-	protected void onPostExecute(Cursor cursor) {
+	protected void onPostExecute(DataBaseView dbv) {
 		int filterSize = 0;
-		if (cursor != null) {
+		if (dbv != null) {
 			((ScidApplication) activity.getApplicationContext())
-					.setGamesCursor(cursor);
+					.setGamesDataBaseView(dbv);
 			((ScidApplication) activity.getApplicationContext())
-					.setNoGames(cursor);
-			Bundle extras = cursor.getExtras();
+					.setNoGames(dbv);
+			Bundle extras = dbv.getExtras();
 			if (extras != Bundle.EMPTY) {
 				filterSize = extras.getInt("filterSize");
 				if (filterSize > 0) {
-					activity.startManagingCursor(cursor);
-					cursor.moveToFirst();
+					dbv.moveToFirst();
 				}
 			}
 		}
