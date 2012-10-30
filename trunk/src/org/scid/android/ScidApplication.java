@@ -4,11 +4,11 @@ import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.Position;
 
 import android.app.Application;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.os.Bundle;
 
 public class ScidApplication extends Application {
-	private Cursor gamesCursor = null;
+	private DataBaseView gamesDataBaseView = null;
 	private String currentFileName = "";
 	private Position position = null;
 	private int currentGameNo = -1;
@@ -33,12 +33,12 @@ public class ScidApplication extends Application {
 		this.currentFileName = currentFileName;
 	}
 
-	public Cursor getGamesCursor() {
-		return gamesCursor;
+	public DataBaseView getGamesDataBaseView() {
+		return gamesDataBaseView;
 	}
 
-	public void setGamesCursor(Cursor gamesCursor) {
-		this.gamesCursor = gamesCursor;
+	public void setGamesDataBaseView(DataBaseView gamesDataBaseView) {
+		this.gamesDataBaseView = gamesDataBaseView;
 	}
 
 	public int getCurrentGameNo() {
@@ -53,9 +53,9 @@ public class ScidApplication extends Application {
 		this.currentGameNo = currentGameNo;
 	}
 
-	public void setNoGames(Cursor cursor) {
-		this.noGames = cursor.getCount();
-		Bundle extras = cursor.getExtras();
+	public void setNoGames(DataBaseView dbv) {
+		this.noGames = dbv.getCount();
+		Bundle extras = dbv.getExtras();
 		if (extras != Bundle.EMPTY) {
 			int count = extras.getInt("count");
 			if (count > 0) {
@@ -70,7 +70,7 @@ public class ScidApplication extends Application {
 
 	/**
 	 * Set the current game as a favorite (true) or not (false)
-	 * 
+	 *
 	 * @param isFavorite
 	 */
 	public void setFavorite(boolean isFavorite) {
@@ -83,7 +83,7 @@ public class ScidApplication extends Application {
 
 	/**
 	 * Set the current game to deleted (true) or not (false)
-	 * 
+	 *
 	 * @param isDeleted
 	 */
 	public void setDeleted(boolean isDeleted) {

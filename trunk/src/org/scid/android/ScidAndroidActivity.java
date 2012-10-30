@@ -32,7 +32,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -139,8 +139,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ctrl.newGame(gameMode);
 
 		int gameNo = settings.getInt("currentGameNo", 0);
-		Cursor cursor = setCursorFromFile();
-		if (cursor != null && cursor.moveToPosition(gameNo)) {
+		DataBaseView dbv = setDataBaseViewFromFile();
+		if (dbv != null && dbv.moveToPosition(gameNo)) {
 			this.getScidAppContext().setCurrentGameNo(gameNo);
 		}
 
@@ -224,19 +224,19 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private static Random generator = new Random();
 	private void randomGame() {
-		Cursor cursor = getCursor();
-		if (cursor != null) {
-			int oldGameId = cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
-			int totalGames = cursor.getCount();
+		DataBaseView dbv = getDataBaseView();
+		if (dbv != null) {
+			int oldGameId = dbv.getInt(dbv.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
+			int totalGames = dbv.getCount();
 			if(totalGames > 1) {
 				int newGameIndex = generator.nextInt(totalGames - 1); // newGameIndex < totalGames-1
-				cursor.moveToPosition(newGameIndex);
-				int newGameId = cursor.getInt(cursor.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
+				dbv.moveToPosition(newGameIndex);
+				int newGameId = dbv.getInt(dbv.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID));
 				if (newGameId >= oldGameId) {
-					cursor.moveToPosition(newGameIndex+1); // argument < totalGames
+					dbv.moveToPosition(newGameIndex+1); // argument < totalGames
 				}
 				// here newGameId != oldGameId
-				setPgnFromCursor(cursor);
+				setPgnFromDataBaseView(dbv);
 			}
 		}
 	}
@@ -254,32 +254,31 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void nextGame() {
-		Cursor cursor = getCursor();
-		if (cursor != null) {
+		DataBaseView dbv = getDataBaseView();
+		if (dbv != null) {
 			lastEndOfVariation = null;
-			startManagingCursor(cursor);
 			boolean result = false;
-			if (cursor.isBeforeFirst()) {
-				result = cursor.moveToFirst();
+			if (dbv.isBeforeFirst()) {
+				result = dbv.moveToFirst();
 			} else {
-				result = cursor.moveToNext();
+				result = dbv.moveToNext();
 			}
 			if (result) {
-				setPgnFromCursor(cursor);
+				setPgnFromDataBaseView(dbv);
 			}
 		}
 	}
 
-	private void setPgnFromCursor(Cursor cursor) {
-		Log.d("SCID", "getting cursor");
+	private void setPgnFromDataBaseView(DataBaseView dbv) {
+		Log.d("SCID", "getting dbv");
 		this.getScidAppContext()
 				.setCurrentGameNo(
-						cursor.getInt(cursor
+						dbv.getInt(dbv
 								.getColumnIndex(ScidProviderMetaData.ScidMetaData._ID)));
 		boolean isFavorite = Boolean
-				.parseBoolean(cursor.getString(cursor
+				.parseBoolean(dbv.getString(dbv
 						.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_FAVORITE)));
-		boolean isDeleted = Boolean.parseBoolean(cursor.getString(cursor
+		boolean isDeleted = Boolean.parseBoolean(dbv.getString(dbv
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.IS_DELETED)));
 		Log.d("SCID", "isFavorite=" + isFavorite);
 		Log.d("SCID", "isDeleted=" + isDeleted);
@@ -290,15 +289,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		saveCurrentGameNo();
 		Log.d("SCID", "loading pgn for game "
 				+ this.getScidAppContext().getCurrentGameNo());
-		String pgn = cursor.getString(cursor
+		String pgn = dbv.getString(dbv
 				.getColumnIndex(ScidProviderMetaData.ScidMetaData.PGN));
 		Log.d("SCID", "pgn length=" + pgn.length());
 		if (pgn != null && pgn.length() > 0) {
 			try {
 				ctrl.setPGN(pgn);
 				Log.d("SCID", "finished setPGN");
-				int moveNo = cursor
-						.getInt(cursor
+				int moveNo = dbv
+						.getInt(dbv
 								.getColumnIndex(ScidProviderMetaData.ScidMetaData.CURRENT_PLY));
 				if (moveNo > 0) {
 					ctrl.gotoHalfMove(moveNo);
@@ -353,14 +352,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousGameClick(View view) {
-		Cursor cursor = getCursor();
-		if (cursor != null) {
-			startManagingCursor(cursor);
-			if (cursor.isAfterLast()) {
-				cursor.moveToLast();
+		DataBaseView dbv = getDataBaseView();
+		if (dbv != null) {
+			if (dbv.isAfterLast()) {
+				dbv.moveToLast();
 			}
-			if (cursor.getPosition() > 0 && cursor.moveToPrevious()) {
-				setPgnFromCursor(cursor);
+			if (dbv.getPosition() > 0 && dbv.moveToPrevious()) {
+				setPgnFromDataBaseView(dbv);
 			}
 			lastEndOfVariation = null;
 		}
@@ -594,11 +592,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		nextGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				Cursor cursor = getCursor();
-				if (cursor != null) {
-					startManagingCursor(cursor);
-					if (cursor.moveToLast()) {
-						setPgnFromCursor(cursor);
+				DataBaseView dbv = getDataBaseView();
+				if (dbv != null) {
+					if (dbv.moveToLast()) {
+						setPgnFromDataBaseView(dbv);
 					}
 				}
 				return true;
@@ -608,11 +605,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		previousGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				Cursor cursor = getCursor();
-				if (cursor != null) {
-					startManagingCursor(cursor);
-					if (cursor.moveToFirst()) {
-						setPgnFromCursor(cursor);
+				DataBaseView dbv = getDataBaseView();
+				if (dbv != null) {
+					if (dbv.moveToFirst()) {
+						setPgnFromDataBaseView(dbv);
 					}
 				}
 				return true;
@@ -851,7 +847,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_new_game: {
-			setCursorFromFile();
+			setDataBaseViewFromFile();
 			newGame();
 			return true;
 		}
@@ -1102,10 +1098,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			break;
 		case RESULT_SEARCH:
 			if (resultCode == RESULT_OK) {
-				Cursor cursor = getCursor();
-				if (cursor != null) {
-					startManagingCursor(cursor);
-					setPgnFromCursor(cursor);
+				DataBaseView dbv = getDataBaseView();
+				if (dbv != null) {
+					setPgnFromDataBaseView(dbv);
 				}
 			} else if (resultCode == RESULT_FIRST_USER) {
 				resetFilter();
@@ -1115,10 +1110,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (resultCode == RESULT_OK && data != null) {
 				try {
 					int gameNo = Integer.parseInt(data.getAction());
-					Cursor cursor = getCursor();
-					if (cursor != null && cursor.moveToPosition(gameNo)) {
-						startManagingCursor(cursor);
-						setPgnFromCursor(cursor);
+					DataBaseView dbv = getDataBaseView();
+					if (dbv != null && dbv.moveToPosition(gameNo)) {
+						setPgnFromDataBaseView(dbv);
 					}
 				} catch (NumberFormatException nfe) {
 					Toast.makeText(getApplicationContext(),
@@ -1233,13 +1227,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					int gameNo = Integer.parseInt(gameNoString);
 					if (gameNo == -1) {
 						// a new game was added
-						// TODO: reset cursor for now - saving should be done
+						// TODO: reset dbv for now - saving should be done
 						// within the
-						// data provider and cursor
-						Cursor cursor = setCursorFromFile();
+						// data provider and dbv
+						DataBaseView dbv = setDataBaseViewFromFile();
 						// move to newly added game
-						if (cursor != null && cursor.moveToLast()) {
-							setPgnFromCursor(cursor);
+						if (dbv != null && dbv.moveToLast()) {
+							setPgnFromDataBaseView(dbv);
 						}
 					}
 				}
@@ -1254,9 +1248,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		editor.commit();
 		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
 
-		Cursor cursor = setCursorFromFile();
-		if (cursor.moveToPosition(gameNo) || cursor.moveToFirst()) {
-			setPgnFromCursor(cursor);
+		DataBaseView dbv = setDataBaseViewFromFile();
+		if (dbv.moveToPosition(gameNo) || dbv.moveToFirst()) {
+			setPgnFromDataBaseView(dbv);
 		} else {
 			newGame();
 		}
@@ -1472,9 +1466,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						try {
 							int gameNo = Integer.parseInt(input.getText()
 									.toString()) - 1;
-							Cursor cursor = setCursorFromFile();
-							if (cursor != null && cursor.moveToPosition(gameNo)) {
-								setPgnFromCursor(cursor);
+							DataBaseView dbv = setDataBaseViewFromFile();
+							if (dbv != null && dbv.moveToPosition(gameNo)) {
+								setPgnFromDataBaseView(dbv);
 							}
 						} catch (NumberFormatException nfe) {
 							Toast.makeText(getApplicationContext(),
@@ -1756,7 +1750,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				editor.commit();
 				getScidAppContext().setCurrentFileName(
 						Tools.stripExtension(scidFileName));
-				setCursorFromFile();
+				setDataBaseViewFromFile();
 				newGame();
 			}
 		}
@@ -1845,12 +1839,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void resetFilter() {
 		final String fileName = getScidAppContext().getCurrentFileName();
 		if (fileName.length() != 0) {
-			Cursor cursor = setCursorFromFile();
-			if (cursor != null) {
-				cursor.moveToPosition(getScidAppContext().getCurrentGameNo());
+			DataBaseView dbv = setDataBaseViewFromFile();
+			if (dbv != null) {
+				dbv.moveToPosition(getScidAppContext().getCurrentGameNo());
 			}
 		} else {
-			getScidAppContext().setGamesCursor(null);
+			getScidAppContext().setGamesDataBaseView(null);
 		}
 	}
 
@@ -1886,29 +1880,28 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		startActivityForResult(i, RESULT_REMOVE_ENGINE);
 	}
 
-	private Cursor getCursor() {
-		Cursor cursor = getScidAppContext().getGamesCursor();
-		if (cursor == null) {
-			cursor = setCursorFromFile();
+	private DataBaseView getDataBaseView() {
+		DataBaseView dbv = getScidAppContext().getGamesDataBaseView();
+		if (dbv == null) {
+			dbv = setDataBaseViewFromFile();
 		}
-		return cursor;
+		return dbv;
 	}
 
-	private Cursor setCursorFromFile() {
+	private DataBaseView setDataBaseViewFromFile() {
 		final String currentScidFile = settings
 				.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
 		String scidFileName = Tools.stripExtension(currentScidFile);
-		Cursor cursor = getContentResolver().query(
+		DataBaseView dbv = getContentResolver().query(
 				Uri.parse("content://org.scid.database.scidprovider/games"),
 				null, scidFileName, null, null);
-		((ScidApplication) this.getApplicationContext()).setGamesCursor(cursor);
-		((ScidApplication) this.getApplicationContext()).setNoGames(cursor);
+		((ScidApplication) this.getApplicationContext()).setGamesDataBaseView(dbv);
+		((ScidApplication) this.getApplicationContext()).setNoGames(dbv);
 
-		startManagingCursor(cursor);
-		return cursor;
+		return dbv;
 	}
 
 	@Override

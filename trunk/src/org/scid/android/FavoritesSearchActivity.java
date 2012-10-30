@@ -1,7 +1,7 @@
 package org.scid.android;
 
 import android.app.Activity;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -20,7 +20,7 @@ public class FavoritesSearchActivity extends Activity {
 		if (fileName.length() != 0) {
 			(new SearchTask(this){
 				@Override
-				protected Cursor doInBackground(Void... params) {
+				protected DataBaseView doInBackground(Void... params) {
 					String[] search = { };
 					return FavoritesSearchActivity.this.getContentResolver().query(
 							Uri.parse("content://org.scid.database.scidprovider/games"),

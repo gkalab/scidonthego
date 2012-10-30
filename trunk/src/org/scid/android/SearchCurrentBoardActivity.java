@@ -2,7 +2,7 @@ package org.scid.android;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
+import org.scid.database.DataBaseView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -82,7 +82,7 @@ public class SearchCurrentBoardActivity extends Activity {
 			final String[] search = { "" + filterOperation, this.fen, "" + searchType };
 			(new SearchTask(this){
 				@Override
-				protected Cursor doInBackground(Void... params) {
+				protected DataBaseView doInBackground(Void... params) {
 					return SearchCurrentBoardActivity.this.getContentResolver().query(
 							Uri.parse("content://org.scid.database.scidprovider/games"),
 							null, fileName, search, null);
