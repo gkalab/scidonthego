@@ -139,24 +139,6 @@ private:
     //  Position:  Public Functions
 public:
 
-#ifdef WINCE
-  void* operator new(size_t sz) {
-    void* m = my_Tcl_Alloc(sz);
-    return m;
-  }
-  void operator delete(void* m) {
-    my_Tcl_Free((char*)m);
-  }
-  void* operator new [] (size_t sz) {
-    void* m = my_Tcl_AttemptAlloc(sz);
-    return m;
-  }
-
-  void operator delete [] (void* m) {
-    my_Tcl_Free((char*)m);
-  }
-
-#endif
     Position()   { Init(); }
     Position(const Position& p);
     ~Position()  {}
@@ -289,13 +271,8 @@ public:
 
     // Board I/O
     void        MakeLongStr (char * str);
-#if defined (WINCE) || defined (POCKET)
-    void        DumpBoard (/*FILE * */Tcl_Channel fp);
-    void        DumpLists (/*FILE * */Tcl_Channel fp);
-#else
     void        DumpBoard (FILE * fp);
     void        DumpLists (FILE * fp);
-#endif
     errorT      ReadFromLongStr (const char * str);
     errorT      ReadFromCompactStr (const byte * str);
     errorT      ReadFromFEN (const char * s);

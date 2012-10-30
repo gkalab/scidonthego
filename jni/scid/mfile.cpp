@@ -45,20 +45,12 @@ MFile::Extend ()
     Capacity += Capacity;
     if (Capacity < 8192) { Capacity = 8192; }
     byte * oldData = Data;
-#ifdef WINCE
-    Data = (byte*)my_Tcl_Alloc(sizeof( byte [Capacity]));
-#else
     Data = new byte [Capacity];
-#endif
 
     // Copy data to new array:
     for (uint i=0; i < oldCapacity; i++) { Data[i] = oldData[i]; }
 
-#ifdef WINCE
-    if (oldCapacity > 0) { my_Tcl_Free((char*)oldData); }
-#else
     if (oldCapacity > 0) { delete[] oldData; }
-#endif
     CurrentPtr = &(Data[Location]);
 }
 
@@ -67,20 +59,9 @@ MFile::SetBufferSize (uint bufsize)
 {
     if (Type != MFILE_REGULAR) { return; }
     if (FileBuffer != NULL) { return; }
-#ifdef WINCE
-    FileBuffer = my_Tcl_Alloc(sizeof( char [bufsize]));
-#else
     FileBuffer = new char [bufsize];
-#endif
 
-#ifdef WINCE
-    my_Tcl_SetChannelOption(NULL, Handle, "-buffering", "full");
-    char str[32];
-    sprintf(str, "%u", bufsize);
-    my_Tcl_SetChannelOption(NULL, Handle, "-buffersize", (const char *) str);
-#else
     setvbuf (Handle, FileBuffer, _IOFBF, bufsize);
-#endif
 }
 
 errorT
@@ -102,16 +83,10 @@ MFile::Seek (uint position)
         result = gzseek (GzHandle, position, 0);
         GzBuffer_Avail = 0;
     } else {
-#ifdef WINCE
-        result = my_Tcl_Seek(Handle, position, 0);
-    }
-    if (result == -1) { return ERROR_FileSeek; }
-#else
         // handle position > 2GB
     result = fseek (Handle, position, 0);
     }
     if (result != 0) { return ERROR_FileSeek; }
-#endif
     Location = position;
     return OK;
 }
@@ -120,14 +95,7 @@ errorT
 MFile::Flush ()
 {
     if (Type != MFILE_REGULAR  ||  FileMode == FMODE_ReadOnly) { return OK; }
-#ifdef WINCE
-    if (my_Tcl_Flush(Handle) == TCL_OK)
-      return OK;
-    else
-      return ERROR_FileWrite;
-#else
     return (fflush (Handle) == 0 ? OK : ERROR_FileWrite);
-#endif
 }
 
 errorT
@@ -136,15 +104,9 @@ MFile::Open (const char * name, fileModeT fmode)
     ASSERT (Handle == NULL  &&  GzHandle == NULL);
     char * modeStr = NULL;
     switch (fmode) {
-#ifdef WINCE
-        case FMODE_ReadOnly:   modeStr = (char *) "r"/*"rb"*/;  break;
-        case FMODE_WriteOnly:  modeStr = (char *) "w"/*"wb"*/;  break;
-        case FMODE_Both:       modeStr = (char *) "r+"/*"r+b"*/; break;
-#else
         case FMODE_ReadOnly:   modeStr = (char *) "rb";  break;
         case FMODE_WriteOnly:  modeStr = (char *) "wb";  break;
         case FMODE_Both:       modeStr = (char *) "r+b"; break;
-#endif
         default:               return ERROR_FileMode;
     }
 
@@ -154,32 +116,17 @@ MFile::Open (const char * name, fileModeT fmode)
         if (fmode != FMODE_ReadOnly) {
             return ERROR_FileOpen;
         }
-#ifdef WINCE
-        GzHandle = gzopen (name, "r");
-#else
         GzHandle = gzopen (name, "rb");
-#endif
 
         if (GzHandle == NULL) { return ERROR_FileOpen; }
         Type = MFILE_GZIP;
-#ifdef WINCE
-        GzBuffer = (byte *) my_Tcl_Alloc(sizeof(byte [GZ_BUFFER_SIZE]));
-#else
         GzBuffer = new byte [GZ_BUFFER_SIZE];
-#endif
 
         GzBuffer_Current = GzBuffer;
         GzBuffer_Avail = 0;
     } else {
-#ifdef WINCE
-        Handle = mySilent_Tcl_OpenFileChannel(NULL, name, modeStr, 0666);//fopen (name, modeStr);
-        if (Handle == NULL) { return ERROR_FileOpen; }
-        my_Tcl_SetChannelOption(NULL, Handle, "-encoding", "binary");
-        my_Tcl_SetChannelOption(NULL, Handle, "-translation", "binary");
-#else
         Handle = fopen (name, modeStr);
         if (Handle == NULL) { return ERROR_FileOpen; }
-#endif
         Type = MFILE_REGULAR;
     }
 
@@ -195,17 +142,6 @@ MFile::Create (const char * name, fileModeT fmode)
     ASSERT (Handle == NULL  &&  GzHandle == NULL);
     char * modeStr = NULL;
     switch (fmode) {
-#ifdef WINCE
-        case FMODE_WriteOnly: modeStr = "w"/*"wb"*/;  break;
-        case FMODE_Both:      modeStr = "w+"/*"w+b"*/; break;
-        default:              return ERROR_FileMode;
-    }
-    if ((Handle = my_Tcl_OpenFileChannel(NULL, name, modeStr, 0666)/*fopen (name, modeStr)*/) == NULL) {
-      return ERROR_FileOpen;
-    }
- my_Tcl_SetChannelOption(NULL, Handle, "-encoding", "binary");
- my_Tcl_SetChannelOption(NULL, Handle, "-translation", "binary");
-#else
         case FMODE_WriteOnly: modeStr = (char *) "wb";  break;
         case FMODE_Both:      modeStr = (char *) "w+b"; break;
         default:              return ERROR_FileMode;
@@ -213,7 +149,6 @@ MFile::Create (const char * name, fileModeT fmode)
 
     if ((Handle = fopen (name, modeStr)) == NULL) { return ERROR_FileOpen; }
     FileMode = fmode;
-#endif
     FileName = strDuplicate (name);
     Location = 0;
     Type = MFILE_REGULAR;
@@ -224,48 +159,28 @@ errorT
 MFile::Close ()
 {
     if (Type == MFILE_MEMORY) {
-#ifdef WINCE
-        if (Data != NULL) { my_Tcl_Free( (char*) Data ); }
-#else
         if (Data != NULL) { delete[] Data; }
-#endif
         Init();
         return OK;
     }
     int result;
     if (Type == MFILE_GZIP) {
         if (GzBuffer != NULL) {
-#ifdef WINCE
-        my_Tcl_Free( (char *) GzBuffer );
-#else
         delete[] GzBuffer;
-#endif
             GzBuffer = GzBuffer_Current = NULL;
             GzBuffer_Avail = 0;
         }
         result = gzclose (GzHandle);
     } else {
-#ifdef WINCE
-        result = my_Tcl_Close(NULL, Handle);//fclose (Handle);
-#else
         result = fclose (Handle);
-#endif
     }
 
     if (FileBuffer != NULL) {
-#ifdef WINCE
-        my_Tcl_Free( FileBuffer );
-#else
         delete[] FileBuffer;
-#endif
         FileBuffer = NULL;
     }
     if (FileName != NULL) {
-#ifdef WINCE
-        my_Tcl_Free( FileName );
-#else
         delete[] FileName;
-#endif
         FileName = NULL;
     }
     Init();
@@ -306,11 +221,7 @@ MFile::WriteNBytes (const char * str, uint length)
       return err;
     }
 
-#ifdef WINCE
-    return (my_Tcl_Write(Handle, (const char *)str, length) == -1 ) ? ERROR_FileWrite : OK;
-#else
     return (fwrite( str, length, 1, Handle) != 1) ? ERROR_FileWrite : OK;
-#endif
 }
 
 errorT
@@ -326,9 +237,6 @@ MFile::ReadNBytes (char * str, uint length)
         // We read the bytes with fread instead of a getc() loop.
         // This makes tree/material/etc searches go faster.
 
-#ifdef WINCE
-        Location += my_Tcl_Read (Handle, str, length);
-#else
 
 #define FREAD_OPTIMIZE
 #ifdef FREAD_OPTIMIZE
@@ -338,7 +246,6 @@ MFile::ReadNBytes (char * str, uint length)
             *str++ = getc(Handle);
         }
         Location++;
-#endif
 #endif
     }
     return OK;
@@ -358,20 +265,8 @@ MFile::ReadLine (char * str, uint maxLength)
         }
         *str = 0;
     } else {
-#ifdef WINCE
-        while (1) {
-            if (maxLength == 0) { break; }
-            maxLength--;
-            char ch = ReadOneByte ();
-            *str++ = ch;
-            if (ch == '\n') { break; }
-        }
-        *str = 0;
-        Location = my_Tcl_Tell(Handle);
-#else
         fgets (str, (int) maxLength, Handle);
         Location = ftell (Handle);
-#endif
     }
     return OK;
 }

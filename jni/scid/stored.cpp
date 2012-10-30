@@ -41,11 +41,7 @@ void StoredLine::FreeStoredLine() {
   for (uint i = 1; i <= nStoredLines; i++) {
       delete storedLineGames[i];
   }
-#ifdef WINCE
-    my_Tcl_Free( (char*) storedLineGames );
-#else
     delete[] storedLineGames;
-#endif
 
   storedLineGames = NULL;
 }
@@ -331,11 +327,7 @@ StoredLine::Init (void)
 {
     ASSERT (storedLineGames == NULL);
     Timer t;
-#ifdef WINCE
-    storedLineGames = (Game **)my_Tcl_Alloc (sizeof( Game * [nStoredLines + 1]));
-#else
     storedLineGames = new Game * [nStoredLines + 1];
-#endif
     PgnParser parser;
     char buf [256];
 
@@ -350,11 +342,7 @@ StoredLine::Init (void)
             }
         }
 #endif
-#ifdef WINCE
-        storedLineGames[i] = new Game(true); // allocate low memory games
-#else
         storedLineGames[i] = new Game;
-#endif
         parser.Reset (storedLineText[i]);
         parser.SetEndOfInputWarnings (false);
         parser.SetResultWarnings (false);

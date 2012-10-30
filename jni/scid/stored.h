@@ -28,24 +28,6 @@ class StoredLine {
     static void Init (void);
 
   public:
-#ifdef WINCE
-  void* operator new(size_t sz) {
-    void* m = my_Tcl_Alloc(sz);
-    return m;
-  }
-  void operator delete(void* m) {
-    my_Tcl_Free((char*)m);
-  }
-  void* operator new [] (size_t sz) {
-    void* m = my_Tcl_AttemptAlloc(sz);
-    return m;
-  }
-
-  void operator delete [] (void* m) {
-    my_Tcl_Free((char*)m);
-  }
-
-#endif  
 
 	StoredLine(Position* pos);
 	bool CanMatch(uint ln, uint* ply, simpleMoveT* sm){
