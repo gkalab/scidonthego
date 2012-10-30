@@ -48,7 +48,7 @@ public class SaveGameActivity extends Activity {
 		// disable save game if the database is empty or if it's a new game (gameNo=-1)
 		Button save_game_button = (Button) findViewById(R.id.save_game_save);
 		if (getScidAppContext().getNoGames() == 0
-				|| getScidAppContext().getCurrentGameNo() < 0) {
+				|| getScidAppContext().getGameId() < 0) {
 			save_game_button.setEnabled(false);
 		}
 		event = (EditText) findViewById(R.id.ed_header_event);
@@ -90,7 +90,7 @@ public class SaveGameActivity extends Activity {
 	public void onSaveClick(View view) {
 		final String fileName = getScidAppContext().getCurrentFileName();
 		if (fileName.length() != 0) {
-			saveGame(view, getScidAppContext().getCurrentGameNo());
+			saveGame(view, getScidAppContext().getGameId());
 			finish();
 		} else {
 			setResult(RESULT_CANCELED);

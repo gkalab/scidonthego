@@ -24,7 +24,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
     }
 	public void onOkClick(View view) {
 		final DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
-				.getGamesDataBaseView();
+				.getDataBaseView();
 		final String white = ets(R.id.search_white), black = ets(R.id.search_black),
 				event = ets(R.id.search_event), site = ets(R.id.search_site),
 				ecoFrom = ets(R.id.search_eco_from), ecoTo = ets(R.id.search_eco_to),

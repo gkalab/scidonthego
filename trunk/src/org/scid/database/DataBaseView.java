@@ -1,40 +1,28 @@
 package org.scid.database;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import android.database.AbstractCursor;
-import android.os.Bundle;
+
 import android.util.Log;
 
-public class DataBaseView extends AbstractCursor {
-
+public class DataBaseView {
 	/**
 	 * Scids encoding seems to be CP1252 under Windows and under Linux
 	 */
 	private static final String SCID_ENCODING = "CP1252";
-
-	private int count;
-
 	private String fileName;
-
-	private GameInfo gameInfo;
-
-	private int startPosition;
-
-	private int[] projection;
-
-	private boolean loadPGN = false; // True if projection contains pgn column
-
-	private boolean reloadIndex = true;
-
+	private int count; // total games in file
 	private Filter filter;
+	private GameInfo gameInfo = new GameInfo();
+	private int position, id; // non equal if filter is in effect
+	private boolean reloadIndex = true;
+	private int generation; // incremented on every change
+	private boolean loadPGN = true;
 
 	private DataBaseView(String fileName){
-		super();
 		this.fileName = fileName;
 		this.count = DataBase.getSize(fileName);
-		this.startPosition = 0;
-		handleProjection(null);
+		this.position = 0;
+		this.id = 0;
 	}
 
 	public static DataBaseView getAll(String fileName) {
@@ -76,80 +64,6 @@ public class DataBaseView extends AbstractCursor {
 		return (filter == null) ? new int[0] : filter.getFilter();
 	}
 
-	private final static String[] columns = new String[] { "_id",
-			ScidProviderMetaData.ScidMetaData.EVENT,
-			ScidProviderMetaData.ScidMetaData.SITE,
-			ScidProviderMetaData.ScidMetaData.DATE,
-			ScidProviderMetaData.ScidMetaData.ROUND,
-			ScidProviderMetaData.ScidMetaData.WHITE,
-			ScidProviderMetaData.ScidMetaData.BLACK,
-			ScidProviderMetaData.ScidMetaData.RESULT,
-			ScidProviderMetaData.ScidMetaData.PGN,
-			ScidProviderMetaData.ScidMetaData.SUMMARY,
-			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
-			ScidProviderMetaData.ScidMetaData.DETAILS,
-			ScidProviderMetaData.ScidMetaData.IS_FAVORITE,
-			ScidProviderMetaData.ScidMetaData.IS_DELETED };
-
-	private void handleProjection(String[] projection) {
-		if (projection == null) {
-			this.projection = new int[columns.length];
-			for (int i = 0; i < columns.length; i++) {
-				this.projection[i] = i;
-			}
-		} else {
-			ArrayList<Integer> proj = new ArrayList<Integer>();
-			for (String p : projection) {
-				int idx = 0;
-				for (int i = 0; i < columns.length; i++) {
-					if (columns[i].equals(p)) {
-						idx = i;
-						break;
-					}
-				}
-				proj.add(idx);
-			}
-			this.projection = new int[proj.size()];
-			for (int i = 0; i < proj.size(); i++) {
-				this.projection[i] = proj.get(i);
-			}
-		}
-		loadPGN = false;
-		for (int p : this.projection) {
-			if (p == 8) {
-				loadPGN = true;
-				break;
-			}
-		}
-	}
-
-	@Override
-	public Bundle getExtras() {
-		Bundle bundle = new Bundle();
-		if (filter != null) {
-			bundle.putInt("filterSize", filter.getSize());
-			bundle.putInt("count", count);
-		}
-		return bundle;
-	}
-
-	@Override
-	public String[] getColumnNames() {
-		String[] ret = new String[projection.length];
-		int idx = 0;
-		for (int i : projection) {
-			ret[idx++] = columns[i];
-		}
-		return ret;
-	}
-
-	/**
-	 * Return the number of games in the cursor. If the there's a current filter
-	 * only return the number of games in the filter.
-	 *
-	 * @see android.database.AbstractCursor#getCount()
-	 */
-	@Override
 	public int getCount() {
 		if (filter != null) {
 			return filter.getSize();
@@ -158,8 +72,11 @@ public class DataBaseView extends AbstractCursor {
 		}
 	}
 
-	private void setGameInfo(int gameNo, boolean isFavorite) {
-		this.gameInfo = new GameInfo();
+	public int getTotalGamesInFile() {
+		return count;
+	}
+
+	private void setGameInfo(boolean isFavorite) {
 		try {
 			gameInfo.setEvent(getSanitizedString(DataBase.getEvent()));
 			if (gameInfo.getEvent().equals("?")) {
@@ -191,9 +108,12 @@ public class DataBaseView extends AbstractCursor {
 		} catch (UnsupportedEncodingException e) {
 			Log.e("SCID", "Error converting byte[] to String", e);
 		}
-		gameInfo.setId(gameNo);
 		gameInfo.setFavorite(isFavorite);
 		gameInfo.setDeleted(DataBase.isDeleted());
+	}
+
+	public GameInfo getGameInfo(){ // Do not changed the returned value!
+		return gameInfo;
 	}
 
 	private String getSanitizedString(byte[] value)
@@ -201,108 +121,81 @@ public class DataBaseView extends AbstractCursor {
 		return Utf8Converter.convertToUTF8(new String(value, SCID_ENCODING));
 	}
 
-	/**
-	 * @param oldPosition
-	 *            the position that we're moving from
-	 * @param newPosition
-	 *            the position that we're moving to
-	 * @return true if the move is successful, false otherwise
-	 */
-	@Override
-	public boolean onMove(int oldPosition, int newPosition) {
-		boolean result = true;
-		if (filter != null) {
-			result = this.onFilterMove(oldPosition, newPosition);
-		} else {
-			int gameNo = startPosition + newPosition;
-			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
-					onlyHeaders, this.reloadIndex);
-			setGameInfo(gameNo, isFavorite);
+	public boolean moveToPosition(int newPosition) {
+		int id = (filter != null) ? filter.getGameNo(newPosition) : newPosition;
+		if (id < 0 || id >= count) {
+			return false;
 		}
-		this.reloadIndex = false;
-		return result;
-	}
-
-	private boolean onFilterMove(int oldPosition, int newPosition) {
-		boolean result = false;
-		int gameNo = filter.getGameNo(startPosition + newPosition);
-		if (gameNo >= 0) {
-			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
-					onlyHeaders, this.reloadIndex);
-			setGameInfo(gameNo, isFavorite);
-			gameInfo.setCurrentPly(filter.getGamePly(startPosition + newPosition));
-			result = true;
-		}
-		return result;
-	}
-
-	@Override
-	public double getDouble(int arg0) {
-		return 0;
-	}
-
-	@Override
-	public float getFloat(int arg0) {
-		return 0;
-	}
-
-	@Override
-	public int getInt(int position) {
-		if (this.gameInfo != null) {
-			return Integer.parseInt(this.gameInfo.getColumn(projection[position]));
-		}
-		return 0;
-	}
-
-	@Override
-	public long getLong(int position) {
-		if (this.gameInfo != null) {
-			return Long.parseLong(this.gameInfo.getColumn(projection[position]));
-		}
-		return 0;
-	}
-
-	@Override
-	public short getShort(int position) {
-		if (this.gameInfo != null) {
-			return Short.parseShort(this.gameInfo.getColumn(projection[position]));
-		}
-		return 0;
-	}
-
-	@Override
-	public String getString(int position) {
-		if (this.gameInfo != null) {
-			int column = projection[position];
-			return this.gameInfo.getColumn(column);
-		}
-		return null;
-	}
-
-	@Override
-	public boolean isNull(int position) {
-		if (this.gameInfo != null) {
-			return "".equals(this.gameInfo.getColumn(projection[position]));
-		}
+		this.id = id;
+		this.position = newPosition;
+		boolean onlyHeaders = !loadPGN;
+		boolean isFavorite = DataBase.loadGame(fileName, id, onlyHeaders, this.reloadIndex);
+		setGameInfo(isFavorite);
+		if (filter != null)
+			gameInfo.setCurrentPly(filter.getGamePly(position));
+		reloadIndex = false;
 		return true;
 	}
 
-	@Override
-	public Bundle respond(Bundle extras) {
-		if (extras.containsKey("loadPGN")) {
-			this.loadPGN = extras.getBoolean("loadPGN");
-		}
-		if (extras.containsKey("reloadIndex")) {
-			this.reloadIndex = extras.getBoolean("reloadIndex");
-		}
-		if (extras.containsKey("isDeleted")) {
-			this.gameInfo.setDeleted(extras.getBoolean("isDeleted"));
-		}
-		if (extras.containsKey("isFavorite")) {
-			this.gameInfo.setFavorite(extras.getBoolean("isFavorite"));
-		}
-		return null;
+	public boolean moveToFirst() {
+		return moveToPosition(0);
 	}
+
+	public boolean moveToLast() {
+		return moveToPosition(getCount() - 1);
+	}
+
+	public int getPosition() {
+		return position;
+	}
+
+	public void setLoadPGN(boolean value) {
+		loadPGN = value;
+	}
+
+	public void forceReloadIndex() {
+		reloadIndex = true;
+		++generation;
+	}
+
+	public int getGenerationCounter() {
+		return generation;
+	}
+
+	public void setDeleted(boolean value) {
+		if (value != isDeleted()) {
+			gameInfo.setDeleted(value);
+			DataBase.setDeleted(fileName, id, value);
+			forceReloadIndex();
+		}
+	}
+
+	public boolean isDeleted() {
+		return gameInfo.isDeleted();
+	}
+
+	public void setFavorite(boolean value) {
+		if (value != isFavorite()) {
+			gameInfo.setFavorite(value);
+			DataBase.setFavorite(fileName, id, value);
+			forceReloadIndex();
+		}
+	}
+
+	public boolean isFavorite() {
+		return gameInfo.isFavorite();
+	}
+
+	public int getGameId() {
+		return id;
+	}
+
+	public String getPGN() {
+		return gameInfo.getPgn();
+	}
+
+	public int getCurrentPly(){
+		return gameInfo.getCurrentPly();
+	}
+
 }

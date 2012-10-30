@@ -2,20 +2,17 @@ package org.scid.android;
 
 import org.scid.android.gamelogic.ChessController;
 import org.scid.android.gamelogic.Position;
+import org.scid.database.DataBaseView;
 
 import android.app.Application;
-import org.scid.database.DataBaseView;
-import android.os.Bundle;
 
 public class ScidApplication extends Application {
-	private DataBaseView gamesDataBaseView = null;
+	private DataBaseView dbv = null;
 	private String currentFileName = "";
 	private Position position = null;
 	private int currentGameNo = -1;
 	private int noGames = 0;
-	private boolean isFavorite = false;
 	private ChessController controller;
-	private boolean isDeleted = false;
 
 	public Position getPosition() {
 		return position;
@@ -33,61 +30,38 @@ public class ScidApplication extends Application {
 		this.currentFileName = currentFileName;
 	}
 
-	public DataBaseView getGamesDataBaseView() {
-		return gamesDataBaseView;
+	public DataBaseView getDataBaseView() {
+		return dbv;
 	}
 
-	public void setGamesDataBaseView(DataBaseView gamesDataBaseView) {
-		this.gamesDataBaseView = gamesDataBaseView;
+	public void setDataBaseView(DataBaseView dbv) {
+		this.dbv = dbv;
 	}
 
-	public int getCurrentGameNo() {
-		return this.currentGameNo;
+	public int getGameId() {
+		return (dbv == null) ? -1 : dbv.getGameId();
 	}
 
 	public int getNoGames() {
-		return this.noGames;
-	}
-
-	public void setCurrentGameNo(int currentGameNo) {
-		this.currentGameNo = currentGameNo;
-	}
-
-	public void setNoGames(DataBaseView dbv) {
-		this.noGames = dbv.getCount();
-		Bundle extras = dbv.getExtras();
-		if (extras != Bundle.EMPTY) {
-			int count = extras.getInt("count");
-			if (count > 0) {
-				this.noGames = count;
-			}
-		}
+		return (dbv == null) ? 0 : dbv.getCount();
 	}
 
 	public boolean isFavorite() {
-		return this.isFavorite;
+		return (dbv == null) ? false : dbv.isFavorite();
 	}
 
-	/**
-	 * Set the current game as a favorite (true) or not (false)
-	 *
-	 * @param isFavorite
-	 */
-	public void setFavorite(boolean isFavorite) {
-		this.isFavorite = isFavorite;
+	public void setFavorite(boolean value) {
+		if (dbv != null) // TODO: remove
+			dbv.setFavorite(value);
 	}
 
 	public boolean isDeleted() {
-		return this.isDeleted;
+		return (dbv == null) ? false : dbv.isDeleted();
 	}
 
-	/**
-	 * Set the current game to deleted (true) or not (false)
-	 *
-	 * @param isDeleted
-	 */
-	public void setDeleted(boolean isDeleted) {
-		this.isDeleted = isDeleted;
+	public void setDeleted(boolean value) {
+		if (dbv != null) // TODO: remove
+			dbv.setDeleted(value);
 	}
 
 	public void setController(ChessController controller) {

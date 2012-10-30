@@ -15,12 +15,13 @@ import org.scid.android.engine.ComputerPlayer;
 import org.scid.android.engine.EngineConfig;
 import org.scid.android.gamelogic.Game.GameState;
 import org.scid.android.gamelogic.GameTree.Node;
+import org.scid.database.DataBaseView;
 
 import android.util.Log;
 
 /**
  * The glue between the chess engine and the GUI.
- * 
+ *
  * @author petero
  */
 public class ChessController {
@@ -590,7 +591,7 @@ public class ChessController {
 
 	/**
 	 * Move a piece from one square to another.
-	 * 
+	 *
 	 * @return True if the move was legal, false otherwise.
 	 */
 	final private boolean doMove(Move move) {
@@ -643,13 +644,18 @@ public class ChessController {
 			game.tree.goForward(-1);
 		}
 		gui.setPosition(game.currPos(), sb.toString(), game.tree.variations());
-		int noGames = gui.getScidAppContext().getNoGames();
-		String gameNo = "";
-		if (noGames != 0) {
-			gameNo = "" + (gui.getScidAppContext().getCurrentGameNo() + 1)
-					+ "/" + noGames;
+		// TODO: all this does not belong to ChessController
+		DataBaseView dbv = gui.getScidAppContext().getDataBaseView();
+		String gameTitle = "";
+		if (dbv != null) {
+			int position = dbv.getPosition() + 1, id = dbv.getGameId() + 1,
+					count = dbv.getCount(), total = dbv.getTotalGamesInFile();
+			gameTitle = "" + position + "/" + count
+					+ ((count == total)
+							? ""
+							: " (" + id + "/" + total + ")");
 		}
-		gui.setGameInformation(game.tree.white, game.tree.black, gameNo);
+		gui.setGameInformation(game.tree.white, game.tree.black, gameTitle);
 	}
 
 	private void updateStatus() {

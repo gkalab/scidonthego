@@ -41,7 +41,7 @@ public class SearchCurrentBoardActivity extends SearchActivityBase {
 
 	public void currentBoardSearch(View view, final int searchType) {
 		final DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
-				.getGamesDataBaseView();
+				.getDataBaseView();
 		(new SearchTask(this){
 			@Override
 			protected DataBaseView doInBackground(Void... params) {

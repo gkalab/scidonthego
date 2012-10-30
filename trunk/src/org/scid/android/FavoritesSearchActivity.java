@@ -11,7 +11,7 @@ public class FavoritesSearchActivity extends SearchActivityBase {
 		setContentView(R.layout.favorites);
 
 		final DataBaseView dbv = ((ScidApplication) this.getApplicationContext())
-				.getGamesDataBaseView();
+				.getDataBaseView();
 		(new SearchTask(this){
 			@Override
 			protected DataBaseView doInBackground(Void... params) {
