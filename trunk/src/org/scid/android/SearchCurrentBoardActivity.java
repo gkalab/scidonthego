@@ -75,17 +75,15 @@ public class SearchCurrentBoardActivity extends Activity {
 		}
 	}
 
-	public void currentBoardSearch(View view, int searchType) {
+	public void currentBoardSearch(View view, final int searchType) {
 		final String fileName = ((ScidApplication) this.getApplicationContext())
 				.getCurrentFileName();
 		if (fileName.length() != 0) {
-			final String[] search = { "" + filterOperation, this.fen, "" + searchType };
 			(new SearchTask(this){
 				@Override
 				protected DataBaseView doInBackground(Void... params) {
-					return SearchCurrentBoardActivity.this.getContentResolver().query(
-							Uri.parse("content://org.scid.database.scidprovider/games"),
-							null, fileName, search, null);
+					return DataBaseView.getMatchingBoards(fileName,
+							"" + filterOperation, fen, searchType);
 				}
 			}).execute();
 		} else {

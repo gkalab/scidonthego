@@ -28,50 +28,42 @@ public class DataBaseView extends AbstractCursor {
 
 	private boolean loadPGN = false; // True if projection contains pgn column
 
-	private boolean singleGame = false;
-
 	private boolean reloadIndex = true;
 
 	// TODO: check for thread safety
 	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
 
-	public DataBaseView(String fileName, String[] projection, boolean singleGame) {
+	private DataBaseView(){ 
 		super();
+	}
+	
+	public static DataBaseView getAll(String fileName) {
+		DataBaseView dbv = new DataBaseView();
+		dbv.init(fileName, null, 0);
 		filterMap.put(fileName, null);
-		this.singleGame = singleGame;
-		init(fileName, projection, 0);
+		return dbv;
 	}
 
-	public DataBaseView(String fileName, String[] projection, int startPosition,
-			boolean singleGame) {
-		this(fileName, projection, singleGame);
-		this.startPosition = startPosition;
-		handleProjection(projection);
+	public static DataBaseView getFavorites(String fileName) {
+		DataBaseView dbv = new DataBaseView();
+		dbv.init(fileName, null, 0);
+		dbv.searchFavorites(fileName);
+		return dbv;
 	}
 
-	public DataBaseView(String fileName, String[] projection) {
-		super();
-		this.singleGame = false;
-		this.startPosition = 0;
-		init(fileName, projection, startPosition);
-		getFavorites(fileName);
+	public static DataBaseView getMatchingHeaders(String fileName, String[] selectionArgs) {
+		DataBaseView dbv = new DataBaseView();
+		dbv.init(fileName, null, 0);
+		dbv.searchHeader(fileName, selectionArgs);
+		return dbv;
 	}
 
-	public DataBaseView(String fileName, String[] projection, int startPosition,
-			String[] selectionArgs, boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchHeader(fileName, selectionArgs);
-	}
-
-	public DataBaseView(String fileName, String[] projection, int startPosition,
-			String filterOperation, String fen, int searchType,
-			boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchBoard(fileName, filterOperation, fen, searchType);
+	public static DataBaseView getMatchingBoards(String fileName, String filterOperation,
+			String fen, int searchType) {
+		DataBaseView dbv = new DataBaseView();
+		dbv.init(fileName, null, 0);
+		dbv.searchBoard(fileName, filterOperation, fen, searchType);
+		return dbv;
 	}
 
 	private final static String[] columns = new String[] { "_id",
@@ -91,7 +83,7 @@ public class DataBaseView extends AbstractCursor {
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
-		this.count = singleGame ? 1 : DataBase.getSize(fileName);
+		this.count = DataBase.getSize(fileName);
 		this.startPosition = startPosition;
 		handleProjection(projection);
 	}
@@ -369,7 +361,7 @@ public class DataBaseView extends AbstractCursor {
 		return null;
 	}
 
-	private void getFavorites(String fileName) {
+	private void searchFavorites(String fileName) {
 		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName)));
 	}
 }
