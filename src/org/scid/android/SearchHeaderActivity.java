@@ -15,7 +15,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 	    Tools.setKeepScreenOn(this, true);
 		addSpinner();
 	}
-	
+
     private String ets(int id){ // id of EditText => String
         return ((EditText) findViewById(id)).getText().toString().trim();
     }
@@ -44,7 +44,8 @@ public class SearchHeaderActivity extends SearchActivityBase {
 						resultBlackWins, resultUnspecified,
 						event, site,
 						ecoFrom, ecoTo, ecoNone,
-						yearFrom, yearTo);
+						yearFrom, yearTo,
+						progress);
 			}
 		}).execute();
 	}

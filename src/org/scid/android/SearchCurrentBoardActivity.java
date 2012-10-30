@@ -45,7 +45,7 @@ public class SearchCurrentBoardActivity extends SearchActivityBase {
 		(new SearchTask(this){
 			@Override
 			protected DataBaseView doInBackground(Void... params) {
-				return DataBaseView.getMatchingBoards(dbv, filterOperation, fen, searchType);
+				return DataBaseView.getMatchingBoards(dbv, filterOperation, fen, searchType, progress);
 			}
 		}).execute();
 	}

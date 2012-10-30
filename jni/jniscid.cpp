@@ -311,11 +311,35 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
     return result;
 }
 
+#define PREPARE_PROGRESS(noGames)                                       \
+    jmethodID midIsCanceled, midPublishProgress;                        \
+    uint progressDelta, nextCallbackGameNo;                             \
+    if (progress) {                                                     \
+        jclass cls = env->GetObjectClass(progress);                     \
+        midPublishProgress = env->GetMethodID(cls, "publishProgress", "(I)V"); \
+        midIsCanceled = env->GetMethodID(cls, "isCancelled", "()Z");    \
+        env->DeleteLocalRef(cls);                                       \
+        progressDelta = noGames / 100;                                  \
+        nextCallbackGameNo = progressDelta;                             \
+    } else {                                                            \
+        LOGD("No progress");                                            \
+    }
+#define DO_PROGRESS(gameNum, noGames)                               \
+    if (progress && gameNum >= nextCallbackGameNo) {                \
+        nextCallbackGameNo = gameNum + progressDelta;               \
+        int percent = float(gameNum)*100/noGames;                   \
+        env->CallVoidMethod(progress, midPublishProgress, percent); \
+        if (env->CallBooleanMethod(progress, midIsCanceled)) {      \
+            LOGD("cancelled");                                      \
+            break;                                                  \
+        }                                                           \
+    }
 
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoard
         (JNIEnv *env, jclass cls, jstring fileName, jstring position,
          jint typeOfSearch,
-         jint filterOperation, jintArray currentFilter)
+         jint filterOperation, jintArray currentFilter,
+         jobject progress)
 {
     jintArray result;
     int filterOp = filterOperation;
@@ -410,20 +434,9 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 
             // Here is the loop that searches on each game:
             Game g;
-            uint gameNum;
-
-            int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
-            jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
-            for (gameNum=0; gameNum < noGames; gameNum++) {
-                // show progress
-                // make sure to only call callback not more than 100 times
-                if (gameNum >= nextCallbackGameNo) {
-                    nextCallbackGameNo = gameNum + progressDelta;
-                    if (mid != 0) {
-                        env->CallStaticVoidMethod(cls, mid, gameNum);
-                    }
-                }
-
+            PREPARE_PROGRESS(noGames);
+            for (uint gameNum=0; gameNum < noGames; gameNum++) {
+                DO_PROGRESS(gameNum, noGames);
                 // First, apply the filter operation:
                 if (filterOp == FILTEROP_AND) {  // Skip any games not in the filter:
                     if (fill[gameNum] == 0) {
@@ -802,7 +815,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         (JNIEnv *env, jclass cls, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
          jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
          jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
-         jstring yearFrom, jstring yearTo, jint filterOperation, jintArray currentFilter)
+         jstring yearFrom, jstring yearTo, jint filterOperation, jintArray currentFilter,
+         jobject progress)
 {
     jintArray result;
     int filterOp = filterOperation;
@@ -1073,19 +1087,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     }
 
     // Here is the loop that searches on each game:
-    int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
-    uint i=0;
-    int lastCallbackGameNo = -1;
-    jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
+    PREPARE_PROGRESS(noGames);
+    uint i = 0;
     for (; i < noGames; i++) {
-        // show progress
-        // make sure to only call callback not more than 100 times
-        if (i >= nextCallbackGameNo) {
-            nextCallbackGameNo = i + progressDelta;
-            if (mid != 0) {
-                env->CallStaticVoidMethod(cls, mid, i);
-            }
-        }
+        DO_PROGRESS(i, noGames);
 
         // First, apply the filter operation:
         if (filterOp == FILTEROP_AND) {  // Skip any games not in the filter:
@@ -1477,7 +1482,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
  * Method:    getFavorites
  */
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavorites
-        (JNIEnv *env, jclass cls, jstring fileName)
+        (JNIEnv *env, jclass cls, jstring fileName, jobject progress)
 {
     jintArray result;
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
@@ -1514,8 +1519,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
     }
 
     // Here is the loop that searches on each game:
-    uint i=0;
+    PREPARE_PROGRESS(noGames);
+    uint i = 0;
     for (; i < noGames; i++) {
+        DO_PROGRESS(i, noGames);
         // First, apply the filter operation:
         // Skip any games not in the filter:
         if (fill[i] == 0) {

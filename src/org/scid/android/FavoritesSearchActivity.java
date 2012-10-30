@@ -15,7 +15,7 @@ public class FavoritesSearchActivity extends SearchActivityBase {
 		(new SearchTask(this){
 			@Override
 			protected DataBaseView doInBackground(Void... params) {
-				return DataBaseView.getFavorites(dbv);
+				return DataBaseView.getFavorites(dbv, progress);
 			}
 		}).execute();
 	}

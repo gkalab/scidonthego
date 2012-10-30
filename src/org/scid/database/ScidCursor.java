@@ -151,7 +151,7 @@ public class ScidCursor extends AbstractCursor {
 				new Filter(DataBase.searchHeader(fileName, white, black,
 						ignoreColors, result_win_white, result_draw,
 						result_win_black, result_none, event, site, ecoFrom,
-						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter)));
+						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter, null)));
 	}
 
 	@Override
@@ -171,7 +171,7 @@ public class ScidCursor extends AbstractCursor {
 		filterMap.put(
 				fileName,
 				new Filter(DataBase.searchBoard(fileName, fen, searchType, filterOp,
-						filter)));
+						filter, null)));
 	}
 
 	private int getFilterOperation(String fileName, String filterOperation) {
@@ -370,6 +370,6 @@ public class ScidCursor extends AbstractCursor {
 	}
 
 	private void getFavorites(String fileName) {
-		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName)));
+		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName, null)));
 	}
 }

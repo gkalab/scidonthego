@@ -1,6 +1,6 @@
 package org.scid.database;
 
-import android.util.Log;
+import org.scid.android.Progress;
 
 public class DataBase {
 	static {
@@ -37,14 +37,14 @@ public class DataBase {
 	 *         large as the found games
 	 */
 	public static final native int[] searchBoard(String fileName, String fen,
-			int typeOfSearch, int filterOperation, int[] currentFilter);
+			int typeOfSearch, int filterOperation, int[] currentFilter, Progress progress);
 
 	public static final native int[] searchHeader(String fileName, String white,
 			String black, boolean ignoreColors, boolean result_win_white,
 			boolean result_draw, boolean result_win_black, boolean result_none,
 			String event, String site, String ecoFrom, String ecoTo,
 			boolean includeEcoNone, String yearFrom, String yearTo,
-			int filterOperation, int[] currentFilter);
+			int filterOperation, int[] currentFilter, Progress progress);
 
 	/** Get the number of games of a scid file. */
 	public static final native int getSize(String fileName);
@@ -76,10 +76,6 @@ public class DataBase {
 	/** Get the header [Round] of the current game. */
 	public static final native byte[] getRound();
 
-	public static void callback(int progress) {
-		Log.d("GAME", "Processed up to game number: " + progress);
-	}
-
 	/** Import a pgn file and create a scid database. */
 	public static final native String importPgn(String fileName);
 
@@ -88,7 +84,7 @@ public class DataBase {
 			boolean isFavorite);
 
 	/** Return the favorites as a filter. */
-	public static final native int[] getFavorites(String fileName);
+	public static final native int[] getFavorites(String fileName, Progress progress);
 
 	/** Save the game with the game number. */
 	public static final native String saveGame(String fileName, int gameNo, String pgn);
