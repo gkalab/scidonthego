@@ -148,11 +148,7 @@ MoveList::IsSorted (void)
 //    I/O for simpleMoveT structs.
 //
 errorT
-#ifdef WINCE
-writeSimpleMove (/*FILE **/Tcl_Channel  fp, simpleMoveT * sm)
-#else
 writeSimpleMove (FILE * fp, simpleMoveT * sm)
-#endif
 {
     errorT err;
     writeOneByte (fp, sm->pieceNum);
@@ -176,11 +172,7 @@ writeSimpleMove (FILE * fp, simpleMoveT * sm)
 }
 
 errorT
-#ifdef WINCE
-readSimpleMove (/*FILE **/Tcl_Channel  fp, simpleMoveT * sm)
-#else
 readSimpleMove (FILE * fp, simpleMoveT * sm)
-#endif
 {
     sm->pieceNum = readOneByte (fp);
     sm->movingPiece = readOneByte (fp);

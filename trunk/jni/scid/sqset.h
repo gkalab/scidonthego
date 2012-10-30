@@ -24,24 +24,6 @@ private:
     uint Bits_a5h8;
 
 public:
-#ifdef WINCE
-  void* operator new(size_t sz) {
-    void* m = my_Tcl_Alloc(sz);
-    return m;
-  }
-  void operator delete(void* m) {
-    my_Tcl_Free((char*)m);
-  }
-  void* operator new [] (size_t sz) {
-    void* m = my_Tcl_AttemptAlloc(sz);
-    return m;
-  }
-
-  void operator delete [] (void* m) {
-    my_Tcl_Free((char*)m);
-  }
-
-#endif  
 
     SquareSet() { Bits_a1h4 = Bits_a5h8 = 0; }
     SquareSet(squareT * squares) {

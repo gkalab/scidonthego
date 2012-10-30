@@ -22,9 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined (WINCE) || defined (POCKET)
-#include <tcl.h>
-#endif
 
 #include "tclmy.h"
 #include "myassert.h"
@@ -33,25 +30,13 @@
 #define NO_ZLIB
 
 // Include the zlib header file if it is being compiled with Scid:
-#ifndef NO_ZLIB
-#  ifdef ZLIB
-#    include "zlib/zlib.h"
-#   else
-#    include <zlib.h>
-#  endif
-#endif
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CONSTANTS:
 
 // Buffer sizes
-#ifdef WINCE
-#define BBUF_SIZE 30000
-#define TBUF_SIZE 100000
-#else
 #define BBUF_SIZE 256000 //120000
 #define TBUF_SIZE 1280000 //160000
-#endif
 
 typedef unsigned short versionT;
 
@@ -75,7 +60,6 @@ const char PGN_SUFFIX[] = ".pgn";
 // functions to replace those used in zlib, which saves wrapping every
 // zlib function call with #ifndef conditions.
 
-#ifdef NO_ZLIB
 typedef void * gzFile;
 inline gzFile gzopen (const char * name, const char * mode) { return NULL; }
 inline int gzputc (gzFile fp, int c) { return c; }
@@ -84,7 +68,6 @@ inline int gzread (gzFile fp, char * buffer, int length) { return 0; }
 inline int gzeof (gzFile fp) { return 1; }
 inline int gzseek (gzFile fp, int offset, int where) { return 0; }
 inline int gzclose (gzFile fp) { return 0; }
-#endif
 
 
 // Bit Manipulations
@@ -744,28 +727,12 @@ square_Adjacent (squareT from, squareT to)
 //   and mix the bits around.
 
 inline void srandom32(uint seed) {
-#ifdef WINCE
-    srand (seed);
-#else
-#ifdef WIN32
-    srand (seed);
-#else
     srandom (seed);
-#endif
-#endif
 }
 
 inline uint random32()
 {
-#if defined (WINCE) || defined (POCKET)
-    return rand() ^ (rand() << 16) ^ (rand() >> 16);
-#else
-#ifdef WIN32
-    return rand() ^ (rand() << 16) ^ (rand() >> 16);
-#else
     return random() ^ (random() << 16) ^ (random() >> 16);
-#endif
-#endif
 }
 
 #endif  // #ifdef SCID_COMMON_H

@@ -53,13 +53,8 @@ ByteBuffer::Empty()
 void
 ByteBuffer::SetBufferSize (uint length)
 {
-#ifdef WINCE
-    if (AllocatedBuffer) { my_Tcl_Free((char*) AllocatedBuffer); }
-    AllocatedBuffer = (byte*)my_Tcl_Alloc(sizeof( byte[length]));
-#else
     if (AllocatedBuffer) { delete[] AllocatedBuffer; }
     AllocatedBuffer = new byte[length];
-#endif
     Buffer = AllocatedBuffer;
     Current = Buffer;
     ReadPos = ByteCount = 0;
@@ -310,19 +305,6 @@ ByteBuffer::CopyFrom (byte * source, uint length, uint offset)
 // ByteBuffer::DumpToFile():
 //      Writes the buffer to an open file.
 //
-#ifdef WINCE
-void
-ByteBuffer::DumpToFile (/*FILE * */Tcl_Channel fp)
-{
-    ASSERT (Current != NULL  &&  fp != NULL);
-    byte *b = Buffer;
-    my_Tcl_Write(fp, (char *)b, ByteCount);
-    /*for (uint count = 0; count < ByteCount; count++) {
-        putc (*b, fp);
-        b++;
-    }*/
-}
-#else
 void
 ByteBuffer::DumpToFile (FILE * fp)
 {
@@ -333,29 +315,12 @@ ByteBuffer::DumpToFile (FILE * fp)
         b++;
     }
 }
-#endif
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ByteBuffer::ReadFromFile():
 //      Reads the buffer from an open file, overwriting the existing
 //      contents of the buffer.
 //
-#ifdef WINCE
-void
-ByteBuffer::ReadFromFile (/*FILE * */Tcl_Channel fp, uint length)
-{
-    ASSERT (Current != NULL  &&  fp != NULL);
-    Err = OK;
-    Current = Buffer;
-    //byte * b = Current;
-    ReadPos = 0; ByteCount = 0;
-    my_Tcl_Read(fp, (char * )Buffer, length);
-    /*for (uint count = 0; count < length; count++) {
-        *b = getc (fp);
-        b++; ByteCount++;
-    }*/
-}
-#else
 void
 ByteBuffer::ReadFromFile (FILE * fp, uint length)
 {
@@ -369,7 +334,6 @@ ByteBuffer::ReadFromFile (FILE * fp, uint length)
         b++; ByteCount++;
     }
 }
-#endif
 //////////////////////////////////////////////////////////////////////
 //  EOF: bytebuf.cpp
 //////////////////////////////////////////////////////////////////////

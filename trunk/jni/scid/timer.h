@@ -21,13 +21,7 @@
 // It uses gettimeofday() in Unix, or ftime() in Windows.
 
 
-#ifdef WIN32
-#  include <sys/timeb.h>
-#else
-#  ifndef NO_GETTIMEOFDAY
 #    include <sys/time.h>
-#  endif
-#endif
 
 
 struct msecTimerT {
@@ -39,25 +33,11 @@ struct msecTimerT {
 inline static void 
 setTimer (msecTimerT *t)
 {
-#ifdef WIN32
-    // Use ftime() call in Windows:
-    struct timeb tb;
-    ftime (&tb);
-    t->seconds = tb.time;
-    t->milliseconds = tb.millitm;
-#else
-#  ifdef NO_GETTIMEOFDAY
-    // No gettimeofday() call, so timing is disabled.
-    t->seconds = 0;
-    t->milliseconds = 0;
-#  else
     // Use gettimeofday() system call in Unix:
     struct timeval timeOfDay;
     gettimeofday (&timeOfDay, NULL);
     t->seconds = timeOfDay.tv_sec;
     t->milliseconds = timeOfDay.tv_usec / 1000;
-#  endif  // NO_GETTIMEOFDAY
-#endif  // WIN32
 }
 
 
@@ -68,24 +48,6 @@ class Timer {
     msecTimerT StartTime;
 
   public:
-#ifdef WINCE
-  void* operator new(size_t sz) {
-    void* m = my_Tcl_Alloc(sz);
-    return m;
-  }
-  void operator delete(void* m) {
-    my_Tcl_Free((char*)m);
-  }
-  void* operator new [] (size_t sz) {
-    void* m = my_Tcl_AttemptAlloc(sz);
-    return m;
-  }
-
-  void operator delete [] (void* m) {
-    my_Tcl_Free((char*)m);
-  }
-
-#endif  
   
     Timer() { Reset (); }
     ~Timer() {}
