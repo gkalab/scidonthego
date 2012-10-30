@@ -22,14 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-#include "tclmy.h"
 #include "myassert.h"
 #include "error.h"
-
-#define NO_ZLIB
-
-// Include the zlib header file if it is being compiled with Scid:
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CONSTANTS:

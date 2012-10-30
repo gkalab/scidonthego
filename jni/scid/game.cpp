@@ -21,7 +21,6 @@
 #include "pgnparse.h"
 #include "naglatex.h"
 #include "nagtext.h"
-// #include "tkscid.h"
 
 #include "bytebuf.h"
 #include "textbuf.h"
@@ -32,12 +31,12 @@
 
 // Piece letters translation
 int language = 0; // default to english
-//  0 = en, 
+//  0 = en,
 //  1 = fr, 2 = es, 3 = de, 4 = it, 5 = ne, 6 = cz
 //  7 = hu, 8 = no, 9 = sw, 10 = ca, 11 = fi, 12 = gr
 //  TODO Piece translations for greek
-const char * langPieces[] = { "", 
-"PPKRQDRTBFNC", "PPKRQDRTBANC", "PBKKQDRTBLNS", 
+const char * langPieces[] = { "",
+"PPKRQDRTBFNC", "PPKRQDRTBANC", "PBKKQDRTBLNS",
 "PPKRQDRTBANC", "PpKKQDRTBLNP", "PPKKQDRVBSNJ",
 "PGKKQVRBBFNH", "PBKKQDRTBLNS", "PBKKQDRTBLNS", "PPKRQDRTBANC", "PSKKQDRTBLNR", "" };
 
@@ -110,7 +109,7 @@ uint Game::GetVarNumber() {
     if (VarDepth == 0) { // not in a variation!
         return 0;
     }
-    
+
     while (move->prev->marker != START_MARKER) {
         move = move->prev;
     }
@@ -126,7 +125,7 @@ uint Game::GetVarNumber() {
     	ASSERT (parent->marker == START_MARKER);
     	varNumber++;
     }
-    return varNumber;  
+    return varNumber;
 }
 // ===================================================
 
@@ -1233,7 +1232,7 @@ Game::TruncateStart (void)
     SetPgnFormat (PGN_FORMAT_Plain);
     // we need to switch off short header style or PGN parsing will not work
     uint  old_style = GetPgnStyle ();
-    if (PgnStyle & PGN_STYLE_SHORT_HEADER) 
+    if (PgnStyle & PGN_STYLE_SHORT_HEADER)
       SetPgnStyle (PGN_STYLE_SHORT_HEADER, false);
     WriteToPGN (&tb);
     Init();
@@ -1241,7 +1240,7 @@ Game::TruncateStart (void)
     parser.ParseGame (this);
     SetPgnFormat (gfmt);
     MoveToPly(0);
-    if (old_style & PGN_STYLE_SHORT_HEADER) 
+    if (old_style & PGN_STYLE_SHORT_HEADER)
       SetPgnStyle (PGN_STYLE_SHORT_HEADER, true);
 }
 
@@ -2133,7 +2132,7 @@ Game::WriteMoveList (TextBuffer *tb, uint plyCount,
     }
 
     // If this is a variation and it starts with a comment, print it:
-    if ((VarDepth > 0 || CurrentMove->prev == FirstMove) && 
+    if ((VarDepth > 0 || CurrentMove->prev == FirstMove) &&
             CurrentMove->prev->comment != NULL) {
         if (PgnStyle & PGN_STYLE_COMMENTS) {
             WriteComment (tb, preCommentStr, CurrentMove->prev->comment,
@@ -3712,7 +3711,7 @@ Game::Encode (ByteBuffer * buf, IndexEntry * ie)
 
     // Now do the comments
     uint commentCount = 0;
-    
+
     err = encodeComments (buf, FirstMove, &commentCount);
 
     // Set the fields in the IndexEntry:
@@ -3770,7 +3769,7 @@ Game::Encode (ByteBuffer * buf, IndexEntry * ie)
         }
         ie->SetStoredLineCode (storedLineCode);
     }
-    
+
     // as each game entry length is coded on 17 bits, and game must fit in a block
     // return an error if there is an overflow
     if (buf->GetByteCount() > MAX_GAME_LENGTH || buf->GetByteCount() > GF_BLOCKSIZE) {

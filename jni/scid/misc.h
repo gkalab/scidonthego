@@ -19,12 +19,6 @@
 #include "common.h"
 #include "error.h"
 #include <ctype.h>   // For isspace(), etc
-#include "tcl.h"
-
-//#ifndef _CURRENT_TCL_INTERP_
-//extern Tcl_Interp * currentTclInterp;
-//#define _CURRENT_TCL_INTERP_
-//#endif
 
 // Scid initialisation routine: this MUST be called before such things as
 // computing chess moves are done, since it sets up piece movement tables.
