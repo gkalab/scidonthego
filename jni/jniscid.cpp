@@ -47,7 +47,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
 	static ByteBuffer bbuf;
 
 	game->Clear();
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
         // get modification time
         struct stat attrib;
@@ -119,7 +119,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
             game->SetAltered(iE.GetDeleteFlag());
         }
       cleanup:
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
 }
@@ -132,20 +132,20 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
 extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
         (JNIEnv* env, jobject obj, jstring fileName)
 {
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
         Index sourceIndex;
 
         sourceIndex.SetFileName(sourceFileName);
         if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-            (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+            env->ReleaseStringUTFChars(fileName, sourceFileName);
             return 0;
         }
         int result = sourceIndex.GetNumGames();
         // cleanup
         sourceIndex.CloseIndexFile();
         sourceIndex.Clear();
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
     return 0;
@@ -165,11 +165,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
     game->WriteToPGN(&tbuf);
     jbyteArray result = NULL;
     int length = strlen(tbuf.GetBuffer());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) tbuf.GetBuffer() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) tbuf.GetBuffer() );
     return result;
 }
 
@@ -200,10 +200,10 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
         game->WriteMoveList (&tbuf, 0, &m, true, false);
         tbuf.PrintWord(RESULT_LONGSTR[game->GetResult()]);
 
-        return (*env).NewStringUTF(tbuf.GetBuffer());
+        return env->NewStringUTF(tbuf.GetBuffer());
     } else {
         static char emptyString = 0;
-        return (*env).NewStringUTF(&emptyString);
+        return env->NewStringUTF(&emptyString);
     }
 }
 
@@ -215,7 +215,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
         (JNIEnv* env, jobject obj)
 {
-    return (*env).NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
+    return env->NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
 }
 
 /*
@@ -227,11 +227,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getWhite
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetWhiteStr());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetWhiteStr() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetWhiteStr() );
     return result;
 }
 
@@ -244,11 +244,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getBlack
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetBlackStr());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetBlackStr() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetBlackStr() );
     return result;
 }
 
@@ -261,11 +261,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getEvent
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetEventStr());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetEventStr() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetEventStr() );
     return result;
 }
 
@@ -278,11 +278,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetSiteStr());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetSiteStr() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetSiteStr() );
     return result;
 }
 
@@ -296,7 +296,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
 {
     char dateStr [20];
     date_DecodeToString(game->GetDate(), dateStr);
-    return (*env).NewStringUTF(dateStr);
+    return env->NewStringUTF(dateStr);
 }
 
 /*
@@ -308,11 +308,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetRoundStr());
-    if ( NULL == (result = (*env).NewByteArray( length )) )
+    if ( NULL == (result = env->NewByteArray( length )) )
     {
         LOGE("Error creating byte array.");
     }
-    (*env).SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetRoundStr() );
+    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetRoundStr() );
     return result;
 }
 
@@ -324,8 +324,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
 {
     jintArray result;
     int filterOp = filterOperation;
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
-    const char* fen = (*env).GetStringUTFChars(position, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
+    const char* fen = env->GetStringUTFChars(position, NULL);
     if (sourceFileName && fen) {
         Index sourceIndex;
         GFile sourceGFile;
@@ -336,11 +336,11 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
         sourceIndex.SetFileName(sourceFileName);
         if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
             // TODO: leaks jstrings here
-            return (*env).NewIntArray(0);
+            return env->NewIntArray(0);
         }
         if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
             // TODO: leaks jstrings here
-            return (*env).NewIntArray(0);
+            return env->NewIntArray(0);
         }
         int noGames = sourceIndex.GetNumGames();
 
@@ -371,17 +371,17 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             jint *fill = new jint[noGames];
             memset(fill, 0, sizeof(fill));
 
-            jsize len = (*env).GetArrayLength(currentFilter);
+            jsize len = env->GetArrayLength(currentFilter);
             if (len != noGames) {
                 // the currentFilter should have been initialized to the same length as the database, so reset the filter now
                 for (int i=0; i<noGames; i++) {
                     fill[i] = 1;
                 }
                 } else {
-                    jint *arr = (*env).GetIntArrayElements(currentFilter, 0);
+                    jint *arr = env->GetIntArrayElements(currentFilter, 0);
                     for (int i=0; i<noGames; i++) {
                         fill[i] = arr[i];
-                    (*env).ReleaseIntArrayElements(currentFilter, arr, 0);
+                    env->ReleaseIntArrayElements(currentFilter, arr, 0);
                 }
             }
 
@@ -392,14 +392,14 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 if (pos.ReadFromLongStr (fen) != OK) {
                     // invalid FEN
                     // TODO: leaks jstrings here
-                    return (*env).NewIntArray(0);
+                    return env->NewIntArray(0);
                 }
             }
             // ReadFromFEN checks that there is one king of each side, but it
             // does not check that the position is actually legal:
             if (! pos.IsLegal()) {
                 // TODO: leaks jstrings here
-               return (*env).NewIntArray(0);
+               return env->NewIntArray(0);
             }
             matSigT msig = matsig_Make (pos.GetMaterial());
             uint hpSig = pos.GetHPSig();
@@ -503,25 +503,25 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 // if ply==0 --> not found
                 fill[gameNum] = ply;
             }
-            result = (*env).NewIntArray(noGames);
+            result = env->NewIntArray(noGames);
             if (result == NULL) {
                 return NULL; // out of memory error thrown
             }
-            (*env).SetIntArrayRegion(result, 0, noGames, fill);
+            env->SetIntArrayRegion(result, 0, noGames, fill);
             delete [] fill;
         } else {
-            result = (*env).NewIntArray(0);
+            result = env->NewIntArray(0);
         }
 
         // cleanup
         sourceIndex.CloseIndexFile();
         sourceIndex.Clear();
         sourceGFile.Close();
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
-        (*env).ReleaseStringUTFChars(position, fen);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(position, fen);
         return result;
     }
-    result = (*env).NewIntArray(0);
+    result = env->NewIntArray(0);
     return result;
 }
 
@@ -535,7 +535,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
 {
     game->Clear();
     std::string resultString = "";
-    const char* targetFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* targetFileName = env->GetStringUTFChars(fileName, NULL);
     if (targetFileName) {
         Index targetIndex;
         NameBase targetNameBase;
@@ -581,11 +581,11 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
 
         // Remove any treefile for this database:
         removeFile (targetFileName, TREEFILE_SUFFIX);
-            (*env).ReleaseStringUTFChars(fileName, targetFileName);
+            env->ReleaseStringUTFChars(fileName, targetFileName);
 
         initialized = false;
     cleanup:
-        return (*env).NewStringUTF(resultString.c_str());
+        return env->NewStringUTF(resultString.c_str());
     }
 }
 
@@ -812,18 +812,18 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 {
     jintArray result;
     int filterOp = filterOperation;
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
-    const char* strWhite = (*env).GetStringUTFChars(white, NULL);
-    const char* strBlack = (*env).GetStringUTFChars(black, NULL);
-    const char* strEvent = (*env).GetStringUTFChars(event, NULL);
-    const char* strSite = (*env).GetStringUTFChars(site, NULL);
-    const char* strEcoFrom = (*env).GetStringUTFChars(ecoFrom, NULL);
-    const char* strEcoTo = (*env).GetStringUTFChars(ecoTo, NULL);
-    const char* strYearFrom = (*env).GetStringUTFChars(yearFrom, NULL);
-    const char* strYearTo = (*env).GetStringUTFChars(yearTo, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
+    const char* strWhite = env->GetStringUTFChars(white, NULL);
+    const char* strBlack = env->GetStringUTFChars(black, NULL);
+    const char* strEvent = env->GetStringUTFChars(event, NULL);
+    const char* strSite = env->GetStringUTFChars(site, NULL);
+    const char* strEcoFrom = env->GetStringUTFChars(ecoFrom, NULL);
+    const char* strEcoTo = env->GetStringUTFChars(ecoTo, NULL);
+    const char* strYearFrom = env->GetStringUTFChars(yearFrom, NULL);
+    const char* strYearTo = env->GetStringUTFChars(yearTo, NULL);
     if (!sourceFileName || !strWhite || !strBlack || !strEvent || !strSite || !strEcoFrom || !strEcoTo
         || !strYearFrom || !strYearTo) {
-      result = (*env).NewIntArray(0);
+      result = env->NewIntArray(0);
       return result;
     }
     Index sourceIndex;
@@ -835,20 +835,20 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     sourceNameBase.SetFileName(sourceFileName);
     if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
         // TODO: leaks jstrings here
-        return (*env).NewIntArray(0);
+        return env->NewIntArray(0);
     }
     if (sourceNameBase.ReadNameFile() != OK) {
         // TODO: leaks jstrings here
-        return (*env).NewIntArray(0);
+        return env->NewIntArray(0);
     }
     if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
         // TODO: leaks jstrings here
-        return (*env).NewIntArray(0);
+        return env->NewIntArray(0);
     }
     int noGames = sourceIndex.GetNumGames();
 
     if (noGames <= 0) {
-        result = (*env).NewIntArray(0);
+        result = env->NewIntArray(0);
         // TODO: leaks jstrings here
         return result;
     }
@@ -857,18 +857,18 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     jint *fill = new jint[noGames];
     memset(fill, 0, sizeof(fill));
 
-    jsize len = (*env).GetArrayLength(currentFilter);
+    jsize len = env->GetArrayLength(currentFilter);
     if (len != noGames) {
         // the currentFilter should have been initialized to the same length as the database, so reset the filter now
         for (int i=0; i<noGames; i++) {
             fill[i] = 1;
         }
     } else {
-        jint *arr = (*env).GetIntArrayElements(currentFilter, 0);
+        jint *arr = env->GetIntArrayElements(currentFilter, 0);
         for (int i=0; i<noGames; i++) {
             fill[i] = arr[i];
         }
-        (*env).ReleaseIntArrayElements(currentFilter, arr, 0);
+        env->ReleaseIntArrayElements(currentFilter, arr, 0);
     }
 
     char * sWhite = NULL;
@@ -1170,13 +1170,13 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         }
     }
 
-    result = (*env).NewIntArray(i);
+    result = env->NewIntArray(i);
     if (i > 0) {
         if (result == NULL) {
             delete [] fill;
             return NULL; // out of memory error thrown
         }
-        (*env).SetIntArrayRegion(result, 0, i, fill);
+        env->SetIntArrayRegion(result, 0, i, fill);
     }
     delete [] fill;
 
@@ -1198,15 +1198,15 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     sourceIndex.Clear();
     sourceNameBase.Clear();
     sourceGFile.Close();
-    (*env).ReleaseStringUTFChars(fileName, sourceFileName);
-    (*env).ReleaseStringUTFChars(white, strWhite);
-    (*env).ReleaseStringUTFChars(black, strBlack);
-    (*env).ReleaseStringUTFChars(event, strEvent);
-    (*env).ReleaseStringUTFChars(site, strSite);
-    (*env).ReleaseStringUTFChars(ecoFrom, strEcoFrom);
-    (*env).ReleaseStringUTFChars(ecoTo, strEcoTo);
-    (*env).ReleaseStringUTFChars(yearFrom, strYearFrom);
-    (*env).ReleaseStringUTFChars(yearTo, strYearTo);
+    env->ReleaseStringUTFChars(fileName, sourceFileName);
+    env->ReleaseStringUTFChars(white, strWhite);
+    env->ReleaseStringUTFChars(black, strBlack);
+    env->ReleaseStringUTFChars(event, strEvent);
+    env->ReleaseStringUTFChars(site, strSite);
+    env->ReleaseStringUTFChars(ecoFrom, strEcoFrom);
+    env->ReleaseStringUTFChars(ecoTo, strEcoTo);
+    env->ReleaseStringUTFChars(yearFrom, strYearFrom);
+    env->ReleaseStringUTFChars(yearTo, strYearTo);
     return result;
 }
 
@@ -1220,7 +1220,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
                 (JNIEnv* env, jobject obj, jstring fileName)
 {
-    const char* pgnName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* pgnName = env->GetStringUTFChars(fileName, NULL);
     std::string resultString = "";
     if (pgnName) {
         MFile * pgnFile = new MFile;
@@ -1396,8 +1396,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
         pgnFile->Close();
 
       cleanup:
-        (*env).ReleaseStringUTFChars(fileName, pgnName);
-        return (*env).NewStringUTF(resultString.c_str());
+        env->ReleaseStringUTFChars(fileName, pgnName);
+        return env->NewStringUTF(resultString.c_str());
     }
 }
 
@@ -1409,7 +1409,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
 extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
                 (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean isFavorite)
 {
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
         Index sourceIndex;
         sourceIndex.SetFileName(sourceFileName);
@@ -1430,7 +1430,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
             sourceIndex.Clear();
         }
       cleanup:
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
         return;
     }
 }
@@ -1443,7 +1443,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
 extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
                 (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean isDeleted)
 {
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
         Index sourceIndex;
         sourceIndex.SetFileName(sourceFileName);
@@ -1467,7 +1467,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
             sourceIndex.Clear();
         }
       cleanup:
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
         return;
     }
 }
@@ -1493,25 +1493,25 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
         (JNIEnv *env, jobject obj, jstring fileName)
 {
     jintArray result;
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (!sourceFileName) {
-      result = (*env).NewIntArray(0);
+      result = env->NewIntArray(0);
       return result;
     }
     Index sourceIndex;
 
     sourceIndex.SetFileName(sourceFileName);
     if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
-        return (*env).NewIntArray(0);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
+        return env->NewIntArray(0);
     }
 
     int noGames = sourceIndex.GetNumGames();
     if (noGames <= 0) {
-        result = (*env).NewIntArray(0);
+        result = env->NewIntArray(0);
         sourceIndex.CloseIndexFile();
         sourceIndex.Clear();
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
         return result;
     }
 
@@ -1554,20 +1554,20 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
         }
     }
 
-    result = (*env).NewIntArray(i);
+    result = env->NewIntArray(i);
     if (i > 0) {
         if (result == NULL) {
             delete [] fill;
             return NULL; // out of memory error thrown
         }
-        (*env).SetIntArrayRegion(result, 0, i, fill);
+        env->SetIntArrayRegion(result, 0, i, fill);
     }
     delete [] fill;
 
     // cleanup
     sourceIndex.CloseIndexFile();
     sourceIndex.Clear();
-    (*env).ReleaseStringUTFChars(fileName, sourceFileName);
+    env->ReleaseStringUTFChars(fileName, sourceFileName);
     return result;
 }
 
@@ -1579,8 +1579,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
         (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jstring pgn)
 {
-    const char* pgnString = (*env).GetStringUTFChars(pgn, NULL);
-    const char* sourceFileName = (*env).GetStringUTFChars(fileName, NULL);
+    const char* pgnString = env->GetStringUTFChars(pgn, NULL);
+    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     std::string resultString = "";
     if (pgnString) {
         if (sourceFileName) {
@@ -1776,7 +1776,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
         }
     }
     cleanup:
-        (*env).ReleaseStringUTFChars(pgn, pgnString);
-        (*env).ReleaseStringUTFChars(fileName, sourceFileName);
-        return (*env).NewStringUTF(resultString.c_str());
+        env->ReleaseStringUTFChars(pgn, pgnString);
+        env->ReleaseStringUTFChars(fileName, sourceFileName);
+        return env->NewStringUTF(resultString.c_str());
 }
