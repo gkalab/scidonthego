@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 
 public class ScidProvider extends ContentProvider {
-	private DataBase db = new DataBase();
 
 	/**
 	 * The current cursor
@@ -149,13 +148,13 @@ public class ScidProvider extends ContentProvider {
 			int gameNo = new Integer(uri.getLastPathSegment());
 			// save favorite flag
 			if (values.containsKey("isFavorite")) {
-				db.setFavorite(selection, gameNo, values
+				DataBase.setFavorite(selection, gameNo, values
 						.getAsBoolean("isFavorite"));
 				setCursorValue("isFavorite", values.getAsBoolean("isFavorite"));
 				result = 1;
 			}
 			if (values.containsKey("isDeleted")) {
-				db.setDeleted(selection, gameNo, values
+				DataBase.setDeleted(selection, gameNo, values
 						.getAsBoolean("isDeleted"));
 				setCursorValue("isDeleted", values.getAsBoolean("isDeleted"));
 				result = 1;

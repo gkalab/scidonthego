@@ -127,9 +127,8 @@ public class SaveGameActivity extends Activity {
 
 		getScidAppContext().getController().setHeaders(headers);
 
-		DataBase db = new DataBase();
 		String pgn = getScidAppContext().getController().getPGN();
-		final String result = db.saveGame(getScidAppContext()
+		final String result = DataBase.saveGame(getScidAppContext()
 				.getCurrentFileName(), gameNo, pgn);
 		if (progressDlg != null) {
 			progressDlg.dismiss();

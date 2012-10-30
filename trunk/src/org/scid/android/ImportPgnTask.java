@@ -20,9 +20,8 @@ public class ImportPgnTask extends AsyncTask {
 		this.activity = (Activity) params[0];
 		this.pgnFileName = (String) params[1];
 		this.progressDlg = (ProgressDialog) params[2];
-		DataBase db = new DataBase();
 		Log.d("SCID", "Starting import from " + pgnFileName);
-		final String result = db.importPgn(pgnFileName);
+		final String result = DataBase.importPgn(pgnFileName);
 		Log.d("SCID", "Import from " + pgnFileName + " done.");
 		Log.d("SCID", "Result: " + result);
 		this.activity.runOnUiThread(new Runnable() {
