@@ -41,10 +41,10 @@ public class DataBaseView extends AbstractCursor {
 		return new DataBaseView(fileName);
 	}
 
-	public static DataBaseView getFavorites(String fileName) {
-		DataBaseView dbv = new DataBaseView(fileName);
-		dbv.filter = new Filter(DataBase.getFavorites(fileName));
-		return dbv;
+	public static DataBaseView getFavorites(DataBaseView dbv) {
+		DataBaseView result = new DataBaseView(dbv.fileName);
+		result.filter = new Filter(DataBase.getFavorites(dbv.fileName));
+		return result;
 	}
 
 	public static DataBaseView getMatchingHeaders(DataBaseView dbv, int filterOperation,

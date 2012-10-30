@@ -1534,6 +1534,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
+						if (getScidAppContext().getGamesDataBaseView() == null) {
+							Toast.makeText(ScidAndroidActivity.this,
+									R.string.err_nothing_to_filter, Toast.LENGTH_LONG).show();
+							return;
+						}
 						switch (finalActions.get(item)) {
 						case RESET_FILTER: {
 							resetFilter();
