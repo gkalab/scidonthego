@@ -36,7 +36,7 @@ const filterOpT FILTEROP_RESET = 0;
  * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
+                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
 {
     bool result = false;
 	static char* currFileName = 0;
@@ -130,7 +130,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
  * Signature: (Ljava/lang/String;)I
  */
 extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
-        (JNIEnv* env, jobject obj, jstring fileName)
+        (JNIEnv* env, jclass cls, jstring fileName)
 {
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
@@ -156,7 +156,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
  * Method:    getPGN
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
-        (JNIEnv* env, jobject obj)
+        (JNIEnv* env, jclass cls)
 {
     TextBuffer tbuf;
     tbuf.SetBufferSize(TBUF_SIZE);
@@ -180,7 +180,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
  * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
-        (JNIEnv* env, jobject obj)
+        (JNIEnv* env, jclass cls)
 {
     if (game->GetNumHalfMoves() > 0) {
         TextBuffer tbuf;
@@ -213,7 +213,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
  * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
-        (JNIEnv* env, jobject obj)
+        (JNIEnv* env, jclass cls)
 {
     return env->NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
 }
@@ -223,7 +223,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
  * Method:    getWhite
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getWhite
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetWhiteStr());
@@ -240,7 +240,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getWhite
  * Method:    getBlack
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getBlack
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetBlackStr());
@@ -257,7 +257,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getBlack
  * Method:    getEvent
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getEvent
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetEventStr());
@@ -274,7 +274,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getEvent
  * Method:    getSite
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetSiteStr());
@@ -292,7 +292,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
  * Signature: (I)Ljava/lang/String;
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     char dateStr [20];
     date_DecodeToString(game->GetDate(), dateStr);
@@ -304,7 +304,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
  * Method:    getRound
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     jbyteArray result = NULL;
     int length = strlen(game->GetRoundStr());
@@ -318,7 +318,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
 
 
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoard
-        (JNIEnv *env, jobject obj, jstring fileName, jstring position,
+        (JNIEnv *env, jclass cls, jstring fileName, jstring position,
          jint typeOfSearch,
          jint filterOperation, jintArray currentFilter)
 {
@@ -417,17 +417,15 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
             uint gameNum;
 
             int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
+            jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
             for (gameNum=0; gameNum < noGames; gameNum++) {
                 // show progress
                 // make sure to only call callback not more than 100 times
                 if (gameNum >= nextCallbackGameNo) {
                     nextCallbackGameNo = gameNum + progressDelta;
-                    jclass cls = env->GetObjectClass(obj);
-                    jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
                     if (mid != 0) {
-                        env->CallVoidMethod(obj, mid, gameNum);
+                        env->CallStaticVoidMethod(cls, mid, gameNum);
                     }
-                    env->DeleteLocalRef(cls);
                 }
 
                 // First, apply the filter operation:
@@ -531,7 +529,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
  * Method:    create
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
-                (JNIEnv* env, jobject obj, jstring fileName)
+                (JNIEnv* env, jclass cls, jstring fileName)
 {
     game->Clear();
     std::string resultString = "";
@@ -805,7 +803,7 @@ matchGameFlags (IndexEntry * ie, flagT fStdStart, flagT fPromos,
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //    Searches by header information.
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHeader
-        (JNIEnv *env, jobject obj, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
+        (JNIEnv *env, jclass cls, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
          jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
          jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
          jstring yearFrom, jstring yearTo, jint filterOperation, jintArray currentFilter)
@@ -1082,17 +1080,15 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     int progressDelta = noGames / 100, nextCallbackGameNo = progressDelta;
     uint i=0;
     int lastCallbackGameNo = -1;
+    jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
     for (; i < noGames; i++) {
         // show progress
         // make sure to only call callback not more than 100 times
         if (i >= nextCallbackGameNo) {
             nextCallbackGameNo = i + progressDelta;
-            jclass cls = env->GetObjectClass(obj);
-            jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
             if (mid != 0) {
-                env->CallVoidMethod(obj, mid, i);
+                env->CallStaticVoidMethod(cls, mid, i);
             }
-            env->DeleteLocalRef(cls);
         }
 
         // First, apply the filter operation:
@@ -1218,10 +1214,11 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
  * Signature: (Ljava/lang/String;IZ)V
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
-                (JNIEnv* env, jobject obj, jstring fileName)
+                (JNIEnv* env, jclass cls, jstring fileName)
 {
     const char* pgnName = env->GetStringUTFChars(fileName, NULL);
     std::string resultString = "";
+    jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
     if (pgnName) {
         MFile * pgnFile = new MFile;
         PgnParser pgnParser (pgnFile);
@@ -1354,16 +1351,11 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
                 // TODO: progBar.Update (percentDone);
                 if (percentDone != lastCallbackPercent) {
                     lastCallbackPercent = percentDone;
-                    jclass cls = env->GetObjectClass(obj);
-                    jmethodID mid = env->GetMethodID(cls, "callback", "(I)V");
                     if (mid != 0) {
-                        env->CallVoidMethod(obj, mid, percentDone);
+                        env->CallStaticVoidMethod(cls, mid, percentDone);
                     }
-                    env->DeleteLocalRef(cls);
                 }
-
             }
-
         }
 
         nb->SetTimeStamp(t);
@@ -1407,7 +1399,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
  * Method:    setFavorite
  */
 extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean isFavorite)
+                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean isFavorite)
 {
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
@@ -1441,7 +1433,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
  * Method:    setDeleted
  */
 extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
-                (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jboolean isDeleted)
+                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean isDeleted)
 {
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
     if (sourceFileName) {
@@ -1478,7 +1470,7 @@ extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
  * Method:    isDeleted
  */
 extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
-                (JNIEnv* env, jobject obj)
+                (JNIEnv* env, jclass cls)
 {
     // misused altered flag for delete flag
     return game->GetAltered();
@@ -1490,7 +1482,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
  * Method:    getFavorites
  */
 extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavorites
-        (JNIEnv *env, jobject obj, jstring fileName)
+        (JNIEnv *env, jclass cls, jstring fileName)
 {
     jintArray result;
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
@@ -1577,7 +1569,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavori
  * Method:    saveGame
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
-        (JNIEnv* env, jobject obj, jstring fileName, jint gameNo, jstring pgn)
+        (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jstring pgn)
 {
     const char* pgnString = env->GetStringUTFChars(pgn, NULL);
     const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
