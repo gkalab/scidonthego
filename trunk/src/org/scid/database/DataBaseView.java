@@ -2,6 +2,8 @@ package org.scid.database;
 
 import java.io.UnsupportedEncodingException;
 
+import org.scid.android.Progress;
+
 import android.util.Log;
 
 public class DataBaseView {
@@ -29,9 +31,9 @@ public class DataBaseView {
 		return new DataBaseView(fileName);
 	}
 
-	public static DataBaseView getFavorites(DataBaseView dbv) {
+	public static DataBaseView getFavorites(DataBaseView dbv, Progress progress) {
 		DataBaseView result = new DataBaseView(dbv.fileName);
-		result.filter = new Filter(DataBase.getFavorites(dbv.fileName));
+		result.filter = new Filter(DataBase.getFavorites(dbv.fileName, progress));
 		return result;
 	}
 
@@ -41,22 +43,25 @@ public class DataBaseView {
 			boolean result_win_black, boolean result_none,
 			String event, String site,
 			String ecoFrom, String ecoTo, boolean ecoNone,
-			String yearFrom, String yearTo) {
+			String yearFrom, String yearTo,
+			Progress progress) {
 		DataBaseView result = new DataBaseView(dbv.fileName);
         result.filter = new Filter(DataBase.searchHeader(dbv.fileName,
         		white, black,
         		ignoreColors, result_win_white, result_draw,
         		result_win_black, result_none, event, site, ecoFrom,
-        		ecoTo, ecoNone, yearFrom, yearTo, filterOperation, dbv.getFilterArray()));
+        		ecoTo, ecoNone, yearFrom, yearTo,
+        		filterOperation, dbv.getFilterArray(), progress));
 		return result;
 	}
 
 	public static DataBaseView getMatchingBoards(DataBaseView dbv, int filterOperation,
-			String fen, int searchType) {
+			String fen, int searchType, Progress progress) {
 		DataBaseView result = new DataBaseView(dbv.fileName);
 		result.filter = new Filter(DataBase.searchBoard(
 				dbv.fileName, fen, searchType,
-				filterOperation, dbv.getFilterArray()));
+				filterOperation, dbv.getFilterArray(),
+				progress));
 		return result;
 	}
 
