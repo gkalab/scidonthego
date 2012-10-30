@@ -177,7 +177,7 @@ public class ScidCursor extends AbstractCursor {
 	private int getFilterOperation(String fileName, String filterOperation) {
 		int filterOp = 0;
 		if (filterMap.get(fileName) != null && filterOperation != null) {
-			filterOp = new Integer(filterOperation);
+			filterOp = Integer.parseInt(filterOperation);
 		}
 		return filterOp;
 	}
@@ -206,7 +206,7 @@ public class ScidCursor extends AbstractCursor {
 	/**
 	 * Return the number of games in the cursor. If the there's a current filter
 	 * only return the number of games in the filter.
-	 * 
+	 *
 	 * @see android.database.AbstractCursor#getCount()
 	 */
 	@Override
@@ -314,8 +314,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public int getInt(int position) {
 		if (this.gameInfo != null) {
-			return new Integer(this.gameInfo.getColumn(projection[position]))
-					.intValue();
+			return Integer.parseInt(this.gameInfo.getColumn(projection[position]));
 		}
 		return 0;
 	}
@@ -323,8 +322,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public long getLong(int position) {
 		if (this.gameInfo != null) {
-			return new Long(this.gameInfo.getColumn(projection[position]))
-					.longValue();
+			return Long.parseLong(this.gameInfo.getColumn(projection[position]));
 		}
 		return 0;
 	}
@@ -332,8 +330,7 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public short getShort(int position) {
 		if (this.gameInfo != null) {
-			return new Short(this.gameInfo.getColumn(projection[position]))
-					.shortValue();
+			return Short.parseShort(this.gameInfo.getColumn(projection[position]));
 		}
 		return 0;
 	}
