@@ -90,7 +90,7 @@ public class ScidProvider extends ContentProvider {
 				throw new IllegalArgumentException(
 						"The scid file name must be specified as the selection.");
 			}
-			int startPosition = new Integer(uri.getLastPathSegment());
+			int startPosition = Integer.parseInt(uri.getLastPathSegment());
 			if (selectionArgs == null) {
 				result = new ScidCursor(selection, projection, startPosition,
 						true);
@@ -117,8 +117,7 @@ public class ScidProvider extends ContentProvider {
 	private Cursor searchBoard(String selection, String[] projection,
 			int startPosition, String[] selectionArgs, boolean singleGame) {
 		this.cursor = new ScidCursor(selection, projection, startPosition,
-				selectionArgs[0], selectionArgs[1], new Integer(
-						selectionArgs[2]), singleGame);
+				selectionArgs[0], selectionArgs[1], Integer.parseInt(selectionArgs[2]), singleGame);
 		return this.cursor;
 	}
 
@@ -132,7 +131,7 @@ public class ScidProvider extends ContentProvider {
 	/**
 	 * Update a game in the scid database. The last path segment must specify
 	 * the real game number in the database (not the one in the current filter)
-	 * 
+	 *
 	 * currently only sets the favorite flag or the delete flag of a game
 	 */
 	@Override
@@ -145,7 +144,7 @@ public class ScidProvider extends ContentProvider {
 				throw new IllegalArgumentException(
 						"The scid file name must be specified as the selection.");
 			}
-			int gameNo = new Integer(uri.getLastPathSegment());
+			int gameNo = Integer.parseInt(uri.getLastPathSegment());
 			// save favorite flag
 			if (values.containsKey("isFavorite")) {
 				DataBase.setFavorite(selection, gameNo, values

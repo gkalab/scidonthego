@@ -1230,7 +1230,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (resultCode == RESULT_OK && data != null) {
 				String gameNoString = data.getAction();
 				if (gameNoString != null) {
-					int gameNo = new Integer(gameNoString);
+					int gameNo = Integer.parseInt(gameNoString);
 					if (gameNo == -1) {
 						// a new game was added
 						// TODO: reset cursor for now - saving should be done
