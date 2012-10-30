@@ -2,7 +2,6 @@ package org.scid.android;
 
 import android.app.Activity;
 import org.scid.database.DataBaseView;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -89,9 +88,7 @@ public class SearchHeaderActivity extends Activity {
 			(new SearchTask(this){
 				@Override
 				protected DataBaseView doInBackground(Void... params) {
-                  return SearchHeaderActivity.this.getContentResolver().query(
-                		  Uri.parse("content://org.scid.database.scidprovider/games"),
-                		  null, fileName, search, null);
+                  return DataBaseView.getMatchingHeaders(fileName, search);
 				}
 			}).execute();
 		} else {

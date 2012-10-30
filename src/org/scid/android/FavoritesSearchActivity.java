@@ -2,7 +2,6 @@ package org.scid.android;
 
 import android.app.Activity;
 import org.scid.database.DataBaseView;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 
@@ -21,10 +20,7 @@ public class FavoritesSearchActivity extends Activity {
 			(new SearchTask(this){
 				@Override
 				protected DataBaseView doInBackground(Void... params) {
-					String[] search = { };
-					return FavoritesSearchActivity.this.getContentResolver().query(
-							Uri.parse("content://org.scid.database.scidprovider/games"),
-							null, fileName, search, null);
+					return DataBaseView.getFavorites(fileName);
 				}
 			}).execute();
 		} else {

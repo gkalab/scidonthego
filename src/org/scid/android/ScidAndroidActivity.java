@@ -1895,9 +1895,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return null;
 		}
 		String scidFileName = Tools.stripExtension(currentScidFile);
-		DataBaseView dbv = getContentResolver().query(
-				Uri.parse("content://org.scid.database.scidprovider/games"),
-				null, scidFileName, null, null);
+		DataBaseView dbv = DataBaseView.getAll(scidFileName);
 		((ScidApplication) this.getApplicationContext()).setGamesDataBaseView(dbv);
 		((ScidApplication) this.getApplicationContext()).setNoGames(dbv);
 
