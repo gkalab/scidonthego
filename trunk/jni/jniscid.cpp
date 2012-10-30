@@ -372,12 +372,12 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoa
                 for (int i=0; i<noGames; i++) {
                     fill[i] = 1;
                 }
-                } else {
-                    jint *arr = env->GetIntArrayElements(currentFilter, 0);
-                    for (int i=0; i<noGames; i++) {
-                        fill[i] = arr[i];
-                    env->ReleaseIntArrayElements(currentFilter, arr, 0);
+            } else {
+                jint *arr = env->GetIntArrayElements(currentFilter, 0);
+                for (int i=0; i<noGames; i++) {
+                    fill[i] = arr[i];
                 }
+                env->ReleaseIntArrayElements(currentFilter, arr, 0);
             }
 
             // setup FEN position
