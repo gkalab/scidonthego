@@ -2,9 +2,6 @@ package org.scid.database;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import android.database.AbstractCursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,40 +27,53 @@ public class DataBaseView extends AbstractCursor {
 
 	private boolean reloadIndex = true;
 
-	// TODO: check for thread safety
-	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
+	private Filter filter;
 
-	private DataBaseView(){ 
+	private DataBaseView(String fileName){
 		super();
+		this.fileName = fileName;
+		this.count = DataBase.getSize(fileName);
+		this.startPosition = 0;
+		handleProjection(null);
 	}
-	
+
 	public static DataBaseView getAll(String fileName) {
-		DataBaseView dbv = new DataBaseView();
-		dbv.init(fileName, null, 0);
-		filterMap.put(fileName, null);
-		return dbv;
+		return new DataBaseView(fileName);
 	}
 
 	public static DataBaseView getFavorites(String fileName) {
-		DataBaseView dbv = new DataBaseView();
-		dbv.init(fileName, null, 0);
-		dbv.searchFavorites(fileName);
+		DataBaseView dbv = new DataBaseView(fileName);
+		dbv.filter = new Filter(DataBase.getFavorites(fileName));
 		return dbv;
 	}
 
-	public static DataBaseView getMatchingHeaders(String fileName, String[] selectionArgs) {
-		DataBaseView dbv = new DataBaseView();
-		dbv.init(fileName, null, 0);
-		dbv.searchHeader(fileName, selectionArgs);
-		return dbv;
+	public static DataBaseView getMatchingHeaders(DataBaseView dbv, int filterOperation,
+			String white, String black, boolean ignoreColors,
+			boolean result_win_white, boolean result_draw,
+			boolean result_win_black, boolean result_none,
+			String event, String site,
+			String ecoFrom, String ecoTo, boolean ecoNone,
+			String yearFrom, String yearTo) {
+		DataBaseView result = new DataBaseView(dbv.fileName);
+        result.filter = new Filter(DataBase.searchHeader(dbv.fileName,
+        		white, black,
+        		ignoreColors, result_win_white, result_draw,
+        		result_win_black, result_none, event, site, ecoFrom,
+        		ecoTo, ecoNone, yearFrom, yearTo, filterOperation, dbv.getFilterArray()));
+		return result;
 	}
 
-	public static DataBaseView getMatchingBoards(String fileName, String filterOperation,
+	public static DataBaseView getMatchingBoards(DataBaseView dbv, int filterOperation,
 			String fen, int searchType) {
-		DataBaseView dbv = new DataBaseView();
-		dbv.init(fileName, null, 0);
-		dbv.searchBoard(fileName, filterOperation, fen, searchType);
-		return dbv;
+		DataBaseView result = new DataBaseView(dbv.fileName);
+		result.filter = new Filter(DataBase.searchBoard(
+				dbv.fileName, fen, searchType,
+				filterOperation, dbv.getFilterArray()));
+		return result;
+	}
+
+	private int[] getFilterArray() {
+		return (filter == null) ? new int[0] : filter.getFilter();
 	}
 
 	private final static String[] columns = new String[] { "_id",
@@ -80,13 +90,6 @@ public class DataBaseView extends AbstractCursor {
 			ScidProviderMetaData.ScidMetaData.DETAILS,
 			ScidProviderMetaData.ScidMetaData.IS_FAVORITE,
 			ScidProviderMetaData.ScidMetaData.IS_DELETED };
-
-	private void init(String fileName, String[] projection, int startPosition) {
-		this.fileName = fileName;
-		this.count = DataBase.getSize(fileName);
-		this.startPosition = startPosition;
-		handleProjection(projection);
-	}
 
 	private void handleProjection(String[] projection) {
 		if (projection == null) {
@@ -120,69 +123,14 @@ public class DataBaseView extends AbstractCursor {
 		}
 	}
 
-	private void searchHeader(String fileName, String[] selectionArgs) {
-		int[] filter = getFilter(fileName);
-		int filterOp = getFilterOperation(fileName, selectionArgs[0]);
-		String white = selectionArgs[1];
-		String black = selectionArgs[2];
-		boolean ignoreColors = Boolean.parseBoolean(selectionArgs[3]);
-		boolean result_win_white = Boolean.parseBoolean(selectionArgs[4]);
-		boolean result_draw = Boolean.parseBoolean(selectionArgs[5]);
-		boolean result_win_black = Boolean.parseBoolean(selectionArgs[6]);
-		boolean result_none = Boolean.parseBoolean(selectionArgs[7]);
-		String event = selectionArgs[8];
-		String site = selectionArgs[9];
-		String ecoFrom = selectionArgs[10];
-		String ecoTo = selectionArgs[11];
-		boolean ecoNone = Boolean.parseBoolean(selectionArgs[12]);
-		String yearFrom = selectionArgs[13];
-		String yearTo = selectionArgs[14];
-
-		filterMap.put(
-				fileName,
-				new Filter(DataBase.searchHeader(fileName, white, black,
-						ignoreColors, result_win_white, result_draw,
-						result_win_black, result_none, event, site, ecoFrom,
-						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter)));
-	}
-
 	@Override
 	public Bundle getExtras() {
 		Bundle bundle = new Bundle();
-		if (filterMap.get(fileName) != null) {
-			bundle.putInt("filterSize", filterMap.get(fileName).getSize());
+		if (filter != null) {
+			bundle.putInt("filterSize", filter.getSize());
 			bundle.putInt("count", count);
 		}
 		return bundle;
-	}
-
-	private void searchBoard(String fileName, String filterOperation,
-			String fen, int searchType) {
-		int[] filter = getFilter(fileName);
-		int filterOp = getFilterOperation(fileName, filterOperation);
-		filterMap.put(
-				fileName,
-				new Filter(DataBase.searchBoard(fileName, fen, searchType, filterOp,
-						filter)));
-	}
-
-	private int getFilterOperation(String fileName, String filterOperation) {
-		int filterOp = 0;
-		if (filterMap.get(fileName) != null && filterOperation != null) {
-			filterOp = Integer.parseInt(filterOperation);
-		}
-		return filterOp;
-	}
-
-	private int[] getFilter(String fileName) {
-		Filter fMap = filterMap.get(fileName);
-		int[] filter;
-		if (fMap == null) {
-			filter = new int[0];
-		} else {
-			filter = fMap.getFilter();
-		}
-		return filter;
 	}
 
 	@Override
@@ -203,7 +151,6 @@ public class DataBaseView extends AbstractCursor {
 	 */
 	@Override
 	public int getCount() {
-		Filter filter = filterMap.get(fileName);
 		if (filter != null) {
 			return filter.getSize();
 		} else {
@@ -264,7 +211,7 @@ public class DataBaseView extends AbstractCursor {
 	@Override
 	public boolean onMove(int oldPosition, int newPosition) {
 		boolean result = true;
-		if (filterMap.get(fileName) != null) {
+		if (filter != null) {
 			result = this.onFilterMove(oldPosition, newPosition);
 		} else {
 			int gameNo = startPosition + newPosition;
@@ -279,15 +226,13 @@ public class DataBaseView extends AbstractCursor {
 
 	private boolean onFilterMove(int oldPosition, int newPosition) {
 		boolean result = false;
-		int gameNo = filterMap.get(fileName).getGameNo(
-				startPosition + newPosition);
+		int gameNo = filter.getGameNo(startPosition + newPosition);
 		if (gameNo >= 0) {
 			boolean onlyHeaders = !loadPGN;
 			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
 					onlyHeaders, this.reloadIndex);
 			setGameInfo(gameNo, isFavorite);
-			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
-					startPosition + newPosition));
+			gameInfo.setCurrentPly(filter.getGamePly(startPosition + newPosition));
 			result = true;
 		}
 		return result;
@@ -359,9 +304,5 @@ public class DataBaseView extends AbstractCursor {
 			this.gameInfo.setFavorite(extras.getBoolean("isFavorite"));
 		}
 		return null;
-	}
-
-	private void searchFavorites(String fileName) {
-		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName)));
 	}
 }

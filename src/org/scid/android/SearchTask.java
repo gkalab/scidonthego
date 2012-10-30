@@ -3,7 +3,6 @@ package org.scid.android;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import org.scid.database.DataBaseView;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
