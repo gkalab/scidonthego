@@ -44,13 +44,14 @@ public class DataBaseView {
 			String event, String site,
 			String ecoFrom, String ecoTo, boolean ecoNone,
 			String yearFrom, String yearTo,
+			String idFrom, String idTo,
 			Progress progress) {
 		DataBaseView result = new DataBaseView(dbv.fileName);
         result.filter = new Filter(DataBase.searchHeader(dbv.fileName,
         		white, black,
         		ignoreColors, result_win_white, result_draw,
         		result_win_black, result_none, event, site, ecoFrom,
-        		ecoTo, ecoNone, yearFrom, yearTo,
+        		ecoTo, ecoNone, yearFrom, yearTo, idFrom, idTo,
         		filterOperation, dbv.getFilterArray(), progress));
 		return result;
 	}

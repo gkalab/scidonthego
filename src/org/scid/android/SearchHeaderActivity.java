@@ -28,7 +28,8 @@ public class SearchHeaderActivity extends SearchActivityBase {
 		final String white = ets(R.id.search_white), black = ets(R.id.search_black),
 				event = ets(R.id.search_event), site = ets(R.id.search_site),
 				ecoFrom = ets(R.id.search_eco_from), ecoTo = ets(R.id.search_eco_to),
-				yearFrom = ets(R.id.search_year_from), yearTo = ets(R.id.search_year_to);
+				yearFrom = ets(R.id.search_year_from), yearTo = ets(R.id.search_year_to),
+				idFrom = ets(R.id.search_game_id_from), idTo = ets(R.id.search_game_id_to);
 		final boolean ignoreColors = cbb(R.id.ignore_colors),
 				resultWhiteWins = cbb(R.id.result_white_wins),
 				resultDraw = cbb(R.id.result_draw),
@@ -45,6 +46,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 						event, site,
 						ecoFrom, ecoTo, ecoNone,
 						yearFrom, yearTo,
+						idFrom, idTo,
 						progress);
 			}
 		}).execute();

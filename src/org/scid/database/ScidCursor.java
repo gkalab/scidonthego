@@ -151,7 +151,7 @@ public class ScidCursor extends AbstractCursor {
 				new Filter(DataBase.searchHeader(fileName, white, black,
 						ignoreColors, result_win_white, result_draw,
 						result_win_black, result_none, event, site, ecoFrom,
-						ecoTo, ecoNone, yearFrom, yearTo, filterOp, filter, null)));
+						ecoTo, ecoNone, yearFrom, yearTo, "", "", filterOp, filter, null)));
 	}
 
 	@Override

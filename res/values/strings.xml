@@ -127,6 +127,8 @@ GNU GPL v2\n\
     <string name="search_eco_from_default">A00</string>
     <string name="search_eco_to_default">E99</string>
     <string name="search_filter_prompt">Operation on current filter:</string>
+    <string name="search_game_id_from">ID from</string>
+    <string name="search_game_id_to">ID to</string>
     <string-array name="search_filter_array">
         <item>IGNORE (Reset filter)</item>
         <item>OR (Add to filter)</item>

@@ -44,6 +44,7 @@ public class DataBase {
 			boolean result_draw, boolean result_win_black, boolean result_none,
 			String event, String site, String ecoFrom, String ecoTo,
 			boolean includeEcoNone, String yearFrom, String yearTo,
+			String idFrom, String idTo,
 			int filterOperation, int[] currentFilter, Progress progress);
 
 	/** Get the number of games of a scid file. */
