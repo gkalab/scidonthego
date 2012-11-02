@@ -1214,11 +1214,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
  * Method:    importPgn
  */
 extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
-                (JNIEnv* env, jclass cls, jstring fileName)
+(JNIEnv* env, jclass cls, jstring fileName, jobject progress)
 {
     const char* pgnName = env->GetStringUTFChars(fileName, NULL);
     std::string resultString = "";
-    jmethodID mid = env->GetStaticMethodID(cls, "callback", "(I)V");
     if (pgnName) {
         MFile * pgnFile = new MFile;
         PgnParser pgnParser (pgnFile);
@@ -1233,6 +1232,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
         uint pgnFileSize = fileSize (pgnName, "");
         // Ensure positive file size counter to avoid division by zero:
         if (pgnFileSize < 1) { pgnFileSize = 1; }
+        PREPARE_PROGRESS(pgnFileSize);
 
         // Make baseName from pgnName if baseName is not provided:
         fileNameT baseName;
@@ -1344,18 +1344,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
             ie->SetLength (bbuf->GetByteCount());
             idx->WriteEntries (ie, gNumber, 1);
 
-            // TODO Update the progress bar:
-            if (! (gNumber % 100)) {
-                int bytesSeen = pgnParser.BytesUsed();
-                int percentDone = 1 + ((bytesSeen) * 100 / pgnFileSize);
-                // TODO: progBar.Update (percentDone);
-                if (percentDone != lastCallbackPercent) {
-                    lastCallbackPercent = percentDone;
-                    if (mid != 0) {
-                        env->CallStaticVoidMethod(cls, mid, percentDone);
-                    }
-                }
-            }
+            int bytesSeen = pgnParser.BytesUsed();
+            DO_PROGRESS(bytesSeen, pgnFileSize);
         }
 
         nb->SetTimeStamp(t);
@@ -1774,3 +1764,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
         env->ReleaseStringUTFChars(fileName, sourceFileName);
         return env->NewStringUTF(resultString.c_str());
 }
+
+// Local Variables:
+// tab-width: 4
+// c-basic-offset: 4
+// End:
