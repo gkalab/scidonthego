@@ -6,6 +6,8 @@
 #include <string>
 #include <sys/stat.h>
 #include <time.h>
+#include <algorithm>
+using namespace std;
 
 #include "scid/common.h"
 #include "scid/index.h"
@@ -815,7 +817,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         (JNIEnv *env, jclass cls, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
          jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
          jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
-         jstring yearFrom, jstring yearTo, jint filterOperation, jintArray currentFilter,
+         jstring yearFrom, jstring yearTo, jstring idFrom, jstring idTo,
+         jint filterOperation, jintArray currentFilter,
          jobject progress)
 {
     jintArray result;
@@ -829,8 +832,10 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     const char* strEcoTo = env->GetStringUTFChars(ecoTo, NULL);
     const char* strYearFrom = env->GetStringUTFChars(yearFrom, NULL);
     const char* strYearTo = env->GetStringUTFChars(yearTo, NULL);
-    if (!sourceFileName || !strWhite || !strBlack || !strEvent || !strSite || !strEcoFrom || !strEcoTo
-        || !strYearFrom || !strYearTo) {
+    const char* strId[2] = {env->GetStringUTFChars(idFrom, NULL),
+                            env->GetStringUTFChars(idTo, NULL)};
+    if (!(sourceFileName && strWhite && strBlack && strEvent && strSite && strEcoFrom && strEcoTo
+          && strYearFrom && strYearTo && strId[0] && strId[1])) {
       result = env->NewIntArray(0);
       return result;
     }
@@ -937,10 +942,12 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     ecoRange[1] = eco_FromString ("E99");
     bool ecoNone = includeEcoNone;  // Whether to include games with no ECO code.
 
-    // gameNumRange: a range of game numbers to search.
-    int gameNumRange[2];
-    gameNumRange[0] = 1;   // Default: start searching at 1st game.
-    gameNumRange[1] = -1;  // Default: stop searching at last game.
+    // gameIdRange: a range of game numbers to search.
+    int gameIdRange[2] = {1, -1}; // Default: from first game to last
+    for (uint i = 0; i < 2; ++i) {
+        if (strId[i][0])
+            gameIdRange[i] = strGetUnsigned(strId[i]);
+    }
 
     flagT fStdStart = FLAG_BOTH;
     flagT fPromotions = FLAG_BOTH;
@@ -1058,22 +1065,20 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     // "B07" -> "B07z4" to make sure subcodes are included in the range:
     ecoRange[1] = eco_LastSubCode (ecoRange[1]);
 
-    // Set up game number range:
-    // Note that a negative number means a count from the end,
-    // so -1 = last game, -2 = second to last, etc.
-    // Convert any negative values to positive:
-    if (gameNumRange[0] < 0) { gameNumRange[0] += noGames + 1; }
-    if (gameNumRange[1] < 0) { gameNumRange[1] += noGames + 1; }
-    if (gameNumRange[0] < 0) { gameNumRange[0] = 0; }
-    if (gameNumRange[1] < 0) { gameNumRange[1] = 0; }
-    uint gameNumMin = (uint) gameNumRange[0];
-    uint gameNumMax = (uint) gameNumRange[1];
-    if (gameNumMin > noGames) { gameNumMin = noGames; }
-    if (gameNumMax > noGames) { gameNumMax = noGames; }
-    // Swap them if necessary so min <= max:
-    if (gameNumMin > gameNumMax) {
-        uint temp = gameNumMin; gameNumMin = gameNumMax; gameNumMax = temp;
+    // Set up game number range
+    // A negative number means a count from the end
+    for (uint i = 0; i < 2; ++i) {
+        int t = gameIdRange[i];
+        if (t < 0) // -1 -> last game
+            t += noGames + 1;
+        if (t < 1)
+            t = 1;
+        else if (t > noGames)
+            t = noGames;
+        gameIdRange[i] = t - 1; // t \in [1,noGames]; gameIdRange[i] \in [0,noGames)
     }
+    if(gameIdRange[0] > gameIdRange[1])
+        swap(gameIdRange[0], gameIdRange[1]);
 
     char temp[250];
     IndexEntry * ie;
@@ -1108,7 +1113,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
         }
 
         // Skip games outside the specified game number range:
-        if (i+1 < gameNumMin  ||  i+1 > gameNumMax) {
+        if (i < gameIdRange[0]  ||  i > gameIdRange[1]) {
             fill[i] = 0;
             continue;
         }
@@ -1204,6 +1209,8 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     env->ReleaseStringUTFChars(ecoTo, strEcoTo);
     env->ReleaseStringUTFChars(yearFrom, strYearFrom);
     env->ReleaseStringUTFChars(yearTo, strYearTo);
+    env->ReleaseStringUTFChars(idFrom, strId[0]);
+    env->ReleaseStringUTFChars(idTo, strId[1]);
     return result;
 }
 
