@@ -3,47 +3,43 @@ package org.scid.android;
 import org.scid.database.DataBase;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ImportPgnTask extends AsyncTask {
-	private Activity activity;
-	private ProgressDialog progressDlg;
+public class ImportPgnTask extends ProgressingTask<String> {
+	private static final String LOG_TAG = "ImportPgnTask";
 	private String pgnFileName;
 
-	@Override
-	protected Object doInBackground(Object... params) {
-		this.activity = (Activity) params[0];
-		this.pgnFileName = (String) params[1];
-		this.progressDlg = (ProgressDialog) params[2];
-		Log.d("SCID", "Starting import from " + pgnFileName);
-		final String result = DataBase.importPgn(pgnFileName);
-		Log.d("SCID", "Import from " + pgnFileName + " done.");
-		Log.d("SCID", "Result: " + result);
-		this.activity.runOnUiThread(new Runnable() {
-			public void run() {
-				TextView resultView = (TextView) activity
-						.findViewById(R.id.importResult);
-				resultView.setText(result);
-			}
-		});
-		return result;
+	public ImportPgnTask(Activity activity, String pgnFileName) {
+		super(activity, R.string.import_pgn_title, R.string.please_wait);
+		this.pgnFileName = pgnFileName;
 	}
 
 	@Override
-	protected void onPostExecute(Object result) {
-		progressDlg.dismiss();
-		String resultText = (String) result;
-		if (resultText.equals("")) {
+	protected String doInBackground(Void... params) {
+		Log.d(LOG_TAG, "Starting import from " + pgnFileName);
+		final String importErrors = DataBase.importPgn(pgnFileName, progress);
+		Log.d(LOG_TAG, "Import from " + pgnFileName + " done.");
+		Log.d(LOG_TAG, "Result: " + importErrors);
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				TextView resultView = (TextView) activity.findViewById(R.id.importResult);
+				resultView.setText(importErrors);
+			}
+		});
+		return importErrors;
+	}
+
+	@Override
+	protected void onPostExecute(String importErrors) {
+		dismissProgress();
+		if (importErrors.length() == 0) {
 			Toast.makeText(activity.getApplicationContext(),
 					String.format(activity.getString(R.string.pgn_import_success),pgnFileName),
 					Toast.LENGTH_LONG).show();
-				activity.setResult(Activity.RESULT_OK, (new Intent())
-						.setAction(pgnFileName));
+				activity.setResult(Activity.RESULT_OK, (new Intent()).setAction(pgnFileName));
 			activity.finish();
 		} else {
 			Toast.makeText(activity.getApplicationContext(),

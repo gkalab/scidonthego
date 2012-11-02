@@ -77,7 +77,7 @@ public class DataBase {
 	public static final native byte[] getRound();
 
 	/** Import a pgn file and create a scid database. */
-	public static final native String importPgn(String fileName);
+	public static final native String importPgn(String fileName, Progress progress);
 
 	/** Set the favorite flag on a game. */
 	public static final native void setFavorite(String fileName, int gameNo,

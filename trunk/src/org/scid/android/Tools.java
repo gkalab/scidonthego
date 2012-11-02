@@ -44,7 +44,7 @@ public class Tools {
 
 	/**
 	 * Extract links from html using regular expressions
-	 * 
+	 *
 	 * @param html
 	 *            html content for validation
 	 * @return List of links
@@ -70,7 +70,7 @@ public class Tools {
 	/**
 	 * Add names of engine files (files which not have an ignored extension) to
 	 * the specified set of already found engines.
-	 * 
+	 *
 	 * @param foundEngines
 	 *            Set of already found engines or null if a new set should be
 	 *            created.
@@ -111,7 +111,7 @@ public class Tools {
 	/**
 	 * Download file to scid directory with file name from HTTP header or create
 	 * temp file if the HTTP header does not provide enough information
-	 * 
+	 *
 	 * @param path
 	 *            the path to the URL
 	 * @return the downloaded file
@@ -223,6 +223,8 @@ public class Tools {
 
 	private static void startPgnImport(Activity activity, String pgnFileName,
 			final int resultId) {
+		if (pgnFileName.length() == 0)
+			return;
 		Intent i = new Intent(activity, ImportPgnActivity.class);
 		i.setAction(pgnFileName);
 		activity.startActivityForResult(i, resultId);
