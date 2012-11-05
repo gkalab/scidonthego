@@ -37,7 +37,7 @@ public class ScidProviderMetaData {
 		public static final String IS_DELETED = "is_deleted";
 
 		public static final String[] columns = new String[] {
-			"_id", EVENT, SITE,	DATE, ROUND, WHITE,	BLACK,
+			_ID, EVENT, SITE, DATE, ROUND, WHITE, BLACK,
 			RESULT, PGN, SUMMARY, CURRENT_PLY, DETAILS,
 			IS_FAVORITE, IS_DELETED
 		};
