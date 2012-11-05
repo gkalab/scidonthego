@@ -615,7 +615,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	protected void onResume() {
-		getIntentData();
+		// Support the registered *.pgn extension
+		Uri data = getIntent().getData();
+		if (data != null) {
+			Tools.processUri(this, data, RESULT_PGN_IMPORT);
+			// the data was handled, set it to null to not enter this again
+			getIntent().setData(null);
+		}
+
+		// recover from preempted DataBase
+		setDataBaseViewFromFile();
+
 		if (ctrl != null) {
 			ctrl.setGuiPaused(false);
 		}
@@ -623,19 +633,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			startAnalysis();
 		}
 		super.onResume();
-	}
-
-	/**
-	 * Called after onResume to support the registered *.pgn extension
-	 */
-	private void getIntentData() {
-		Uri data = getIntent().getData();
-		if (data != null) {
-			Tools.processUri(this, data, RESULT_PGN_IMPORT);
-			// the data was handled, set it to null to not enter this again in
-			// onResume()
-			getIntent().setData(null);
-		}
 	}
 
 	@Override
@@ -1803,14 +1800,19 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private DataBaseView setDataBaseViewFromFile() {
-		final String currentScidFile = settings
-				.getString("currentScidFile", "");
+		final String currentScidFile = settings.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
 		String scidFileName = Tools.stripExtension(currentScidFile);
-		DataBaseView dbv = new DataBaseView(scidFileName);
-		((ScidApplication) this.getApplicationContext()).setDataBaseView(dbv);
+		DataBaseView dbv = getScidAppContext().getDataBaseView();
+		if (dbv == null || !scidFileName.equals(dbv.getFileName())) {
+			dbv = new DataBaseView(scidFileName);
+		} else { // The file is already loaded
+			if (!dbv.reloadFile())
+				dbv = null;
+		}
+		getScidAppContext().setDataBaseView(dbv);
 		return dbv;
 	}
 

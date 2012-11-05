@@ -7,16 +7,30 @@ import org.scid.android.Progress;
 import android.util.Log;
 
 public class DataBaseView {
+	private String fileName;
 	private int count; // total games in file
 	private GameFilter filter;
 	private GameInfo gameInfo = new GameInfo(); // TODO: remove and use JNI directly
 	private int position, id; // non equal if filter is in effect
 
 	public DataBaseView(String fileName) {
+		this.fileName = fileName;
 		DataBase.loadFile(fileName); // TODO: errors
 		this.count = DataBase.getSize();
 		this.position = -1;
 		this.id = -1;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	/** DataBase is static and thus can be preempted by different DataBaseView
+	 * or ScidCursor. This method is used to take the database back. */
+	public boolean reloadFile() {
+		// TODO: remove this function once DataBase is non-static
+		return DataBase.loadFile(fileName)
+				&& DataBase.loadGame(id, false);
 	}
 
 	public void setFilter(GameFilter filter) {
