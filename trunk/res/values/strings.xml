@@ -140,7 +140,9 @@ GNU GPL v2\n\
     <string name="study_mode_disabled">Study mode turned off</string>
     <string name="analysis_mode_enabled">Analysis enabled using \n%s</string>
     <string name="analysis_mode_disabled">Analysis turned off</string>
-    <string name="filter_no_games">No games found. Filter is reset.</string>
+    <string name="filter_no_games">No games found.\nFilter is preserved.</string>
+    <string name="filter_one_game_reset_filter">Only one game is found.\nFilter is reset.</string>
+    <string name="filter_one_game_preserved_filter">Only one game is found.\nFilter is preserved.</string>
     <string name="filter_numberof_games">games in current filter</string>
     <string name="downloading">Downloading...</string>
     <string name="download_started">Download started in the background.</string>
