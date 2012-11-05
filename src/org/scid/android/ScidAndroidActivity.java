@@ -222,7 +222,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					++newPosition;
 				// assert newPosition < totalGames && newPosition != oldPosition
 				dbv.moveToPosition(newPosition);
-				setPgnFromDataBaseView(dbv);
+				setPgnFromDataBaseView();
 			}
 		}
 	}
@@ -244,7 +244,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (dbv != null) {
 			int position = dbv.getPosition();
 			if (position > 0 && dbv.moveToPosition(position-1)) {
-				setPgnFromDataBaseView(dbv);
+				setPgnFromDataBaseView();
 			} else {
 				Toast.makeText(this, R.string.err_no_prev_game, Toast.LENGTH_SHORT).show();
 			}
@@ -257,7 +257,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (dbv != null) {
 			int position = dbv.getPosition();
 			if (position < dbv.getCount() && dbv.moveToPosition(position+1)) {
-				setPgnFromDataBaseView(dbv);
+				setPgnFromDataBaseView();
 			} else {
 				Toast.makeText(this, R.string.err_no_next_game, Toast.LENGTH_SHORT).show();
 			}
@@ -265,7 +265,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
-	private void setPgnFromDataBaseView(DataBaseView dbv) {
+	private void setPgnFromDataBaseView() {
+		DataBaseView dbv = getDataBaseView();
+		if (dbv == null)
+			return;
 		String pgn = dbv.getPGN();
 		if (pgn != null && pgn.length() > 0) {
 			try {
@@ -561,7 +564,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				if (dbv != null) {
 					int position = dbv.getPosition(), total = dbv.getCount();
 					if (position != total-1 && dbv.moveToPosition(total-1)) {
-						setPgnFromDataBaseView(dbv);
+						setPgnFromDataBaseView();
 					}
 				}
 				return true;
@@ -574,7 +577,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				DataBaseView dbv = getDataBaseView();
 				if (dbv != null) {
 					if (dbv.moveToFirst()) {
-						setPgnFromDataBaseView(dbv);
+						setPgnFromDataBaseView();
 					}
 				}
 				return true;
@@ -828,9 +831,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_gamelist: {
-			Intent i = new Intent(ScidAndroidActivity.this,
-					GameListActivity.class);
-			startActivityForResult(i, RESULT_GAMELIST);
+			showGameList();
 			return true;
 		}
 		case R.id.item_paste_clipboard: {
@@ -1057,13 +1058,24 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			}
 			break;
 		case RESULT_SEARCH:
-			if (resultCode == RESULT_OK) {
-				DataBaseView dbv = getDataBaseView();
-				if (dbv != null) {
-					setPgnFromDataBaseView(dbv);
-				}
-			} else if (resultCode == RESULT_FIRST_USER) {
-				resetFilter();
+			switch (resultCode) {
+			case SearchActivityBase.RESULT_CANCELED:
+				// search gives nothing or the same single game, keep the previous state
+				break;
+			case SearchActivityBase.RESULT_SHOW_LIST_AND_KEEP_OLD_GAME:
+				// many games found, the current is among them
+				showGameList();
+				ctrl.updateGUI();
+				break;
+			case SearchActivityBase.RESULT_SHOW_LIST_AND_GOTO_NEW:
+				// many games found, but the current one is not among them
+				showGameList();
+				setPgnFromDataBaseView();
+				break;
+			case SearchActivityBase.RESULT_SHOW_SINGLE_NEW:
+				// single game was found, it is not the current one
+				setPgnFromDataBaseView();
+				break;
 			}
 			break;
 		case RESULT_GAMELIST:
@@ -1072,7 +1084,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					int gameNo = Integer.parseInt(data.getAction());
 					DataBaseView dbv = getDataBaseView();
 					if (dbv != null && dbv.moveToPosition(gameNo)) {
-						setPgnFromDataBaseView(dbv);
+						setPgnFromDataBaseView();
 					}
 				} catch (NumberFormatException nfe) {
 					Toast.makeText(getApplicationContext(),
@@ -1193,7 +1205,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						DataBaseView dbv = setDataBaseViewFromFile();
 						// move to newly added game
 						if (dbv != null && dbv.moveToLast()) {
-							setPgnFromDataBaseView(dbv);
+							setPgnFromDataBaseView();
 						}
 					}
 				}
@@ -1210,7 +1222,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 		DataBaseView dbv = setDataBaseViewFromFile();
 		if (dbv.moveToPosition(gameNo) || dbv.moveToFirst()) {
-			setPgnFromDataBaseView(dbv);
+			setPgnFromDataBaseView();
 		} else {
 			newGame();
 		}
@@ -1428,7 +1440,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 									.toString()) - 1;
 							DataBaseView dbv = setDataBaseViewFromFile();
 							if (dbv != null && dbv.moveToPosition(gameNo)) {
-								setPgnFromDataBaseView(dbv);
+								setPgnFromDataBaseView();
 							}
 						} catch (NumberFormatException nfe) {
 							Toast.makeText(getApplicationContext(),
@@ -1664,6 +1676,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		startActivityForResult(i, RESULT_EDITBOARD);
 	}
 
+	private void showGameList() {
+		if (hasNoDataBaseViewOpened())
+			return;
+		Intent i = new Intent(this, GameListActivity.class);
+		startActivityForResult(i, RESULT_GAMELIST);
+	}
+
 	private void pasteFromClipboard() {
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		if (clipboard.hasText()) {
@@ -1748,11 +1767,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void resetFilter() {
 		final String fileName = getScidAppContext().getCurrentFileName();
 		if (fileName.length() != 0) {
-			int previousGameId = getScidAppContext().getGameId();
 			DataBaseView dbv = setDataBaseViewFromFile();
 			if (dbv != null) {
-				dbv.moveToPosition(previousGameId); // without filter position == id
-				setPgnFromDataBaseView(dbv);
+				dbv.setFilter(null, true);
+				setPgnFromDataBaseView();
 			}
 		} else {
 			getScidAppContext().setDataBaseView(null);

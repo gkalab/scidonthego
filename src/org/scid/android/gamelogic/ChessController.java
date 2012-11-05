@@ -623,7 +623,7 @@ public class ChessController {
 		return false;
 	}
 
-	final private void updateGUI() {
+	final public void updateGUI() {
 		updateStatus();
 		updateMoveList();
 

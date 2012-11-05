@@ -8,6 +8,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 class SearchActivityBase extends Activity {
+	public static final int RESULT_SHOW_LIST_AND_KEEP_OLD_GAME = RESULT_FIRST_USER;
+	public static final int RESULT_SHOW_LIST_AND_GOTO_NEW = RESULT_FIRST_USER + 1;
+	public static final int RESULT_SHOW_SINGLE_NEW = RESULT_FIRST_USER + 2;
+
 	protected int filterOperation = 0;
 	protected void addSpinner() {
 		Spinner spinner = (Spinner) findViewById(R.id.search_filter_spinner);

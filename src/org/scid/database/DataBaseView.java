@@ -33,10 +33,19 @@ public class DataBaseView {
 				&& DataBase.loadGame(id, false);
 	}
 
-	public void setFilter(GameFilter filter) {
+	/** returns whether the id was preserved
+	 * (that is current game is present in the new filter) */
+	public boolean setFilter(GameFilter filter, boolean preserveId) {
 		this.filter = filter;
-		this.position = -1; // must call moveToPosition
-		this.id = -1;
+		boolean wasPreserved;
+		if (preserveId) {
+			int position = (filter == null) ? id : filter.getPosition(id);
+			wasPreserved = (position >= 0);
+			moveToPosition(wasPreserved ? position : 0);
+		} else {
+			wasPreserved = false;
+		}
+		return wasPreserved;
 	}
 
 	public GameFilter getMatchingHeaders(int filterOperation,
@@ -160,6 +169,15 @@ public class DataBaseView {
 
 	public int getPosition() {
 		return position;
+	}
+
+	/** returns negative value if id is not present */
+	public int getPosition(int id) {
+		return (filter == null) ? id : filter.getPosition(id);
+	}
+
+	public int getId() {
+		return id;
 	}
 
 	public void setDeleted(boolean value) {

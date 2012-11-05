@@ -1,5 +1,7 @@
 package org.scid.database;
 
+import java.util.Arrays;
+
 import android.util.Log;
 
 public class GameFilter {
@@ -30,7 +32,7 @@ public class GameFilter {
 		}
 	}
 
-	/** Create Filter from list of id: all ply are assumed to be 1 */
+	/** Create Filter from list of IDs (the list must be ascending): all ply are assumed to be 1 */
 	public GameFilter(int[] id) {
 		this.id = id;
 		ply = new short[id.length];
@@ -59,6 +61,11 @@ public class GameFilter {
 		} else {
 			return ply[position];
 		}
+	}
+
+	/** returns negative value if id is not present */
+	public int getPosition(int id) {
+		return Arrays.binarySearch(this.id, id);
 	}
 
 	/** Prepare a filtering array for a possibly null Filter
