@@ -3,97 +3,87 @@ package org.scid.database;
 import org.scid.android.Progress;
 
 public class DataBase {
+	/**
+	 * SCID's encoding seems to be CP1252 under Windows and under Linux
+	 */
+	public static final String SCID_ENCODING = "CP1252";
+
 	static {
 		System.loadLibrary("jni");
 	}
+	// Make sure the following is in sync with jniscid.cpp
 
-	/** Create a new scid database. */
+    /// Loading and operations with loaded file
+    public static final native boolean loadFile(String fileName);
+	public static final native int getSize();
+	public static final int // nameType is one of
+        NAME_PLAYER = 0, NAME_EVENT = 1, NAME_SITE = 2, NAME_ROUND = 3;
+	public static final native int getNamesCount(int nameType);
+	public static final native String getName(int nameType, int id);
+	public static final native int[] getMatchingNames(int nameType, String prefix);
+
+    /// Loading and operations with the loaded game
+	public static final native boolean loadGame(int gameId, boolean onlyHeaders);
+	/** Get the complete PGN of the current game. */
+	public static final native byte[] getPGN();
+	/** Get the move list (including the result) of the current game. */
+	public static final native String getMoves();
+	/** Get the header [Result] of the current game. */
+	public static final native String getResult();
+	/** Get the header [White] of the current game. */
+	public static final native byte[] getWhite();
+	/** Get the header [Black] of the current game. */
+	public static final native byte[] getBlack();
+	/** Get the header [Event] of the current game. */
+	public static final native byte[] getEvent();
+	/** Get the header [Site] of the current game. */
+	public static final native byte[] getSite();
+	/** Get the header [Date] of the current game. */
+	public static final native String getDate();
+	/** Get the header [Round] of the current game. */
+	public static final native byte[] getRound();
+	/** Return true if the current game is favorite. */
+	public static final native boolean isFavorite();
+	/** Return true if the current game is marked as deleted. */
+	public static final native boolean isDeleted();
+
+    /// Create database (new or import)
+    /** Create new empty database */
 	public static final native String create(String fileName);
+	/** Import a pgn file and create a SCID database. */
+	public static final native String importPgn(String fileName, Progress progress);
 
-	/**
-	 * Load a game from a scid file and set it as the current game.
-	 * If reloadIndex = true then reload the index file.
-	 * Return true if the game is in Favorites.
-	 */
-	public static final native boolean loadGame(String fileName, int gameNo,
-			boolean onlyHeaders, boolean reloadIndex);
-
+    /// Filtering
 	/**
 	 * Do a board search and return the found game numbers and plys in an int
 	 * array
 	 *
-	 * @param fileName
-	 *            the file name to search
 	 * @param fen
 	 *            the FEN position to search for
-	 * @param typeOfSearch
+	 * @param searchType
 	 *            0=exact, 1=pawns, 2=files, 3=any
 	 * @param filterOperation
 	 *            the type of filter restriction (0=IGNORE, 1=OR, 2=AND)
-	 * @param currentFilter
-	 *            the current filter
-	 * @return int array of found game numbers and ply the result has the format
-	 *         [gameNo1, ply1, gameNo2, ply2, ...], so the result is twice as
-	 *         large as the found games
+	 * @param filter
+	 *            in-out array with ply for each game or 0 if the game is not selected
 	 */
-	public static final native int[] searchBoard(String fileName, String fen,
-			int typeOfSearch, int filterOperation, int[] currentFilter, Progress progress);
+	public static final native boolean searchBoard
+        (String fen, int searchType,
+         int filterOperation, short[]/*in-out*/ filter, Progress progress);
+	public static final native boolean searchHeader
+        (String white, String black, boolean ignoreColors,
+         boolean resultWinWhite, boolean resultDraw, boolean resultWinBlack, boolean resultNone,
+         String event, String site, String ecoFrom, String ecoTo, boolean includeEcoNone,
+         String yearFrom, String yearTo, String idFrom, String idTo,
+         int filterOperation, short[]/*in-out*/ filter, Progress progress);
+	/** Return the list of favorites. */
+	public static final native int[] getFavorites(Progress progress);
 
-	public static final native int[] searchHeader(String fileName, String white,
-			String black, boolean ignoreColors, boolean result_win_white,
-			boolean result_draw, boolean result_win_black, boolean result_none,
-			String event, String site, String ecoFrom, String ecoTo,
-			boolean includeEcoNone, String yearFrom, String yearTo,
-			String idFrom, String idTo,
-			int filterOperation, int[] currentFilter, Progress progress);
-
-	/** Get the number of games of a scid file. */
-	public static final native int getSize(String fileName);
-
-	/** Get the complete PGN of the current game. */
-	public static final native byte[] getPGN();
-
-	/** Get the move list (including the result) of the current game. */
-	public static final native String getMoves();
-
-	/** Get the header [Result] of the current game. */
-	public static final native String getResult();
-
-	/** Get the header [White] of the current game. */
-	public static final native byte[] getWhite();
-
-	/** Get the header [Black] of the current game. */
-	public static final native byte[] getBlack();
-
-	/** Get the header [Event] of the current game. */
-	public static final native byte[] getEvent();
-
-	/** Get the header [Site] of the current game. */
-	public static final native byte[] getSite();
-
-	/** Get the header [Date] of the current game. */
-	public static final native String getDate();
-
-	/** Get the header [Round] of the current game. */
-	public static final native byte[] getRound();
-
-	/** Import a pgn file and create a scid database. */
-	public static final native String importPgn(String fileName, Progress progress);
-
+    /// Modifications
 	/** Set the favorite flag on a game. */
-	public static final native void setFavorite(String fileName, int gameNo,
-			boolean isFavorite);
-
-	/** Return the favorites as a filter. */
-	public static final native int[] getFavorites(String fileName, Progress progress);
-
+	public static final native boolean setFavorite(int gameId, boolean isFavorite);
+    /** Set the deleted flag on a game. */
+	public static final native boolean setDeleted(int gameId, boolean isDeleted);
 	/** Save the game with the game number. */
-	public static final native String saveGame(String fileName, int gameNo, String pgn);
-
-	/** Set the deleted flag on a game. */
-	public static final native void setDeleted(String fileName, int gameNo,
-			boolean isDeleted);
-
-	/** Return true if the current game is marked as deleted. */
-	public static final native boolean isDeleted();
+	public static final native String saveGame(int gameId, String pgn);
 }

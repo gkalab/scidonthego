@@ -2,20 +2,14 @@ package org.scid.database;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
+import org.scid.database.ScidProviderMetaData.ScidMetaData;
 
 import android.database.AbstractCursor;
 import android.os.Bundle;
 import android.util.Log;
 
 public class ScidCursor extends AbstractCursor {
-
-	/**
-	 * Scids encoding seems to be CP1252 under Windows and under Linux
-	 */
-	private static final String SCID_ENCODING = "CP1252";
-
 	private int count;
 
 	private String fileName;
@@ -32,12 +26,8 @@ public class ScidCursor extends AbstractCursor {
 
 	private boolean reloadIndex = true;
 
-	// TODO: check for thread safety
-	private static Map<String, Filter> filterMap = new HashMap<String, Filter>();
-
 	public ScidCursor(String fileName, String[] projection, boolean singleGame) {
 		super();
-		filterMap.put(fileName, null);
 		this.singleGame = singleGame;
 		init(fileName, projection, 0);
 	}
@@ -49,65 +39,41 @@ public class ScidCursor extends AbstractCursor {
 		handleProjection(projection);
 	}
 
-	public ScidCursor(String fileName, String[] projection) {
-		super();
-		this.singleGame = false;
-		this.startPosition = 0;
-		init(fileName, projection, startPosition);
-		getFavorites(fileName);
-	}
-
-	public ScidCursor(String fileName, String[] projection, int startPosition,
-			String[] selectionArgs, boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchHeader(fileName, selectionArgs);
-	}
-
-	public ScidCursor(String fileName, String[] projection, int startPosition,
-			String filterOperation, String fen, int searchType,
-			boolean singleGame) {
-		super();
-		this.singleGame = singleGame;
-		init(fileName, projection, startPosition);
-		searchBoard(fileName, filterOperation, fen, searchType);
-	}
-
-	private final static String[] columns = new String[] { "_id",
-			ScidProviderMetaData.ScidMetaData.EVENT,
-			ScidProviderMetaData.ScidMetaData.SITE,
-			ScidProviderMetaData.ScidMetaData.DATE,
-			ScidProviderMetaData.ScidMetaData.ROUND,
-			ScidProviderMetaData.ScidMetaData.WHITE,
-			ScidProviderMetaData.ScidMetaData.BLACK,
-			ScidProviderMetaData.ScidMetaData.RESULT,
-			ScidProviderMetaData.ScidMetaData.PGN,
-			ScidProviderMetaData.ScidMetaData.SUMMARY,
-			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
-			ScidProviderMetaData.ScidMetaData.DETAILS,
-			ScidProviderMetaData.ScidMetaData.IS_FAVORITE,
-			ScidProviderMetaData.ScidMetaData.IS_DELETED };
+//	private final static String[] columns = new String[] { "_id",
+//			ScidProviderMetaData.ScidMetaData.EVENT,
+//			ScidProviderMetaData.ScidMetaData.SITE,
+//			ScidProviderMetaData.ScidMetaData.DATE,
+//			ScidProviderMetaData.ScidMetaData.ROUND,
+//			ScidProviderMetaData.ScidMetaData.WHITE,
+//			ScidProviderMetaData.ScidMetaData.BLACK,
+//			ScidProviderMetaData.ScidMetaData.RESULT,
+//			ScidProviderMetaData.ScidMetaData.PGN,
+//			ScidProviderMetaData.ScidMetaData.SUMMARY,
+//			ScidProviderMetaData.ScidMetaData.CURRENT_PLY,
+//			ScidProviderMetaData.ScidMetaData.DETAILS,
+//			ScidProviderMetaData.ScidMetaData.IS_FAVORITE,
+//			ScidProviderMetaData.ScidMetaData.IS_DELETED };
 
 	private void init(String fileName, String[] projection, int startPosition) {
 		this.fileName = fileName;
-		this.count = singleGame ? 1 : DataBase.getSize(fileName);
+		DataBase.loadFile(fileName);
+		this.count = singleGame ? 1 : DataBase.getSize();
 		this.startPosition = startPosition;
 		handleProjection(projection);
 	}
 
 	private void handleProjection(String[] projection) {
 		if (projection == null) {
-			this.projection = new int[columns.length];
-			for (int i = 0; i < columns.length; i++) {
+			this.projection = new int[ScidMetaData.columns.length];
+			for (int i = 0; i < ScidMetaData.columns.length; i++) {
 				this.projection[i] = i;
 			}
 		} else {
 			ArrayList<Integer> proj = new ArrayList<Integer>();
 			for (String p : projection) {
 				int idx = 0;
-				for (int i = 0; i < columns.length; i++) {
-					if (columns[i].equals(p)) {
+				for (int i = 0; i < ScidMetaData.columns.length; i++) {
+					if (ScidMetaData.columns[i].equals(p)) {
 						idx = i;
 						break;
 					}
@@ -128,95 +94,19 @@ public class ScidCursor extends AbstractCursor {
 		}
 	}
 
-	private void searchHeader(String fileName, String[] selectionArgs) {
-		int[] filter = getFilter(fileName);
-		int filterOp = getFilterOperation(fileName, selectionArgs[0]);
-		String white = selectionArgs[1];
-		String black = selectionArgs[2];
-		boolean ignoreColors = Boolean.parseBoolean(selectionArgs[3]);
-		boolean result_win_white = Boolean.parseBoolean(selectionArgs[4]);
-		boolean result_draw = Boolean.parseBoolean(selectionArgs[5]);
-		boolean result_win_black = Boolean.parseBoolean(selectionArgs[6]);
-		boolean result_none = Boolean.parseBoolean(selectionArgs[7]);
-		String event = selectionArgs[8];
-		String site = selectionArgs[9];
-		String ecoFrom = selectionArgs[10];
-		String ecoTo = selectionArgs[11];
-		boolean ecoNone = Boolean.parseBoolean(selectionArgs[12]);
-		String yearFrom = selectionArgs[13];
-		String yearTo = selectionArgs[14];
-
-		filterMap.put(
-				fileName,
-				new Filter(DataBase.searchHeader(fileName, white, black,
-						ignoreColors, result_win_white, result_draw,
-						result_win_black, result_none, event, site, ecoFrom,
-						ecoTo, ecoNone, yearFrom, yearTo, "", "", filterOp, filter, null)));
-	}
-
-	@Override
-	public Bundle getExtras() {
-		Bundle bundle = new Bundle();
-		if (filterMap.get(fileName) != null) {
-			bundle.putInt("filterSize", filterMap.get(fileName).getSize());
-			bundle.putInt("count", count);
-		}
-		return bundle;
-	}
-
-	private void searchBoard(String fileName, String filterOperation,
-			String fen, int searchType) {
-		int[] filter = getFilter(fileName);
-		int filterOp = getFilterOperation(fileName, filterOperation);
-		filterMap.put(
-				fileName,
-				new Filter(DataBase.searchBoard(fileName, fen, searchType, filterOp,
-						filter, null)));
-	}
-
-	private int getFilterOperation(String fileName, String filterOperation) {
-		int filterOp = 0;
-		if (filterMap.get(fileName) != null && filterOperation != null) {
-			filterOp = Integer.parseInt(filterOperation);
-		}
-		return filterOp;
-	}
-
-	private int[] getFilter(String fileName) {
-		Filter fMap = filterMap.get(fileName);
-		int[] filter;
-		if (fMap == null) {
-			filter = new int[0];
-		} else {
-			filter = fMap.getFilter();
-		}
-		return filter;
-	}
-
 	@Override
 	public String[] getColumnNames() {
 		String[] ret = new String[projection.length];
 		int idx = 0;
 		for (int i : projection) {
-			ret[idx++] = columns[i];
+			ret[idx++] = ScidMetaData.columns[i];
 		}
 		return ret;
 	}
 
-	/**
-	 * Return the number of games in the cursor. If the there's a current filter
-	 * only return the number of games in the filter.
-	 *
-	 * @see android.database.AbstractCursor#getCount()
-	 */
 	@Override
 	public int getCount() {
-		Filter filter = filterMap.get(fileName);
-		if (filter != null) {
-			return filter.getSize();
-		} else {
-			return this.count;
-		}
+		return count;
 	}
 
 	private void setGameInfo(int gameNo, boolean isFavorite) {
@@ -248,7 +138,7 @@ public class ScidCursor extends AbstractCursor {
 			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
 			gameInfo.setResult(DataBase.getResult());
 			gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
-					SCID_ENCODING) : null);
+					DataBase.SCID_ENCODING) : null);
 		} catch (UnsupportedEncodingException e) {
 			Log.e("SCID", "Error converting byte[] to String", e);
 		}
@@ -259,7 +149,7 @@ public class ScidCursor extends AbstractCursor {
 
 	private String getSanitizedString(byte[] value)
 			throws UnsupportedEncodingException {
-		return Utf8Converter.convertToUTF8(new String(value, SCID_ENCODING));
+		return Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
 	}
 
 	/**
@@ -272,32 +162,11 @@ public class ScidCursor extends AbstractCursor {
 	@Override
 	public boolean onMove(int oldPosition, int newPosition) {
 		boolean result = true;
-		if (filterMap.get(fileName) != null) {
-			result = this.onFilterMove(oldPosition, newPosition);
-		} else {
-			int gameNo = startPosition + newPosition;
-			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
-					onlyHeaders, this.reloadIndex);
-			setGameInfo(gameNo, isFavorite);
-		}
+		int gameNo = startPosition + newPosition;
+		boolean onlyHeaders = !loadPGN;
+		boolean isFavorite = DataBase.loadGame(gameNo,	onlyHeaders);
+		setGameInfo(gameNo, isFavorite);
 		this.reloadIndex = false;
-		return result;
-	}
-
-	private boolean onFilterMove(int oldPosition, int newPosition) {
-		boolean result = false;
-		int gameNo = filterMap.get(fileName).getGameNo(
-				startPosition + newPosition);
-		if (gameNo >= 0) {
-			boolean onlyHeaders = !loadPGN;
-			boolean isFavorite = DataBase.loadGame(fileName, gameNo,
-					onlyHeaders, this.reloadIndex);
-			setGameInfo(gameNo, isFavorite);
-			gameInfo.setCurrentPly(filterMap.get(fileName).getGamePly(
-					startPosition + newPosition));
-			result = true;
-		}
 		return result;
 	}
 
@@ -367,9 +236,5 @@ public class ScidCursor extends AbstractCursor {
 			this.gameInfo.setFavorite(extras.getBoolean("isFavorite"));
 		}
 		return null;
-	}
-
-	private void getFavorites(String fileName) {
-		filterMap.put(fileName, new Filter(DataBase.getFavorites(fileName, null)));
 	}
 }

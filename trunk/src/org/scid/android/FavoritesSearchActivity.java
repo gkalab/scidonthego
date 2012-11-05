@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import org.scid.database.DataBaseView;
+import org.scid.database.GameFilter;
 
 import android.os.Bundle;
 
@@ -14,8 +15,8 @@ public class FavoritesSearchActivity extends SearchActivityBase {
 				.getDataBaseView();
 		(new SearchTask(this){
 			@Override
-			protected DataBaseView doInBackground(Void... params) {
-				return DataBaseView.getFavorites(dbv, progress);
+			protected GameFilter doInBackground(Void... params) {
+				return dbv.getFavorites(progress);
 			}
 		}).execute();
 	}

@@ -246,9 +246,9 @@ class IndexEntry
     // 128 ko (131071). So 7 bits are usable for custom flags or other.
     ushort       Length_Low;
     byte         Length_High; // LxFFFFFF ( L = length for long games, x = spare, F = custom flags)
-    
+
   public:
-    
+
     IndexEntry() {}
     ~IndexEntry() {}
     void Init();
@@ -333,7 +333,7 @@ class IndexEntry
     }
     inline static uint DecodeCount (uint x) {
         static uint countCodes[16] = {0,1,2,3,4,5,6,7,8,9,10,15,20,30,40,50};
-        return countCodes[x & 15]; 
+        return countCodes[x & 15];
     }
     inline uint GetVariationCount () { return DecodeCount(VarCounts & 15); }
     inline uint GetCommentCount ()   { return DecodeCount((VarCounts >> 4) & 15); }
@@ -346,7 +346,7 @@ class IndexEntry
     // Set() Methods:
 
     inline void SetOffset (uint offset) { Offset = offset; }
-    
+
     inline void SetLength (uint length) {
       ASSERT(length >= 0 && length < 131072);
       Length_Low = (unsigned short) (length & 0xFFFF);
@@ -646,6 +646,7 @@ class Index
     void        SetFileName (const char *s)   { strCopy (Fname, s); }
     char  *     GetFileName ()          { return Fname; }
 
+    fileModeT   GetFileMode()      { return FileMode; }
     void        SetType (uint t)   { Header.baseType = t; }
     uint        GetType ()         { return Header.baseType; }
 
@@ -659,7 +660,7 @@ class Index
     void        GetCustomFlagDesc (char * str, byte c) {
       strcpy(str, Header.customFlagDesc[c-1] );
     }
-    
+
     void        SetCustomFlagDesc (const char * str, byte c) {
       strncpy( Header.customFlagDesc[c-1], str, CUSTOM_FLAG_DESC_LENGTH );
       Header.customFlagDesc[c-1][CUSTOM_FLAG_DESC_LENGTH] = 0;
@@ -669,7 +670,7 @@ class Index
     gameNumberT GetAutoLoad () {
         return ((Header.autoLoad == 0) ? 1 : (Header.autoLoad - 1));
     }
-    
+
     errorT      Open (fileModeT, bool old);
     errorT      OpenIndexFile (fileModeT m) { return Open (m, false); }
     errorT      OpenOldIndexFile (fileModeT m) { return Open (m, true); }
@@ -691,7 +692,7 @@ class Index
     }
 
     MFile *     GetMFile() { return FilePtr; }
-    
+
     uint        VerifyFile (NameBase * nb);
     bool        AllInMemory() { return InMemory; }
 

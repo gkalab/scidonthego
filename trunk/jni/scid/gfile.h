@@ -59,8 +59,10 @@ class GFile
     GFile()      { Init(); }
 
     void      Init ();
-    
+
     uint      GetFileSize();
+    const char* GetFileNameWithSuffix() { return FileName; }
+    fileModeT   GetFileMode()      { return FileMode; }
     uint      GetNumReads ()   { return Reads; }
     uint      GetNumWrites ()  { return Writes; }
 
@@ -78,7 +80,7 @@ class GFile
     errorT    Flush (gfBlockT * blk);
 
     void      FlushAll ()  { Flush (CurrentBlock); }
-    
+
     errorT    AddGame (ByteBuffer * bb, uint * offset);
     errorT    ReadGame (ByteBuffer * bb, uint offset, uint length);
 };

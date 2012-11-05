@@ -7,37 +7,25 @@ import org.scid.android.Progress;
 import android.util.Log;
 
 public class DataBaseView {
-	/**
-	 * Scids encoding seems to be CP1252 under Windows and under Linux
-	 */
-	private static final String SCID_ENCODING = "CP1252";
-	private String fileName;
 	private int count; // total games in file
-	private Filter filter;
-	private GameInfo gameInfo = new GameInfo();
+	private GameFilter filter;
+	private GameInfo gameInfo = new GameInfo(); // TODO: remove and use JNI directly
 	private int position, id; // non equal if filter is in effect
-	private boolean reloadIndex = true;
-	private int generation; // incremented on every change
-	private boolean loadPGN = true;
 
-	private DataBaseView(String fileName){
-		this.fileName = fileName;
-		this.count = DataBase.getSize(fileName);
-		this.position = 0;
-		this.id = 0;
+	public DataBaseView(String fileName) {
+		DataBase.loadFile(fileName); // TODO: errors
+		this.count = DataBase.getSize();
+		this.position = -1;
+		this.id = -1;
 	}
 
-	public static DataBaseView getAll(String fileName) {
-		return new DataBaseView(fileName);
+	public void setFilter(GameFilter filter) {
+		this.filter = filter;
+		this.position = -1; // must call moveToPosition
+		this.id = -1;
 	}
 
-	public static DataBaseView getFavorites(DataBaseView dbv, Progress progress) {
-		DataBaseView result = new DataBaseView(dbv.fileName);
-		result.filter = new Filter(DataBase.getFavorites(dbv.fileName, progress));
-		return result;
-	}
-
-	public static DataBaseView getMatchingHeaders(DataBaseView dbv, int filterOperation,
+	public GameFilter getMatchingHeaders(int filterOperation,
 			String white, String black, boolean ignoreColors,
 			boolean result_win_white, boolean result_draw,
 			boolean result_win_black, boolean result_none,
@@ -46,28 +34,30 @@ public class DataBaseView {
 			String yearFrom, String yearTo,
 			String idFrom, String idTo,
 			Progress progress) {
-		DataBaseView result = new DataBaseView(dbv.fileName);
-        result.filter = new Filter(DataBase.searchHeader(dbv.fileName,
-        		white, black,
+		short[] filterArray = GameFilter.getFilterArray(filter, count);
+        if (!DataBase.searchHeader(white, black,
         		ignoreColors, result_win_white, result_draw,
         		result_win_black, result_none, event, site, ecoFrom,
         		ecoTo, ecoNone, yearFrom, yearTo, idFrom, idTo,
-        		filterOperation, dbv.getFilterArray(), progress));
-		return result;
+        		filterOperation, filterArray, progress)) {
+        	Log.e("DBV", "error in searchHeader");
+        	return null;
+        }
+        return new GameFilter(filterArray);
 	}
 
-	public static DataBaseView getMatchingBoards(DataBaseView dbv, int filterOperation,
-			String fen, int searchType, Progress progress) {
-		DataBaseView result = new DataBaseView(dbv.fileName);
-		result.filter = new Filter(DataBase.searchBoard(
-				dbv.fileName, fen, searchType,
-				filterOperation, dbv.getFilterArray(),
-				progress));
-		return result;
+	public GameFilter getMatchingBoards(int filterOperation, String fen,
+			int searchType,	Progress progress) {
+		short[] filterArray = GameFilter.getFilterArray(filter, count);
+		if (!DataBase.searchBoard(fen, searchType, filterOperation, filterArray, progress)) {
+        	Log.e("DBV", "error in searchBoard");
+        	return null;
+        }
+		return new GameFilter(filterArray);
 	}
 
-	private int[] getFilterArray() {
-		return (filter == null) ? new int[0] : filter.getFilter();
+	public GameFilter getFavorites(Progress progress) {
+		return new GameFilter(DataBase.getFavorites(progress));
 	}
 
 	public int getCount() {
@@ -82,7 +72,7 @@ public class DataBaseView {
 		return count;
 	}
 
-	private void setGameInfo(boolean isFavorite) {
+	private void setGameInfo(boolean onlyHeaders) {
 		try {
 			gameInfo.setEvent(getSanitizedString(DataBase.getEvent()));
 			if (gameInfo.getEvent().equals("?")) {
@@ -109,12 +99,13 @@ public class DataBaseView {
 			gameInfo.setWhite(getSanitizedString(DataBase.getWhite()));
 			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
 			gameInfo.setResult(DataBase.getResult());
-			gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
-					SCID_ENCODING) : null);
+			gameInfo.setPgn(onlyHeaders
+					? null
+					: new String(DataBase.getPGN(), DataBase.SCID_ENCODING));
 		} catch (UnsupportedEncodingException e) {
 			Log.e("SCID", "Error converting byte[] to String", e);
 		}
-		gameInfo.setFavorite(isFavorite);
+		gameInfo.setFavorite(DataBase.isFavorite());
 		gameInfo.setDeleted(DataBase.isDeleted());
 	}
 
@@ -124,23 +115,25 @@ public class DataBaseView {
 
 	private String getSanitizedString(byte[] value)
 			throws UnsupportedEncodingException {
-		return Utf8Converter.convertToUTF8(new String(value, SCID_ENCODING));
+		return Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
 	}
 
-	public boolean moveToPosition(int newPosition) {
-		int id = (filter != null) ? filter.getGameNo(newPosition) : newPosition;
+	public boolean moveToPosition(int newPosition, boolean onlyHeaders) {
+		int id = (filter != null) ? filter.getGameId(newPosition) : newPosition;
 		if (id < 0 || id >= count) {
 			return false;
 		}
 		this.id = id;
 		this.position = newPosition;
-		boolean onlyHeaders = !loadPGN;
-		boolean isFavorite = DataBase.loadGame(fileName, id, onlyHeaders, this.reloadIndex);
-		setGameInfo(isFavorite);
+		DataBase.loadGame(id, onlyHeaders); // TODO: check errors
+		setGameInfo(onlyHeaders);
 		if (filter != null)
 			gameInfo.setCurrentPly(filter.getGamePly(position));
-		reloadIndex = false;
 		return true;
+	}
+
+	public boolean moveToPosition(int newPosition) {
+		return moveToPosition(newPosition, false);
 	}
 
 	public boolean moveToFirst() {
@@ -155,24 +148,10 @@ public class DataBaseView {
 		return position;
 	}
 
-	public void setLoadPGN(boolean value) {
-		loadPGN = value;
-	}
-
-	public void forceReloadIndex() {
-		reloadIndex = true;
-		++generation;
-	}
-
-	public int getGenerationCounter() {
-		return generation;
-	}
-
 	public void setDeleted(boolean value) {
 		if (value != isDeleted()) {
 			gameInfo.setDeleted(value);
-			DataBase.setDeleted(fileName, id, value);
-			forceReloadIndex();
+			DataBase.setDeleted(id, value);
 		}
 	}
 
@@ -183,8 +162,7 @@ public class DataBaseView {
 	public void setFavorite(boolean value) {
 		if (value != isFavorite()) {
 			gameInfo.setFavorite(value);
-			DataBase.setFavorite(fileName, id, value);
-			forceReloadIndex();
+			DataBase.setFavorite(id, value);
 		}
 	}
 
@@ -202,6 +180,18 @@ public class DataBaseView {
 
 	public int getCurrentPly(){
 		return gameInfo.getCurrentPly();
+	}
+
+	/* nameType is one of NAME_PLAYER, NAME_EVENT, NAME_SITE, NAME_ROUND */
+	public static final int NAME_PLAYER = 0, NAME_EVENT = 1, NAME_SITE = 2, NAME_ROUND = 3;
+	public int getNamesCount(int nameType) {
+		return DataBase.getNamesCount(nameType);
+	}
+	public String getName(int nameType, int id) {
+		return DataBase.getName(nameType, id);
+	}
+	public int[] getMatchingNames(int nameType, String prefix){
+		return DataBase.getMatchingNames(nameType, prefix);
 	}
 
 }
