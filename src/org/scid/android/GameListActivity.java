@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import org.scid.database.DataBaseView;
+import org.scid.database.GameInfo;
 
 import android.app.ListActivity;
 import android.content.Context;
@@ -63,24 +64,23 @@ public class GameListActivity extends ListActivity {
 						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				view = vi.inflate(R.layout.gamelist_item, null);
 			}
-			dbv.moveToPosition(position);
-			GameInfo item = new GameInfo(dbv.getGameInfo());
-			if (item != null) {
+			if (dbv.moveToPosition(position, true)) {
+				final GameInfo info = dbv.getGameInfo(); // must not be modified
 				TextView title = (TextView) view.findViewById(R.id.item_title);
 				TextView details = (TextView) view.findViewById(R.id.item_details);
 				if (title != null) {
-					title.setText(item.getTitle());
+					title.setText(info.getWhite() + " - " + info.getBlack());
 				}
 				if (details != null) {
-					String text = item.getDetails();
-					if (item.isDeleted()) {
+					String text = info.getDetails();
+					if (info.isDeleted()) {
 						text = "<font color='red'><b>DELETED</b></font> " + text;
 					}
 					details.setText(Html.fromHtml(text));
 				}
 				RatingBar favorite = (RatingBar) view.findViewById(R.id.item_favorite);
 				if (favorite != null) {
-					favorite.setRating(item.isFavorite() ? 1 : 0);
+					favorite.setRating(info.isFavorite() ? 1 : 0);
 				}
 			}
 			return view;

@@ -1809,7 +1809,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return null;
 		}
 		String scidFileName = Tools.stripExtension(currentScidFile);
-		DataBaseView dbv = DataBaseView.getAll(scidFileName);
+		DataBaseView dbv = new DataBaseView(scidFileName);
 		((ScidApplication) this.getApplicationContext()).setDataBaseView(dbv);
 		return dbv;
 	}

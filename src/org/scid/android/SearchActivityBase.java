@@ -8,12 +8,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 class SearchActivityBase extends Activity {
-	protected boolean onCreateHelper(int id) {
-		setContentView(id);
-	    Tools.setKeepScreenOn(this, true);
-	    return true;
-	}
-
 	protected int filterOperation = 0;
 	protected void addSpinner() {
 		Spinner spinner = (Spinner) findViewById(R.id.search_filter_spinner);
@@ -31,7 +25,7 @@ class SearchActivityBase extends Activity {
 			}
 		});
 	}
-	
+
 	public void onCancelClick(View view) {
 		setResult(RESULT_CANCELED);
 		finish();

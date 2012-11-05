@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import org.scid.database.DataBaseView;
+import org.scid.database.GameFilter;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -44,8 +45,8 @@ public class SearchCurrentBoardActivity extends SearchActivityBase {
 				.getDataBaseView();
 		(new SearchTask(this){
 			@Override
-			protected DataBaseView doInBackground(Void... params) {
-				return DataBaseView.getMatchingBoards(dbv, filterOperation, fen, searchType, progress);
+			protected GameFilter doInBackground(Void... params) {
+				return dbv.getMatchingBoards(filterOperation, fen, searchType, progress);
 			}
 		}).execute();
 	}

@@ -13,17 +13,19 @@
             android:orientation="horizontal"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content">
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/search_white"
                 android:text=""
                 android:hint="@string/white"
+                android:completionThreshold="1"
                 android:layout_weight="1"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content" />
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/search_black"
                 android:text=""
                 android:hint="@string/black"
+                android:completionThreshold="1"
                 android:layout_weight="1"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content" />
@@ -70,16 +72,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/search_event"
             android:text=""
             android:hint="@string/event"
+            android:completionThreshold="1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/search_site"
             android:text=""
             android:hint="@string/site"
+            android:completionThreshold="1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />
         <LinearLayout

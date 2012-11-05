@@ -1,14 +1,3 @@
-#include <string.h>
-#include <jni.h>
-#include <android/log.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string>
-#include <sys/stat.h>
-#include <time.h>
-#include <algorithm>
-using namespace std;
-
 #include "scid/common.h"
 #include "scid/index.h"
 #include "scid/namebase.h"
@@ -16,919 +5,826 @@ using namespace std;
 #include "scid/game.h"
 #include "scid/pgnparse.h"
 
+#include <android/log.h>
+#include <jni.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include <vector>
+using namespace std;
+
+
+/// JNI helpers
 #define  LOG_TAG    "SCIDjni"
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-int main(int argc, char* argv[]);
+// Java class method
+#define JCM(resultType, methodName, ...)                    \
+    extern "C" JNIEXPORT resultType                         \
+    JNICALL Java_org_scid_database_DataBase_##methodName    \
+  (JNIEnv* env, jclass cls, ##__VA_ARGS__)
 
-static Game * game = new Game;
-static bool initialized = false;
+#define CHECK(op)                               \
+    if((op) != OK) return false
 
-typedef uint filterOpT;
-const filterOpT FILTEROP_AND = 2;
-const filterOpT FILTEROP_OR = 1;
-const filterOpT FILTEROP_RESET = 0;
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    loadGame
- */
-extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_loadGame
-                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean onlyHeaders, jboolean reloadIndex)
-{
-    bool result = false;
-	static char* currFileName = 0;
-    static time_t currModifiedTime = 0;
-	static Index sourceIndex;
-	static NameBase sourceNameBase;
-	static GFile sourceGFile;
-	static ByteBuffer bbuf;
-
-	game->Clear();
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    if (sourceFileName) {
-        // get modification time
-        struct stat attrib;
-        stat(sourceFileName, &attrib);
-        struct tm* modified = localtime((const time_t*)&(attrib.st_mtime));
-        errorT err = 0;
-        if (reloadIndex ||
-            (currFileName == 0) || (currModifiedTime == 0)
-            || (strcmp(currFileName, sourceFileName) != 0)
-            // TODO: check why this does not work
-            //|| mktime(modified) != currModifiedTime
-        )
-            initialized = false;
-    	if (!initialized) {
-            if (currFileName != 0) {
-                LOGI("reloading index");
-            	// cleanup
-            	sourceIndex.CloseIndexFile();
-                sourceIndex.Clear();
-            	sourceNameBase.Clear();
-            	sourceGFile.Close();
-            }
-            bbuf.SetBufferSize (BBUF_SIZE);
-            sourceIndex.SetFileName(sourceFileName);
-            sourceNameBase.SetFileName(sourceFileName);
-            if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-            	goto cleanup;
-            }
-            if (sourceNameBase.ReadNameFile() != OK) {
-                goto cleanup;
-            }
-            if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
-                goto cleanup;
-            }
-            if (currFileName)
-                free(currFileName);
-            currFileName = strdup(sourceFileName);
-            currModifiedTime = mktime(modified);
-    		initialized = true;
-    	}
-
-        if (gameNo < sourceIndex.GetNumGames()) {
-            IndexEntry iE;
-            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
-            if (err != OK) {
-                goto cleanup;
-            }
-            result = iE.GetUserFlag();
-            bbuf.Empty();
-            err = sourceGFile.ReadGame(&bbuf, iE.GetOffset(), iE.GetLength());
-            if (err != OK) {
-                goto cleanup;
-            }
-            if (onlyHeaders) {
-            	game->SetNumHalfMoves(iE.GetNumHalfMoves());
-            } else {
-            	if (game->Decode(&bbuf, GAME_DECODE_ALL) != OK) {
-                    LOGW("Unable to decode game.");
-            		goto cleanup;
-            	}
-            }
-            game->LoadStandardTags(&iE, &sourceNameBase);
-            game->AddPgnStyle(PGN_STYLE_TAGS);
-            game->AddPgnStyle(PGN_STYLE_COMMENTS);
-            game->AddPgnStyle(PGN_STYLE_VARS);
-            game->SetPgnFormat(PGN_FORMAT_Plain);
-
-            // !Altered flag is here misused for the delete flag!
-            game->SetAltered(iE.GetDeleteFlag());
-        }
-      cleanup:
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return result;
+#define CHECKL(op,...)                          \
+    if((op) != OK){                             \
+        LOGW(__VA_ARGS__);                      \
+        return false;                           \
     }
-}
 
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getSize
- */
-extern "C" JNIEXPORT jint JNICALL Java_org_scid_database_DataBase_getSize
-        (JNIEnv* env, jclass cls, jstring fileName)
-{
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    if (sourceFileName) {
-        Index sourceIndex;
-
-        sourceIndex.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-            env->ReleaseStringUTFChars(fileName, sourceFileName);
-            return 0;
-        }
-        int result = sourceIndex.GetNumGames();
-        // cleanup
-        sourceIndex.CloseIndexFile();
-        sourceIndex.Clear();
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return result;
+#define FILE_LOADED                             \
+    if(not fileLoaded){                         \
+        LOGE("%s: no file loaded", __func__);   \
+        return 0;                               \
     }
-    return 0;
-}
 
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getPGN
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getPGN
-        (JNIEnv* env, jclass cls)
-{
-    TextBuffer tbuf;
-    tbuf.SetBufferSize(TBUF_SIZE);
-    tbuf.Empty();
-    tbuf.SetWrapColumn(99999);
-    game->WriteToPGN(&tbuf);
-    jbyteArray result = NULL;
-    int length = strlen(tbuf.GetBuffer());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
+#define GAME_LOADED                             \
+    if(not gameLoaded){                         \
+        LOGE("%s: no game loaded", __func__);   \
+        return 0;                               \
     }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) tbuf.GetBuffer() );
-    return result;
-}
 
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getMoves
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getMoves
-        (JNIEnv* env, jclass cls)
-{
-    if (game->GetNumHalfMoves() > 0) {
-        TextBuffer tbuf;
-        tbuf.SetBufferSize(TBUF_SIZE);
-        tbuf.Empty();
-        tbuf.SetWrapColumn(99999);
-
-        game->MoveToPly(0);
-        moveT m;
-        m.prev = m.next = m.varParent = m.varChild = NULL;
-        m.numVariations = 0;
-        m.comment = NULL;
-        m.nagCount = 0;
-        m.nags[0] = 0;
-        m.marker = NO_MARKER;
-        m.san[0] = 0;
-        game->WriteMoveList (&tbuf, 0, &m, true, false);
-        tbuf.PrintWord(RESULT_LONGSTR[game->GetResult()]);
-
-        return env->NewStringUTF(tbuf.GetBuffer());
-    } else {
-        static char emptyString = 0;
-        return env->NewStringUTF(&emptyString);
+#define PROPER_NAME_TYPE                                    \
+    if(not (nameType >= 0 and nameType < NUM_NAME_TYPES)){  \
+        LOGE("%s: bad nameType %d", __func__, nameType);    \
+        return 0;                                           \
     }
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getResult
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getResult
-        (JNIEnv* env, jclass cls)
-{
-    return env->NewStringUTF(RESULT_LONGSTR[game->GetResult()]);
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getWhite
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getWhite
-                (JNIEnv* env, jclass cls)
-{
-    jbyteArray result = NULL;
-    int length = strlen(game->GetWhiteStr());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
-    }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetWhiteStr() );
-    return result;
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getBlack
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getBlack
-                (JNIEnv* env, jclass cls)
-{
-    jbyteArray result = NULL;
-    int length = strlen(game->GetBlackStr());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
-    }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetBlackStr() );
-    return result;
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getEvent
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getEvent
-                (JNIEnv* env, jclass cls)
-{
-    jbyteArray result = NULL;
-    int length = strlen(game->GetEventStr());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
-    }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetEventStr() );
-    return result;
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getSite
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getSite
-                (JNIEnv* env, jclass cls)
-{
-    jbyteArray result = NULL;
-    int length = strlen(game->GetSiteStr());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
-    }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetSiteStr() );
-    return result;
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getDate
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_getDate
-                (JNIEnv* env, jclass cls)
-{
-    char dateStr [20];
-    date_DecodeToString(game->GetDate(), dateStr);
-    return env->NewStringUTF(dateStr);
-}
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getRound
- */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_scid_database_DataBase_getRound
-                (JNIEnv* env, jclass cls)
-{
-    jbyteArray result = NULL;
-    int length = strlen(game->GetRoundStr());
-    if ( NULL == (result = env->NewByteArray( length )) )
-    {
-        LOGE("Error creating byte array.");
-    }
-    env->SetByteArrayRegion( result, 0, length, (const jbyte*) game->GetRoundStr() );
-    return result;
-}
 
 #define PREPARE_PROGRESS(noGames)                                       \
     jmethodID midIsCanceled, midPublishProgress;                        \
     uint progressDelta, nextCallbackGameNo;                             \
-    if (progress) {                                                     \
+    if(progress){                                                       \
         jclass cls = env->GetObjectClass(progress);                     \
         midPublishProgress = env->GetMethodID(cls, "publishProgress", "(I)V"); \
         midIsCanceled = env->GetMethodID(cls, "isCancelled", "()Z");    \
         env->DeleteLocalRef(cls);                                       \
-        progressDelta = noGames / 100;                                  \
+        progressDelta = (noGames) / 100;                                \
         nextCallbackGameNo = progressDelta;                             \
     } else {                                                            \
         LOGD("No progress");                                            \
     }
+
 #define DO_PROGRESS(gameNum, noGames)                               \
-    if (progress && gameNum >= nextCallbackGameNo) {                \
-        nextCallbackGameNo = gameNum + progressDelta;               \
-        int percent = float(gameNum)*100/noGames;                   \
+    if(progress and (gameNum) >= nextCallbackGameNo){               \
+        nextCallbackGameNo = (gameNum) + progressDelta;             \
+        int percent = float(gameNum)*100/(noGames);                 \
         env->CallVoidMethod(progress, midPublishProgress, percent); \
-        if (env->CallBooleanMethod(progress, midIsCanceled)) {      \
+        if(env->CallBooleanMethod(progress, midIsCanceled)){        \
             LOGD("cancelled");                                      \
             break;                                                  \
         }                                                           \
     }
 
-extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchBoard
-        (JNIEnv *env, jclass cls, jstring fileName, jstring position,
-         jint typeOfSearch,
-         jint filterOperation, jintArray currentFilter,
-         jobject progress)
-{
-    jintArray result;
-    int filterOp = filterOperation;
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    const char* fen = env->GetStringUTFChars(position, NULL);
-    if (sourceFileName && fen) {
-        Index sourceIndex;
-        GFile sourceGFile;
-        ByteBuffer bbuf;
-        bbuf.SetBufferSize (BBUF_SIZE);
-        errorT err = 0;
+class AutoJString {             // automatic release of jstring chars
+    JNIEnv* env;
+    jstring j;                  // java string
+    const char* c;              // C string
+public:
+    AutoJString(JNIEnv* env, jstring j)
+        :env(env),
+         j(j),
+         c(env->GetStringUTFChars(j,0))
+    {
+        // LOGI("( %s", c);
+    }
+    ~AutoJString(){
+        // LOGI(") %s", c);
+        env->ReleaseStringUTFChars(j, c);
+    }
+    const char* c_str() const { return c; }
+    operator const char*() const { return c; }
+};
+#define AJS(name) const AutoJString name(env, j##name) // local "str" from parameter "jstr"
 
-        sourceIndex.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-            // TODO: leaks jstrings here
-            return env->NewIntArray(0);
-        }
-        if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
-            // TODO: leaks jstrings here
-            return env->NewIntArray(0);
-        }
-        int noGames = sourceIndex.GetNumGames();
+class AutoJArray {              // automatic release of short[] chars
+    JNIEnv* env;
+    jshortArray j;              // java array
+    jshort* c;                  // C array
+public:
+    AutoJArray(JNIEnv* env, jshortArray j)
+        :env(env),
+         j(j),
+         c(env->GetShortArrayElements(j,0)){}
+    ~AutoJArray(){
+        env->ReleaseShortArrayElements(j, c, 0);
+    }
+    operator jshort* () { return c; }
+};
+#define AJA(name) AutoJArray name(env, j##name) // local "arr" from parameter "jarr"
+
+/// Global state
+typedef uint filterOpT;
+const filterOpT FILTEROP_RESET = 0, FILTEROP_OR = 1, FILTEROP_AND = 2;
 
-        if (noGames > 0) {
-            // type of search
-            bool useHpSigSpeedup = false;
-            gameExactMatchT searchType = GAME_EXACT_MATCH_Exact;
-            switch (typeOfSearch) {
-                case 0:
-                    searchType = GAME_EXACT_MATCH_Exact;
-                    useHpSigSpeedup = true;
-                    break;
-                case 1:
-                    searchType = GAME_EXACT_MATCH_Pawns;
-                    useHpSigSpeedup = true;
-                    break;
-                case 2:
-                    searchType = GAME_EXACT_MATCH_Fyles;
-                    break;
-                case 3:
-                    searchType = GAME_EXACT_MATCH_Material;
-                    break;
-                default:
-                    break;
-            }
+static Index sourceIndex;
+static NameBase sourceNameBase;
+static GFile sourceGFile;
+static ByteBuffer bbuf;
+static bool fileLoaded = false;
 
-            // initialize filter
-            jint *fill = new jint[noGames];
-            memset(fill, 0, sizeof(fill));
+static Game game;
+static bool isFavorite;
+static bool gameLoaded = false;
 
-            jsize len = env->GetArrayLength(currentFilter);
-            if (len != noGames) {
-                // the currentFilter should have been initialized to the same length as the database, so reset the filter now
-                for (int i=0; i<noGames; i++) {
-                    fill[i] = 1;
-                }
-            } else {
-                jint *arr = env->GetIntArrayElements(currentFilter, 0);
-                for (int i=0; i<noGames; i++) {
-                    fill[i] = arr[i];
-                }
-                // free the buffer without copying back the possible changes
-                env->ReleaseIntArrayElements(currentFilter, arr, JNI_ABORT);
-            }
-
-            // setup FEN position
-            game->Clear();
-            Position pos;
-            if (pos.ReadFromFEN (fen) != OK) {
-                if (pos.ReadFromLongStr (fen) != OK) {
-                    // invalid FEN
-                    // TODO: leaks jstrings here
-                    return env->NewIntArray(0);
-                }
-            }
-            // ReadFromFEN checks that there is one king of each side, but it
-            // does not check that the position is actually legal:
-            if (! pos.IsLegal()) {
-                // TODO: leaks jstrings here
-               return env->NewIntArray(0);
-            }
-            matSigT msig = matsig_Make (pos.GetMaterial());
-            uint hpSig = pos.GetHPSig();
-
-            // If filter operation is to reset the filter, reset it:
-            if (filterOp == FILTEROP_RESET) {
-                for (int i=0; i < noGames; i++) {
-                    fill[i] = 1;
-                }
-                filterOp = FILTEROP_AND;
-            }
-
-            // Here is the loop that searches on each game:
-            Game g;
-            PREPARE_PROGRESS(noGames);
-            for (uint gameNum=0; gameNum < noGames; gameNum++) {
-                DO_PROGRESS(gameNum, noGames);
-                // First, apply the filter operation:
-                if (filterOp == FILTEROP_AND) {  // Skip any games not in the filter:
-                    if (fill[gameNum] == 0) {
-                    continue;
-                    }
-                } else /* filterOp==FILTEROP_OR*/ { // Skip any games in the filter:
-                    if (fill[gameNum] != 0) {
-                    continue;
-                    } else {
-                    // OK, this game is NOT in the filter.
-                    // Add it so filterCounts are kept up to date:
-                    fill[gameNum] = 1;
-                    }
-                }
-
-                IndexEntry ie;
-                err = sourceIndex.ReadEntries(&ie, gameNum, 1);
-                if (err != OK) {
-                    // Skip games with no gamefile record:
-                    fill[gameNum] = 0;
-                    continue;
-                }
-
-                bool possibleMatch = true;
-                bool useVars = false;
-                // Apply speedups if we are not searching in variations:
-                if (! useVars) {
-                    if (! ie.GetStartFlag()) {
-                        // Speedups that only apply to standard start games:
-                        if (useHpSigSpeedup  &&  hpSig != 0xFFFF) {
-                            const byte * hpData = ie.GetHomePawnData();
-                            if (! hpSig_PossibleMatch (hpSig, hpData)) {
-                                possibleMatch = false;
-                            }
-                        }
-                    }
-
-                    // If this game has no promotions, check the material of its final
-                    // position, since the searched position might be unreachable:
-                    if (possibleMatch) {
-                        if (!matsig_isReachable (msig, ie.GetFinalMatSig(),
-                                                 ie.GetPromotionsFlag(),
-                                                 ie.GetUnderPromoFlag())) {
-                                possibleMatch = false;
-                            }
-                    }
-                }
-
-                if (!possibleMatch) {
-                    fill[gameNum] = 0;
-                    continue;
-                }
-
-                // At this point, the game needs to be loaded:
-                bbuf.Empty();
-                err = sourceGFile.ReadGame(&bbuf, ie.GetOffset(), ie.GetLength());
-                if (err != OK) {
-                    fill[gameNum] = 0;
-                    continue;
-                }
-                uint ply = 0;
-                // No searching in variations:
-                if (possibleMatch) {
-                    if (g.ExactMatch (&pos, &bbuf, NULL, searchType)) {
-                        // Set its auto-load move number to the matching move:
-                        ply = g.GetCurrentPly() + 1;
-                    }
-                }
-                if (ply > 255) { ply = 255; }
-                // save the ply to filter gameNum
-                // if ply==0 --> not found
-                fill[gameNum] = ply;
-            }
-            result = env->NewIntArray(noGames);
-            if (result == NULL) {
-                return NULL; // out of memory error thrown
-            }
-            env->SetIntArrayRegion(result, 0, noGames, fill);
-            delete [] fill;
-        } else {
-            result = env->NewIntArray(0);
-        }
-
-        // cleanup
+static void unloadGame(){
+    if(gameLoaded){
+        game.Clear();
+        gameLoaded = false;
+    }
+}
+static void unloadFile(){
+    unloadGame();
+    if(fileLoaded){
+        LOGI("unloading index");
         sourceIndex.CloseIndexFile();
         sourceIndex.Clear();
+        sourceNameBase.Clear();
         sourceGFile.Close();
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        env->ReleaseStringUTFChars(position, fen);
-        return result;
+        fileLoaded = false;
     }
-    result = env->NewIntArray(0);
+}
+static errorT reopenIndexForWriting(){
+    if(sourceIndex.GetFileMode() != FMODE_Both){
+        sourceIndex.CloseIndexFile();
+        if(sourceIndex.OpenIndexFile(FMODE_Both) != OK){
+            LOGE("cannot open index for writing");
+            sourceIndex.OpenIndexFile(FMODE_ReadOnly);
+            return ERROR;
+        }
+    }
+    return OK;
+}
+static errorT reopenGFileForWriting(){
+    if(sourceGFile.GetFileMode() != FMODE_Both){
+        sourceGFile.Close();
+        string fname = sourceGFile.GetFileNameWithSuffix();
+        if(sourceGFile.Open(fname.c_str(), FMODE_Both, "") != OK){
+            LOGE("cannot open game file for writing");
+            sourceGFile.Open(fname.c_str(), FMODE_ReadOnly, "");
+            return ERROR;
+        }
+    }
+    return OK;
+}
+
+/// Loading and operations with loaded file
+JCM(jboolean, loadFile, jstring jfname){
+    AJS(fname);
+    if(fileLoaded and strcmp(fname, sourceIndex.GetFileName()) == 0){
+        LOGI("loadFile: file %s is already loaded", fname.c_str());
+        return true;
+    }
+
+    unloadFile();
+    LOGI("loadFile: %s\n", fname.c_str());
+    sourceIndex.SetFileName(fname);
+
+    sourceNameBase.SetFileName(fname);
+    CHECKL(sourceIndex.OpenIndexFile(FMODE_ReadOnly), "OpenIndexFile");
+    CHECKL(sourceNameBase.ReadNameFile(),"ReadNameFile");
+    CHECKL(sourceGFile.Open(fname, FMODE_ReadOnly),"Open");
+    bbuf.SetBufferSize(BBUF_SIZE);
+    LOGI("file loaded\n");
+    fileLoaded = true;
+    return true;
+}
+JCM(jint, getSize){
+    FILE_LOADED;
+    return sourceIndex.GetNumGames();
+}
+JCM(jint, getNamesCount, jint nameType){
+    PROPER_NAME_TYPE;
+    FILE_LOADED;
+    return sourceNameBase.GetNumNames(nameType);
+}
+JCM(jstring, getName, jint nameType, jint id){
+    PROPER_NAME_TYPE;
+    FILE_LOADED;
+    return env->NewStringUTF(sourceNameBase.GetName(nameType, id));
+}
+// getMatchingNames must be reentrant and use case-insensitive
+// comparison (thus we cannot use the name tree)
+struct CaseCmp{
+    nameT nameType;
+    const char* name(jint id){
+        return sourceNameBase.GetName(nameType, id);
+    }
+    bool operator()(jint a, jint b){
+        return strcasecmp(name(a),name(b)) < 0;
+    }
+};
+JCM(jintArray, getMatchingNames, jint nameType, jstring jprefix){
+    PROPER_NAME_TYPE;
+    FILE_LOADED;
+    AJS(prefix);
+    vector<jint> matches; // idNumberT is uint and thus compatible with jint
+    uint numNames = sourceNameBase.GetNumNames(nameType);
+    if(size_t len = strlen(prefix)){
+        for(uint i = 0; i < numNames; ++i){
+            if(strncasecmp(prefix, sourceNameBase.GetName(nameType, i), len) == 0)
+                matches.push_back(i);
+        }
+    }else{                      // if prefix is "", then return all names
+        matches.resize(numNames);
+        for(uint i = 0; i < numNames; ++i)
+            matches[i] = i;
+    }
+    LOGD("getNames: got %d", matches.size());
+
+    CaseCmp caseCmp = {nameType};
+    sort(matches.begin(), matches.end(), caseCmp);
+
+    jintArray result = env->NewIntArray(matches.size());
+    env->SetIntArrayRegion(result, 0, matches.size(), &matches[0]);
     return result;
 }
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    create
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_create
-                (JNIEnv* env, jclass cls, jstring fileName)
-{
-    game->Clear();
-    std::string resultString = "";
-    const char* targetFileName = env->GetStringUTFChars(fileName, NULL);
-    if (targetFileName) {
-        Index targetIndex;
-        NameBase targetNameBase;
-        GFile targetGFile;
-        targetIndex.SetFileName (targetFileName);
-        targetIndex.SetDescription ("");
-        targetNameBase.SetFileName (targetFileName);
-        // Check that the target database does not already exist:
-        Index tempIndex;
-        tempIndex.SetFileName (targetFileName);
-        if (tempIndex.OpenIndexFile(FMODE_ReadOnly) == OK) {
-            tempIndex.CloseIndexFile();
-            resultString.append("Error: the database already exists.");
-            goto cleanup;
-        }
-
-        // Open the target files:
-        if (targetIndex.CreateIndexFile(FMODE_Both) != OK) {
-            resultString.append("Error creating index file.");
-            goto cleanup;
-        }
-        if (targetNameBase.WriteNameFile() != OK) {
-            resultString.append("Error writing name base file.");
-            goto cleanup;
-        }
-        if (targetGFile.Create (targetFileName, FMODE_Both) != OK) {
-            resultString.append("Error creating game file.");
-            goto cleanup;
-        }
-
-        LOGD("Index file written.");
-        if (targetIndex.WriteHeader() != OK) {
-            resultString.append("Error writing index header.");
-            goto cleanup;
-        }
-
-        // Now all files have been created. All we need do is close the new base:
-        targetIndex.CloseIndexFile();
-        if (targetGFile.Close() != OK) {
-            resultString.append("Error closing game file.");
-            goto cleanup;
-        }
-
-        // Remove any treefile for this database:
-        removeFile (targetFileName, TREEFILE_SUFFIX);
-            env->ReleaseStringUTFChars(fileName, targetFileName);
-
-        initialized = false;
-    cleanup:
-        return env->NewStringUTF(resultString.c_str());
-    }
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// matchGameHeader():
-//    Called by search header to test a particular game against the
-//    header search criteria.
-bool
-matchGameHeader (IndexEntry * ie, NameBase * nb,
-                 bool * mWhite, bool * mBlack,
-                 bool * mEvent, bool * mSite, bool *mRound,
-                 dateT dateMin, dateT dateMax, bool * results,
-                 int weloMin, int weloMax, int beloMin, int beloMax,
-                 int diffeloMin, int diffeloMax,
-                 ecoT ecoMin, ecoT ecoMax, bool ecoNone,
-                 uint halfmovesMin, uint halfmovesMax,
-                 bool wToMove, bool bToMove, bool bAnnotaded)
-{
-    // First, check the numeric ranges:
-
-    if (!results[ie->GetResult()]) { return false; }
-
-    uint halfmoves = ie->GetNumHalfMoves();
-    if (halfmoves < halfmovesMin  ||  halfmoves > halfmovesMax) {
+
+/// Loading and operations with the loaded game
+JCM(jboolean, loadGame, jint gameId, jboolean onlyHeaders){
+    FILE_LOADED;
+    unloadGame();
+    if(gameId < 0 or gameId >= sourceIndex.GetNumGames()){
+        LOGE("loadGame: %d is out of range", gameId);
         return false;
     }
-    if ((halfmoves % 2) == 0) {
-        // This game ends with White to move:
-        if (! wToMove) { return false; }
+    IndexEntry iE;
+    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
+    isFavorite = iE.GetUserFlag();
+    bbuf.Empty();
+    CHECK(sourceGFile.ReadGame(&bbuf, iE.GetOffset(), iE.GetLength()));
+    if(onlyHeaders){
+        game.SetNumHalfMoves(iE.GetNumHalfMoves());
     } else {
-        // This game ends with Black to move:
-        if (! bToMove) { return false; }
+        CHECKL(game.Decode(&bbuf, GAME_DECODE_ALL), "Unable to decode game.");
     }
+    game.LoadStandardTags(&iE, &sourceNameBase);
+    game.AddPgnStyle(PGN_STYLE_TAGS);
+    game.AddPgnStyle(PGN_STYLE_COMMENTS);
+    game.AddPgnStyle(PGN_STYLE_VARS);
+    game.SetPgnFormat(PGN_FORMAT_Plain);
+    // Altered flag is here misused for the delete flag
+    game.SetAltered(iE.GetDeleteFlag());
+
+    gameLoaded = true;
+    return true;
+}
+JCM(jbyteArray, getPGN){
+    GAME_LOADED;
+    TextBuffer tbuf;
+    tbuf.SetBufferSize(TBUF_SIZE);
+    tbuf.Empty();
+    tbuf.SetWrapColumn(99999);
+    game.WriteToPGN(&tbuf);
+    int length = strlen(tbuf.GetBuffer()); // TODO: why strlen?
+    jbyteArray result = env->NewByteArray(length);
+    env->SetByteArrayRegion(result, 0, length,(const jbyte*) tbuf.GetBuffer());
+    return result;
+}
+JCM(jstring, getMoves){
+    GAME_LOADED;
+    if(game.GetNumHalfMoves() == 0)
+        return env->NewStringUTF("");
+
+    TextBuffer tbuf;
+    tbuf.SetBufferSize(TBUF_SIZE);
+    tbuf.Empty();
+    tbuf.SetWrapColumn(99999);
+
+    game.MoveToPly(0);
+    moveT m;
+    m.prev = m.next = m.varParent = m.varChild = 0;
+    m.numVariations = 0;
+    m.comment = 0;
+    m.nagCount = 0;
+    m.nags[0] = 0;
+    m.marker = NO_MARKER;
+    m.san[0] = 0;
+    game.WriteMoveList(&tbuf, 0, &m, true, false);
+    tbuf.PrintWord(RESULT_LONGSTR[game.GetResult()]);
+
+    return env->NewStringUTF(tbuf.GetBuffer());
+}
+JCM(jstring, getResult){
+    GAME_LOADED;
+    return env->NewStringUTF(RESULT_LONGSTR[game.GetResult()]);
+}
+#define _(funcionName, fieldAccessor)                                   \
+    JCM(jbyteArray, funcionName){                                       \
+        GAME_LOADED;                                                    \
+        int length = strlen(game.fieldAccessor());                      \
+        jbyteArray result = env->NewByteArray(length);                  \
+        env->SetByteArrayRegion(result, 0, length,                      \
+                                (const jbyte*) game.fieldAccessor());   \
+        return result;                                                  \
+    }
+_(getWhite, GetWhiteStr)
+_(getBlack, GetBlackStr)
+_(getEvent, GetEventStr)
+_(getSite, GetSiteStr)
+_(getRound, GetRoundStr)
+#undef _
+JCM(jstring, getDate){
+    GAME_LOADED;
+    char dateStr[20];
+    date_DecodeToString(game.GetDate(), dateStr);
+    return env->NewStringUTF(dateStr);
+}
+JCM(jboolean, isFavorite){
+    GAME_LOADED;
+    return isFavorite;
+}
+JCM(jboolean, isDeleted){
+    GAME_LOADED;
+    // misused altered flag for delete flag
+    return game.GetAltered();
+}
+
+/// Create database (new or import)
+JCM(jstring, create, jstring jtargetFileName){
+    AJS(targetFileName);
+    if(not targetFileName)
+        return 0;
+
+    Index targetIndex;
+    NameBase targetNameBase;
+    GFile targetGFile;
+    targetIndex.SetFileName(targetFileName);
+    targetIndex.SetDescription("");
+    targetNameBase.SetFileName(targetFileName);
+    // Check that the target database does not already exist:
+    Index tempIndex;
+    tempIndex.SetFileName(targetFileName);
+    if(tempIndex.OpenIndexFile(FMODE_ReadOnly) == OK){
+        tempIndex.CloseIndexFile();
+        return env->NewStringUTF("Error: the database already exists.");
+    }
+
+#define _(op,msg) if((op) != OK) return env->NewStringUTF(msg)
+    // Open the target files:
+    _(targetIndex.CreateIndexFile(FMODE_Both), "Error creating index file.");
+    _(targetNameBase.WriteNameFile(), "Error writing name base file.");
+    _(targetGFile.Create(targetFileName, FMODE_Both), "Error creating game file.");
+    LOGD("Index file written.");
+    _(targetIndex.WriteHeader(), "Error writing index header.");
+
+    // Now all files have been created. All we need do is close the new base:
+    targetIndex.CloseIndexFile();
+    _(targetGFile.Close(), "Error closing game file.");
+
+    // Remove any treefile for this database:
+    removeFile(targetFileName, TREEFILE_SUFFIX);
+#undef _
+    return env->NewStringUTF("");
+}
+JCM(jstring, importPgn, jstring jpgnName, jobject progress){
+    AJS(pgnName);
+    if(not pgnName) return 0;
+
+#define _(op,msg) if((op) != OK) return env->NewStringUTF(msg)
+
+    MFile pgnFile;
+    _(pgnFile.Open(pgnName, FMODE_ReadOnly), "Could not open pgn file");
+    PgnParser pgnParser(&pgnFile);
+    ByteBuffer bbuf;
+    Index idx;
+    Game game;
+    GFile gameFile;
+    NameBase nb;
+    IndexEntry ie;
+    uint t = 0;   // = time(0);
+    int lastCallbackPercent = -1;
+    uint pgnFileSize = fileSize(pgnName, "");
+    // Ensure positive file size counter to avoid division by zero:
+    if(pgnFileSize < 1){ pgnFileSize = 1; }
+    PREPARE_PROGRESS(pgnFileSize);
+
+    // Make baseName from pgnName if baseName is not provided:
+    fileNameT baseName;
+    strCopy(baseName, pgnName); // TODO: security flaw if len(pgnName) > 512
+    // Trim the ".pgn" suffix:
+    strTrimFileSuffix(baseName);
+
+    // Try opening the log file:
+    fileNameT fname;
+    strCopy(fname, baseName);
+    strAppend(fname, ".err");
+    FILE * logFile = fopen(fname, "w");
+
+    string resultString = "";
+    if(logFile == 0){
+        resultString.append("Could not open log file.\n");
+        goto cleanup;
+    }
+
+    scid_Init();
+
+    if((gameFile.Create(baseName, FMODE_WriteOnly)) != OK){
+        // could not create the game file
+        pgnFile.Close();
+        goto cleanup;
+    }
+    idx.SetFileName(baseName);
+    idx.CreateIndexFile(FMODE_WriteOnly);
+    gameNumberT gNumber;
+
+    bbuf.SetBufferSize(BBUF_SIZE); // 32768
+
+    pgnParser.SetErrorFile(logFile);
+    pgnParser.SetPreGameText(true);
+
+    // TODO: Add command line option for ignored tags, rather than
+    //       just hardcoding PlyCount as the only ignored tag.
+    pgnParser.AddIgnoredTag("PlyCount");
+
+    // Add each game found to the database:
+    while(pgnParser.ParseGame(&game) != ERROR_NotFound){
+        ie.Init();
+
+        if(idx.AddGame(&gNumber, &ie) != OK){
+            resultString.append("Too many games!");
+            goto cleanup;
+        }
+
+        // Add the names to the namebase:
+        idNumberT id = 0;
+
+        if(nb.AddName(NAME_PLAYER, game.GetWhiteStr(), &id) != OK){
+            resultString.append("Too many names: ");
+            resultString.append(NAME_PLAYER);
+            goto cleanup;
+        }
+        nb.IncFrequency(NAME_PLAYER, id, 1);
+        ie.SetWhite(id);
+
+        if(nb.AddName(NAME_PLAYER, game.GetBlackStr(), &id) != OK){
+            resultString.append("Too many names: ");
+            resultString.append(NAME_PLAYER);
+            goto cleanup;
+        }
+        nb.IncFrequency(NAME_PLAYER, id, 1);
+        ie.SetBlack(id);
+
+        if(nb.AddName(NAME_EVENT, game.GetEventStr(), &id) != OK){
+            resultString.append("Too many names: ");
+            resultString.append(NAME_TYPE_STRING [NAME_EVENT]);
+            goto cleanup;
+        }
+        nb.IncFrequency(NAME_EVENT, id, 1);
+        ie.SetEvent(id);
+
+        if(nb.AddName(NAME_SITE, game.GetSiteStr(), &id) != OK){
+            resultString.append("Too many names: ");
+            resultString.append(NAME_TYPE_STRING [NAME_SITE]);
+            goto cleanup;
+        }
+        nb.IncFrequency(NAME_SITE, id, 1);
+        ie.SetSite(id);
+
+        if(nb.AddName(NAME_ROUND, game.GetRoundStr(), &id) != OK){
+            resultString.append("Too many names: ");
+            resultString.append(NAME_TYPE_STRING [NAME_ROUND]);
+            goto cleanup;
+        }
+        nb.IncFrequency(NAME_ROUND, id, 1);
+        ie.SetRound(id);
+
+        bbuf.Empty();
+        if(game.Encode(&bbuf, &ie) != OK){
+            resultString.append("Fatal error encoding game!\n");
+            goto cleanup;
+        }
+        uint offset = 0;
+        if(gameFile.AddGame(&bbuf, &offset) != OK){
+            resultString.append("Fatal error writing game file!\n");
+            goto cleanup;
+        }
+        ie.SetOffset(offset);
+        ie.SetLength(bbuf.GetByteCount());
+        idx.WriteEntries(&ie, gNumber, 1);
+
+        int bytesSeen = pgnParser.BytesUsed();
+        DO_PROGRESS(bytesSeen, pgnFileSize);
+    }
+
+    nb.SetTimeStamp(t);
+    nb.SetFileName(baseName);
+    if(nb.WriteNameFile() != OK){
+        resultString.append("Fatal error writing name file!\n");
+        goto cleanup;
+    }
+
+    /*printf("\nDatabase `%s': %d games, %d players, %d events, %d sites.\n",
+      baseName, idx.GetNumGames(), nb.GetNumNames(NAME_PLAYER),
+      nb.GetNumNames(NAME_EVENT), nb.GetNumNames(NAME_SITE));*/
+    fclose(logFile);
+    if(pgnParser.ErrorCount() > 0){
+        FILE * errFile = fopen(fname, "r");
+        char line[100];
+        while( fgets(line, sizeof(line), errFile) != 0 ){
+            resultString.append(line);
+        }
+        fclose(errFile);
+    }
+    removeFile(baseName, ".err");
+    gameFile.Close();
+    idx.CloseIndexFile();
+    idx.Clear();
+
+    // If there is a tree cache file for this database, it is out of date:
+    removeFile(baseName, TREEFILE_SUFFIX);
+    pgnFile.Close();
+#undef _
+ cleanup:
+    return env->NewStringUTF(resultString.c_str());
+}
+
+/// Filtering
+JCM(jboolean, searchBoard,
+    jstring jfen, jint/*gameExactMatchT*/ searchType,
+    jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
+    FILE_LOADED;
+
+    AJS(fen);
+    if(not fen){
+        LOGE("searchBoard: fen is null");
+        return false;
+    }
+    // setup FEN position
+    Position pos;
+    if(not ((pos.ReadFromFEN(fen) == OK or pos.ReadFromLongStr(fen) == OK)
+         and pos.IsLegal())){
+        LOGE("searchBoard: invalid FEN '%s'", fen.c_str());
+        return false;
+    }
+    matSigT msig = matsig_Make(pos.GetMaterial());
+    uint hpSig;
+    bool useHpSigSpeedup;
+    switch(searchType){
+    case GAME_EXACT_MATCH_Exact:
+    case GAME_EXACT_MATCH_Pawns:
+        hpSig = pos.GetHPSig();
+        useHpSigSpeedup = true;
+        break;
+    case GAME_EXACT_MATCH_Fyles:
+    case GAME_EXACT_MATCH_Material:
+        useHpSigSpeedup = false;
+        break;
+    default:
+        LOGE("searchBoard: wrong typeOfSearch %d", searchType);
+        return false;
+    }
+
+    AJA(filter);
+    if(not filter){
+        LOGE("searchBoard: filter is null");
+        return false;
+    }
+    gameNumberT noGames = sourceIndex.GetNumGames();
+    if(noGames != env->GetArrayLength(jfilter)){
+        LOGE("searchBoard: filter has wrong length");
+        return false;
+    }
+
+    // Here is the loop that searches on each game:
+    Game g;
+    PREPARE_PROGRESS(noGames);
+    for(gameNumberT i = 0; i < noGames; ++i){
+        DO_PROGRESS(i, noGames);
+        // First, apply the filter operation:
+        if(filterOperation == FILTEROP_AND and !filter[i]
+           or filterOperation == FILTEROP_OR and filter[i]){
+            // no need to change filter[i]
+            continue;
+        }
+        IndexEntry ie;
+        if(sourceIndex.ReadEntries(&ie, i, 1) != OK){ // TODO: maybe FetchEntry?
+            // Skip games with no gamefile record:
+            filter[i] = 0;
+            continue;
+        }
+
+        bool possibleMatch = true;
+        bool useVars = false; // TODO: allow user to change
+        // Apply speedups if we are not searching in variations:
+        if(not useVars){
+            if(not ie.GetStartFlag()){
+                // Speedups that only apply to standard start games:
+                if(useHpSigSpeedup and hpSig != 0xFFFF){
+                    const byte * hpData = ie.GetHomePawnData();
+                    if(not hpSig_PossibleMatch(hpSig, hpData)){
+                        possibleMatch = false;
+                    }
+                }
+            }
+
+            // If this game has no promotions, check the material of its final
+            // position, since the searched position might be unreachable:
+            if(possibleMatch){
+                if(not matsig_isReachable(msig, ie.GetFinalMatSig(),
+                                         ie.GetPromotionsFlag(),
+                                         ie.GetUnderPromoFlag())){
+                    possibleMatch = false;
+                }
+            }
+        }
+
+        if(not possibleMatch){
+            filter[i] = 0;
+            continue;
+        }
+
+        // At this point, the game needs to be loaded:
+        bbuf.Empty();
+        if(sourceGFile.ReadGame(&bbuf, ie.GetOffset(), ie.GetLength()) != OK){
+            LOGI("searchBoard: cannot read game %d", i);
+            filter[i] = 0;
+            continue;
+        }
+        uint ply = 0;
+        // No searching in variations:
+        if(possibleMatch){
+            if(g.ExactMatch(&pos, &bbuf, 0, gameExactMatchT(searchType))){
+                // Set its auto-load move number to the matching move:
+                ply = g.GetCurrentPly() + 1;
+                const int MAX_JSHORT = (1<<15) - 1; // 2^15 - 1
+                if(ply > MAX_JSHORT) ply = MAX_JSHORT;
+            }
+        }
+        filter[i] = jshort(ply);
+    }
+    return true;
+}
+// Called by search header to test a particular game against the
+// header search criteria.
+inline bool matchGameHeader
+(IndexEntry * ie,
+ NameBase * nb,
+ const bit_vector& mWhite, const bit_vector& mBlack,
+ const bit_vector& mEvent, const bit_vector& mSite,
+ /* TODO const bit_vector& mRound, */
+ dateT dateMin, dateT dateMax,
+ bool results[NUM_RESULT_TYPES],
+ /* TODO int weloMin, int weloMax, int beloMin, int beloMax,
+    int diffeloMin, int diffeloMax, */
+ ecoT ecoMin, ecoT ecoMax, bool ecoNone
+ /* TODO uint halfmovesMin, uint halfmovesMax,
+    bool wToMove, bool bToMove, bool bAnnotaded */){
+#define CI(op) /* continue if */ if(not (op)) return false
+#define CIIR(a,min,max) /*continue if in range */ \
+        CI((a) >= (min) and (a) <= (max))
+#define _(Name)                                     \
+    CI(m##Name.empty() or m##Name[ie->Get##Name()])
+    _(White); _(Black);
+    _(Event); _(Site); /* TODO _(Round); */
+#undef _
+    CI(results[ie->GetResult()]);
+
+    /* TODO
+    uint halfmoves = ie->GetNumHalfMoves();
+    CIIR(halfmoves, halfmovesMin, halfmovesMax);
+    if((halfmoves % 2) == 0){// This game ends with White to move
+        CI(wToMove);
+    } else {// This game ends with Black to move
+        CI(bToMove);
+    }
+    */
 
     dateT date = ie->GetDate();
-    if (date < dateMin  ||  date > dateMax) { return false; }
+    CIIR(date, dateMin, dateMax);
 
+    /* TODO
     // Check Elo ratings:
-    int whiteElo = (int) ie->GetWhiteElo();
-    int blackElo = (int) ie->GetBlackElo();
-    if (whiteElo == 0) { whiteElo = nb->GetElo (ie->GetWhite()); }
-    if (blackElo == 0) { blackElo = nb->GetElo (ie->GetBlack()); }
-
+    int whiteElo =(int) ie->GetWhiteElo();
+    int blackElo =(int) ie->GetBlackElo();
+    if(whiteElo == 0){ whiteElo = nb->GetElo(ie->GetWhite()); }
+    if(blackElo == 0){ blackElo = nb->GetElo(ie->GetBlack()); }
     int diffElo = whiteElo - blackElo;
-    // Elo difference used to be absolute difference, but now it is
-    // just white rating minus black rating, so leave next line commented:
-    //if (diffElo < 0) { diffElo = -diffElo; }
+    CIIR(whiteElo, weloMin, weloMax);
+    CIIR(blackElo, beloMin, beloMax);
+    CIIR(diffElo, diffeloMin, diffeloMax);
 
-    if (whiteElo < weloMin  ||  whiteElo > weloMax) { return false; }
-    if (blackElo < beloMin  ||  blackElo > beloMax) { return false; }
-    if (diffElo < diffeloMin  ||  diffElo > diffeloMax) { return false; }
+	if(bAnnotaded)
+        CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
+    */
 
     ecoT ecoCode = ie->GetEcoCode();
-    if (ecoCode == ECO_None) {
-        if (!ecoNone) { return false; }
+    if(ecoCode == ECO_None){
+        CI(ecoNone);
     } else {
-        if (ecoCode < ecoMin  ||  ecoCode > ecoMax) { return false; }
+        CIIR(ecoCode, ecoMin, ecoMax);
     }
-
-    // Now check the event, site and round fields:
-    if (mEvent != NULL  &&  !mEvent[ie->GetEvent()]) { return false; }
-    if (mSite != NULL  &&  !mSite[ie->GetSite()]) { return false; }
-    if (mRound != NULL  &&  !mRound[ie->GetRound()]) { return false; }
-
-    // Last, we check the players
-    if (mWhite != NULL  &&  !mWhite[ie->GetWhite()]) { return false; }
-    if (mBlack != NULL  &&  !mBlack[ie->GetBlack()]) { return false; }
-
-	if (bAnnotaded && !(ie->GetCommentsFlag() || ie->GetVariationsFlag() || ie->GetNagsFlag()))
-		return false;
-
+#undef CI
+#undef CIIR
     // If we reach here, this game matches all criteria.
     return true;
 }
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// matchGameFlags():
-//    Called by sc_search_header to test a particular game against the
-//    specified index flag restrictions, for example, excluding
-//    deleted games or games without comments.
-bool
-matchGameFlags (IndexEntry * ie, flagT fStdStart, flagT fPromos,
-                flagT fComments, flagT fVars, flagT fNags, flagT fDelete,
-                flagT fWhiteOp, flagT fBlackOp, flagT fMiddle,
-                flagT fEndgame, flagT fNovelty, flagT fPawn,
-                flagT fTactics, flagT fKside, flagT fQside,
-                flagT fBrill, flagT fBlunder, flagT fUser,
-                flagT fCustom1, flagT fCustom2, flagT fCustom3,
-                flagT fCustom4, flagT fCustom5, flagT fCustom6 )
-{
+/* TODO
+// Called by search header to test a particular game against the
+// specified index flag restrictions, for example, excluding
+// deleted games or games without comments.
+inline bool matchGameFlags
+(IndexEntry * ie,
+ flagT fStart, flagT fPromotions, flagT fComments, flagT fVariations, flagT fNags,
+ flagT fDelete, flagT fWhiteOp, flagT fBlackOp, flagT fMiddlegame, flagT fEndgame,
+ flagT fNovelty, flagT fPawnStruct, flagT fTactics, flagT fKingside, flagT fQueenside,
+ flagT fBrilliancy, flagT fBlunder, flagT fUser,
+ flagT fCustom1, flagT fCustom2, flagT fCustom3,
+ flagT fCustom4, flagT fCustom5, flagT fCustom6){
     bool flag;
+#define _(flagName)                                 \
+    flag = ie->Get##flagName##Flag();               \
+    if(    flag and not flag_Yes(f##flagName) or    \
+       not flag and not flag_No(f##flagName))       \
+       return false
 
-    flag = ie->GetStartFlag();
-    if ((flag && !flag_Yes(fStdStart))  ||  (!flag && !flag_No(fStdStart))) {
-        return false;
-    }
-
-    flag = ie->GetPromotionsFlag();
-    if ((flag && !flag_Yes(fPromos))  ||  (!flag && !flag_No(fPromos))) {
-        return false;
-    }
-
-    flag = ie->GetCommentsFlag();
-    if ((flag && !flag_Yes(fComments))  ||  (!flag && !flag_No(fComments))) {
-        return false;
-    }
-
-    flag = ie->GetVariationsFlag();
-    if ((flag && !flag_Yes(fVars))  ||  (!flag && !flag_No(fVars))) {
-        return false;
-    }
-
-    flag = ie->GetNagsFlag();
-    if ((flag && !flag_Yes(fNags))  ||  (!flag && !flag_No(fNags))) {
-        return false;
-    }
-
-    flag = ie->GetDeleteFlag();
-    if ((flag && !flag_Yes(fDelete))  ||  (!flag && !flag_No(fDelete))) {
-        return false;
-    }
-
-    flag = ie->GetWhiteOpFlag();
-    if ((flag && !flag_Yes(fWhiteOp))  ||  (!flag && !flag_No(fWhiteOp))) {
-        return false;
-    }
-
-    flag = ie->GetBlackOpFlag();
-    if ((flag && !flag_Yes(fBlackOp))  ||  (!flag && !flag_No(fBlackOp))) {
-        return false;
-    }
-
-    flag = ie->GetMiddlegameFlag();
-    if ((flag && !flag_Yes(fMiddle))  ||  (!flag && !flag_No(fMiddle))) {
-        return false;
-    }
-
-    flag = ie->GetEndgameFlag();
-    if ((flag && !flag_Yes(fEndgame))  ||  (!flag && !flag_No(fEndgame))) {
-        return false;
-    }
-
-    flag = ie->GetNoveltyFlag();
-    if ((flag && !flag_Yes(fNovelty))  ||  (!flag && !flag_No(fNovelty))) {
-        return false;
-    }
-
-    flag = ie->GetPawnStructFlag();
-    if ((flag && !flag_Yes(fPawn))  ||  (!flag && !flag_No(fPawn))) {
-        return false;
-    }
-
-    flag = ie->GetTacticsFlag();
-    if ((flag && !flag_Yes(fTactics))  ||  (!flag && !flag_No(fTactics))) {
-        return false;
-    }
-
-    flag = ie->GetKingsideFlag();
-    if ((flag && !flag_Yes(fKside))  ||  (!flag && !flag_No(fKside))) {
-        return false;
-    }
-
-    flag = ie->GetQueensideFlag();
-    if ((flag && !flag_Yes(fQside))  ||  (!flag && !flag_No(fQside))) {
-        return false;
-    }
-
-    flag = ie->GetBrilliancyFlag();
-    if ((flag && !flag_Yes(fBrill))  ||  (!flag && !flag_No(fBrill))) {
-        return false;
-    }
-
-    flag = ie->GetBlunderFlag();
-    if ((flag && !flag_Yes(fBlunder))  ||  (!flag && !flag_No(fBlunder))) {
-        return false;
-    }
-
-    flag = ie->GetUserFlag();
-    if ((flag && !flag_Yes(fUser))  ||  (!flag && !flag_No(fUser))) {
-        return false;
-    }
-
-    flag = ie->GetCustomFlag(1);
-    if ((flag && !flag_Yes(fCustom1))  ||  (!flag && !flag_No(fCustom1))) {
-      return false;
-    }
-
-    flag = ie->GetCustomFlag(2);
-    if ((flag && !flag_Yes(fCustom2))  ||  (!flag && !flag_No(fCustom2))) {
-      return false;
-    }
-
-    flag = ie->GetCustomFlag(3);
-    if ((flag && !flag_Yes(fCustom3))  ||  (!flag && !flag_No(fCustom3))) {
-      return false;
-    }
-
-    flag = ie->GetCustomFlag(4);
-    if ((flag && !flag_Yes(fCustom4))  ||  (!flag && !flag_No(fCustom4))) {
-      return false;
-    }
-
-    flag = ie->GetCustomFlag(5);
-    if ((flag && !flag_Yes(fCustom5))  ||  (!flag && !flag_No(fCustom5))) {
-      return false;
-    }
-
-    flag = ie->GetCustomFlag(6);
-    if ((flag && !flag_Yes(fCustom6))  ||  (!flag && !flag_No(fCustom6))) {
-      return false;
-    }
-
+    _(Start); _(Promotions); _(Comments); _(Variations); _(Nags);
+    _(Delete); _(WhiteOp); _(BlackOp); _(Middlegame); _(Endgame);
+    _(Novelty); _(PawnStruct); _(Tactics); _(Kingside); _(Queenside);
+    _(Brilliancy); _(Blunder); _(User);
+#undef _
+#define _(n)                                    \
+    flag = ie->GetCustomFlag(n);                \
+    if( flag and !flag_Yes(fCustom##n) or        \
+       !flag and !flag_No (fCustom##n))          \
+       return false
+    _(1); _(2); _(3); _(4); _(5); _(6);
+#undef _
     // If we reach here, the game matched all flag restrictions.
     return true;
 }
+*/
+JCM(jboolean, searchHeader,
+    jstring jwhite, jstring jblack, jboolean ignoreColors,
+    jboolean resultWinWhite, jboolean resultDraw, jboolean resultWinBlack, jboolean resultNone,
+    jstring jevent, jstring jsite,
+    jstring jecoFrom, jstring jecoTo, jboolean includeEcoNone,
+    jstring jyearFrom, jstring jyearTo,
+    jstring jidFrom, jstring jidTo,
+    jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
+    FILE_LOADED;
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//    Searches by header information.
-extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHeader
-        (JNIEnv *env, jclass cls, jstring fileName, jstring white, jstring black, jboolean ignoreColors,
-         jboolean result_win_white, jboolean result_draw, jboolean result_win_black, jboolean result_none,
-         jstring event, jstring site, jstring ecoFrom, jstring ecoTo, jboolean includeEcoNone,
-         jstring yearFrom, jstring yearTo, jstring idFrom, jstring idTo,
-         jint filterOperation, jintArray currentFilter,
-         jobject progress)
-{
-    jintArray result;
-    int filterOp = filterOperation;
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    const char* strWhite = env->GetStringUTFChars(white, NULL);
-    const char* strBlack = env->GetStringUTFChars(black, NULL);
-    const char* strEvent = env->GetStringUTFChars(event, NULL);
-    const char* strSite = env->GetStringUTFChars(site, NULL);
-    const char* strEcoFrom = env->GetStringUTFChars(ecoFrom, NULL);
-    const char* strEcoTo = env->GetStringUTFChars(ecoTo, NULL);
-    const char* strYearFrom = env->GetStringUTFChars(yearFrom, NULL);
-    const char* strYearTo = env->GetStringUTFChars(yearTo, NULL);
-    const char* strId[2] = {env->GetStringUTFChars(idFrom, NULL),
-                            env->GetStringUTFChars(idTo, NULL)};
-    if (!(sourceFileName && strWhite && strBlack && strEvent && strSite && strEcoFrom && strEcoTo
-          && strYearFrom && strYearTo && strId[0] && strId[1])) {
-      result = env->NewIntArray(0);
-      return result;
-    }
-    Index sourceIndex;
-    NameBase sourceNameBase;
-    GFile sourceGFile;
-    errorT err = 0;
-
-    sourceIndex.SetFileName(sourceFileName);
-    sourceNameBase.SetFileName(sourceFileName);
-    if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-        // TODO: leaks jstrings here
-        return env->NewIntArray(0);
-    }
-    if (sourceNameBase.ReadNameFile() != OK) {
-        // TODO: leaks jstrings here
-        return env->NewIntArray(0);
-    }
-    if (sourceGFile.Open(sourceFileName, FMODE_ReadOnly) != OK) {
-        // TODO: leaks jstrings here
-        return env->NewIntArray(0);
-    }
-    int noGames = sourceIndex.GetNumGames();
-
-    if (noGames <= 0) {
-        result = env->NewIntArray(0);
-        // TODO: leaks jstrings here
-        return result;
+    AJS(white); AJS(black); AJS(event); AJS(site);
+    AJS(ecoFrom); AJS(ecoTo); AJS(yearFrom); AJS(yearTo);
+    AJS(idFrom); AJS(idTo);
+    if(not (white and black and event and site and ecoFrom and ecoTo
+         and yearFrom and yearTo and idFrom and idTo)){
+        LOGE("searchHeader: one of jstring parameters is null");
+        return 0;
     }
 
-    // initialize filter
-    jint *fill = new jint[noGames];
-    memset(fill, 0, sizeof(fill));
-
-    jsize len = env->GetArrayLength(currentFilter);
-    if (len != noGames) {
-        // the currentFilter should have been initialized to the same length as the database, so reset the filter now
-        for (int i=0; i<noGames; i++) {
-            fill[i] = 1;
-        }
-    } else {
-        jint *arr = env->GetIntArrayElements(currentFilter, 0);
-        for (int i=0; i<noGames; i++) {
-            fill[i] = arr[i];
-        }
-        env->ReleaseIntArrayElements(currentFilter, arr, JNI_ABORT);
+    AJA(filter);
+    if(not filter){
+        LOGE("searchHeader: filter is null");
+        return false;
     }
-
-    char * sWhite = NULL;
-    char * sBlack = NULL;
-    char * sEvent = NULL;
-    char * sSite  = NULL;
-    char * sRound = NULL;
-	char * sAnnotator = NULL;
-
-    bool * mWhite = NULL;
-    bool * mBlack = NULL;
-    bool * mEvent = NULL;
-    bool * mSite = NULL;
-    bool * mRound = NULL;
+    gameNumberT noGames = sourceIndex.GetNumGames();
+    if(noGames != env->GetArrayLength(jfilter)){
+        LOGE("searchHeader: filter has wrong length");
+        return false;
+    }
 
     dateT dateRange[2];
     dateRange[0] = ZERO_DATE;
-    if (strYearFrom[0] != 0) {
-        uint year = strGetUnsigned(strYearFrom);
-        if (year <= YEAR_MAX && year > 1000) {
+    if(yearFrom[0] != 0){
+        uint year = strGetUnsigned(yearFrom);
+        if(year <= YEAR_MAX and year > 1000){
             dateRange[0] = DATE_MAKE(year, 1, 1);
         }
     }
     dateRange[1] = DATE_MAKE(YEAR_MAX, 12, 31);
-    if (strYearTo[0] != 0) {
-        uint year = strGetUnsigned(strYearTo);
-        if (year <= YEAR_MAX && year > 1000) {
+    if(yearTo[0] != 0){
+        uint year = strGetUnsigned(yearTo);
+        if(year <= YEAR_MAX and year > 1000){
             dateRange[1] = DATE_MAKE(year, 12, 31);
         }
     }
 
-    bool results [NUM_RESULT_TYPES];
-    results[RESULT_White] = results[RESULT_Black] = true;
-    results[RESULT_Draw] = results[RESULT_None] = true;
+    bool results[NUM_RESULT_TYPES] = // order from RESULT_None, ...
+        {resultNone, resultWinWhite, resultWinBlack, resultDraw};
 
+    /* TODO
     uint wEloRange [2];   // White rating range
     uint bEloRange [2];   // Black rating range
-    int  dEloRange [2];   // Rating difference (White minus Black) range
+    int  dEloRange [2];   // Rating difference(White minus Black) range
     wEloRange[0] = bEloRange[0] = 0;
     wEloRange[1] = bEloRange[1] = MAX_ELO;
-    dEloRange[0] = - (int)MAX_ELO;
+    dEloRange[0] = -(int)MAX_ELO;
     dEloRange[1] = MAX_ELO;
 
-	bool bAnnotated = false;
+    // Swap rating difference values if necessary:
+    if(dEloRange[0] > dEloRange[1])
+        swap(dEloRange[0], dEloRange[1]);
 
-    bool * wTitles = NULL;
-    bool * bTitles = NULL;
+	bool bAnnotated = false;
 
     bool wToMove = true;
     bool bToMove = true;
@@ -936,19 +832,26 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     uint halfMoveRange[2];
     halfMoveRange[0] = 0;
     halfMoveRange[1] = 999;
+    */
 
-    ecoT ecoRange [2];    // ECO code range.
-    ecoRange[0] = eco_FromString ("A00");
-    ecoRange[1] = eco_FromString ("E99");
     bool ecoNone = includeEcoNone;  // Whether to include games with no ECO code.
+    ecoT ecoRange[2];    // ECO code range.
+    if(ecoFrom[0] and ecoTo[0]){
+        ecoRange[0] = eco_FromString(ecoFrom);
+        // Set eco maximum to be the largest subcode, for example,
+        // "B07" -> "B07z4" to make sure subcodes are included in the range:
+        ecoRange[1] = eco_LastSubCode(eco_FromString(ecoTo));
+    } else {
+        ecoRange[0] = eco_FromString("A00");
+        ecoRange[1] = eco_FromString("E99");
+    }
 
     // gameIdRange: a range of game numbers to search.
     int gameIdRange[2] = {1, -1}; // Default: from first game to last
-    for (uint i = 0; i < 2; ++i) {
-        if (strId[i][0])
-            gameIdRange[i] = strGetUnsigned(strId[i]);
-    }
+    if(idFrom[0]) gameIdRange[0] = strGetUnsigned(idFrom);
+    if(idTo[0]) gameIdRange[1] = strGetUnsigned(idTo);
 
+    /* TODO
     flagT fStdStart = FLAG_BOTH;
     flagT fPromotions = FLAG_BOTH;
     flagT fComments = FLAG_BOTH;
@@ -973,805 +876,278 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_searchHea
     flagT fCustom4 = FLAG_BOTH;
     flagT fCustom5 = FLAG_BOTH;
     flagT fCustom6 = FLAG_BOTH;
+    */
 
-    if (strWhite[0] != 0) {
-        sWhite = strDuplicate (strWhite);
+#define _(name, Name, TYPE)                                             \
+    bit_vector m##Name;                                                 \
+    if(name[0]){                                                        \
+        idNumberT numNames = sourceNameBase.GetNumNames(NAME_##TYPE);   \
+        m##Name.resize(numNames);                                       \
+        for(idNumberT i = 0; i < numNames; ++i)                         \
+            m##Name[i] = strAlphaContains                                \
+                (sourceNameBase.GetName(NAME_##TYPE, i), name);         \
     }
-    if (strBlack[0] != 0) {
-        sBlack = strDuplicate (strBlack);
-    }
-    if (strEvent[0] != 0) {
-        sEvent = strDuplicate (strEvent);
-    }
-    if (strSite[0] != 0) {
-        sSite = strDuplicate (strSite);
-    }
-    results[RESULT_White] = result_win_white;
-    results[RESULT_Draw] = result_draw;
-    results[RESULT_Black] = result_win_black;
-    results[RESULT_None] = result_none;
-
-    if (strEcoFrom[0] != 0 && strEcoTo[0] != 0) {
-        ecoRange[0] = eco_FromString (strEcoFrom);
-        ecoRange[1] = eco_FromString (strEcoTo);
-    }
-
-    // Set up White name matches array:
-    if (sWhite != NULL  &&  sWhite[0] != 0) {
-        char * search = sWhite;
-        // Search players for match on White name:
-        idNumberT numNames = sourceNameBase.GetNumNames(NAME_PLAYER);
-        mWhite = new bool [numNames];
-        for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase.GetName (NAME_PLAYER, i);
-            mWhite[i] = strAlphaContains (name, search);
-        }
-    }
-
-    // Set up Black name matches array:
-    if (sBlack != NULL  &&  sBlack[0] != 0) {
-        char * search = sBlack;
-        // Search players for match on Black name:
-        idNumberT numNames = sourceNameBase.GetNumNames(NAME_PLAYER);
-        mBlack = new bool [numNames];
-        for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase.GetName (NAME_PLAYER, i);
-            mBlack[i] = strAlphaContains (name, search);
-        }
-    }
-
-    // Set up Event name matches array:
-    if (sEvent != NULL  &&  sEvent[0] != 0) {
-        char * search = sEvent;
-        // Search players for match on Event name:
-        idNumberT numNames = sourceNameBase.GetNumNames(NAME_EVENT);
-        mEvent = new bool [numNames];
-        for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase.GetName (NAME_EVENT, i);
-            mEvent[i] = strAlphaContains (name, search);
-        }
-    }
-
-    // Set up Site name matches array:
-    if (sSite != NULL  &&  sSite[0] != 0) {
-        char * search = sSite;
-        // Search players for match on Site name:
-        idNumberT numNames = sourceNameBase.GetNumNames(NAME_SITE);
-        mSite = new bool [numNames];
-        for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase.GetName (NAME_SITE, i);
-            mSite[i] = strAlphaContains (name, search);
-        }
-    }
-
-    // Set up Round name matches array:
-    if (sRound != NULL  &&  sRound[0] != 0) {
-        char * search = sRound;
-        // Search players for match on Event name:
-        idNumberT numNames = sourceNameBase.GetNumNames(NAME_ROUND);
-        mRound = new bool [numNames];
-        for (idNumberT i=0; i < numNames; i++) {
-            char * name = sourceNameBase.GetName (NAME_ROUND, i);
-            mRound[i] = strAlphaContains (name, search);
-        }
-    }
-
-    // Swap rating difference values if necesary:
-    if (dEloRange[0] > dEloRange[1]) {
-        int x = dEloRange[0]; dEloRange[0] = dEloRange[1]; dEloRange[1] = x;
-    }
-
-    // Set eco maximum to be the largest subcode, for example,
-    // "B07" -> "B07z4" to make sure subcodes are included in the range:
-    ecoRange[1] = eco_LastSubCode (ecoRange[1]);
+    _(white, White, PLAYER);
+    _(black, Black, PLAYER);
+    _(event, Event, EVENT);
+    _(site, Site, SITE);
+    /* TODO _(round, Round, ROUND); */
+#undef _
 
     // Set up game number range
     // A negative number means a count from the end
-    for (uint i = 0; i < 2; ++i) {
+    for(uint i = 0; i < 2; ++i){
         int t = gameIdRange[i];
-        if (t < 0) // -1 -> last game
+        if(t < 0) // -1 -> last game
             t += noGames + 1;
-        if (t < 1)
+        if(t < 1)
             t = 1;
-        else if (t > noGames)
+        else if(t > noGames)
             t = noGames;
         gameIdRange[i] = t - 1; // t \in [1,noGames]; gameIdRange[i] \in [0,noGames)
     }
     if(gameIdRange[0] > gameIdRange[1])
         swap(gameIdRange[0], gameIdRange[1]);
 
-    char temp[250];
     IndexEntry * ie;
-
-    // If filter operation is to reset the filter, reset it:
-    if (filterOp == FILTEROP_RESET) {
-        for (int i=0; i < noGames; i++) {
-            fill[i] = 1;
-        }
-        filterOp = FILTEROP_AND;
-    }
 
     // Here is the loop that searches on each game:
     PREPARE_PROGRESS(noGames);
-    uint i = 0;
-    for (; i < noGames; i++) {
+    for(uint i = 0; i < noGames; ++i){
         DO_PROGRESS(i, noGames);
-
         // First, apply the filter operation:
-        if (filterOp == FILTEROP_AND) {  // Skip any games not in the filter:
-            if (fill[i] == 0) {
-                continue;
-            }
-        } else /* filterOp == FILTEROP_OR*/ { // Skip any games in the filter:
-            if (fill[i] != 0) {
-                continue;
-            } else {
-                // OK, this game is NOT in the filter.
-                // Add it so filterCounts are kept up to date:
-                fill[i] = 1;
-            }
-        }
-
-        // Skip games outside the specified game number range:
-        if (i < gameIdRange[0]  ||  i > gameIdRange[1]) {
-            fill[i] = 0;
+        if(filterOperation == FILTEROP_AND and !filter[i]
+           or filterOperation == FILTEROP_OR and filter[i]){
+            // no need to change filter[i]
             continue;
         }
-
-        ie = sourceIndex.FetchEntry (i);
-        if (ie->GetLength() == 0) {  // Skip games with no gamefile record
-            fill[i] = 0;
-            continue;
-        }
-
-        bool match = false;
-        if (matchGameFlags (ie, fStdStart, fPromotions,
-                            fComments, fVariations, fAnnotations, fDelete,
-                            fWhiteOp, fBlackOp, fMiddlegame, fEndgame,
-                            fNovelty, fPawnStruct, fTactics, fKside,
-                            fQside, fBrilliancy, fBlunder, fUser,
-                            fCustom1, fCustom2, fCustom3, fCustom4, fCustom5, fCustom6
-                           )) {
-            if (matchGameHeader (ie, &sourceNameBase, mWhite, mBlack,
-                                 mEvent, mSite, mRound,
-                                 dateRange[0], dateRange[1], results,
-                                 wEloRange[0], wEloRange[1],
-                                 bEloRange[0], bEloRange[1],
-                                 dEloRange[0], dEloRange[1],
-                                 ecoRange[0], ecoRange[1], ecoNone,
-                                 halfMoveRange[0], halfMoveRange[1],
-                                 wToMove, bToMove, bAnnotated)) {
-                match = true;
-            }
-
-            // Try with inverted players/ratings/results if ignoring colors:
-
-            if (!match  &&  ignoreColors  &&
-                matchGameHeader (ie, &sourceNameBase, mBlack, mWhite,
-                                 mEvent, mSite, mRound,
-                                 dateRange[0], dateRange[1], results,
-                                 bEloRange[0], bEloRange[1],
-                                 wEloRange[0], wEloRange[1],
-                                 -dEloRange[1], -dEloRange[0],
-                                 ecoRange[0], ecoRange[1], ecoNone,
-                                 halfMoveRange[0], halfMoveRange[1],
-                                 bToMove, wToMove, bAnnotated)) {
-                match = true;
-            }
-        }
-
-        if (match) {
-            // Game matched, so update the filter value. Only change it
-            // to 1 if it is currently 0:
-            if (fill[i] == 0) {
-                fill[i] == 1; // set ply number to 1
-            }
+        if((i >= gameIdRange[0] and i <= gameIdRange[1])
+           and (ie = sourceIndex.FetchEntry(i)) != 0
+           and ie->GetLength() // Skip games with no gamefile record
+           /* TODO
+           and
+           matchGameFlags(ie, fStdStart, fPromotions,
+                          fComments, fVariations, fAnnotations, fDelete,
+                          fWhiteOp, fBlackOp, fMiddlegame, fEndgame,
+                          fNovelty, fPawnStruct, fTactics, fKside,
+                          fQside, fBrilliancy, fBlunder, fUser,
+                          fCustom1, fCustom2, fCustom3, fCustom4, fCustom5, fCustom6)
+           */
+           and
+           (matchGameHeader(ie, &sourceNameBase, mWhite, mBlack,
+                            mEvent, mSite, /* TODO mRound, */
+                            dateRange[0], dateRange[1], results,
+                            /* TODO
+                            wEloRange[0], wEloRange[1],
+                            bEloRange[0], bEloRange[1],
+                            dEloRange[0], dEloRange[1],
+                            */
+                            ecoRange[0], ecoRange[1], ecoNone
+                            /* TODO
+                            halfMoveRange[0], halfMoveRange[1],
+                            wToMove, bToMove, bAnnotated
+                            */)
+            or
+            ignoreColors and /* as above, but swap players */
+            matchGameHeader(ie, &sourceNameBase, mBlack, mWhite,
+                            mEvent, mSite, /* TODO mRound, */
+                            dateRange[0], dateRange[1], results,
+                            /* TODO
+                            wEloRange[0], wEloRange[1],
+                            bEloRange[0], bEloRange[1],
+                            dEloRange[0], dEloRange[1],
+                            */
+                            ecoRange[0], ecoRange[1], ecoNone
+                            /* TODO
+                            halfMoveRange[0], halfMoveRange[1],
+                            wToMove, bToMove, bAnnotated
+                            */))){
+            // Game matches
+            if(filter[i] == 0)
+                filter[i] = 1;
+            // otherwise preserve non-zero value of filter[i]
         } else {
-            // This game did NOT match:
-            fill[i] = 0; // set ply number to 0
+            // This game does NOT match
+            filter[i] = 0;
         }
     }
-
-    result = env->NewIntArray(i);
-    if (i > 0) {
-        if (result == NULL) {
-            delete [] fill;
-            return NULL; // out of memory error thrown
-        }
-        env->SetIntArrayRegion(result, 0, i, fill);
-    }
-    delete [] fill;
-
-    if (sWhite != NULL) { delete[] sWhite; }
-    if (sBlack != NULL) { delete[] sBlack; }
-    if (sEvent != NULL) { delete[] sEvent; }
-    if (sSite  != NULL) { delete[] sSite;  }
-    if (sRound != NULL) { delete[] sRound; }
-    if (mWhite != NULL) { delete[] mWhite; }
-    if (mBlack != NULL) { delete[] mBlack; }
-    if (mEvent != NULL) { delete[] mEvent; }
-    if (mSite  != NULL) { delete[] mSite;  }
-    if (mRound != NULL) { delete[] mRound; }
-    if (wTitles != NULL) { delete[] wTitles; }
-    if (bTitles != NULL) { delete[] bTitles; }
-
-    // cleanup
-    sourceIndex.CloseIndexFile();
-    sourceIndex.Clear();
-    sourceNameBase.Clear();
-    sourceGFile.Close();
-    env->ReleaseStringUTFChars(fileName, sourceFileName);
-    env->ReleaseStringUTFChars(white, strWhite);
-    env->ReleaseStringUTFChars(black, strBlack);
-    env->ReleaseStringUTFChars(event, strEvent);
-    env->ReleaseStringUTFChars(site, strSite);
-    env->ReleaseStringUTFChars(ecoFrom, strEcoFrom);
-    env->ReleaseStringUTFChars(ecoTo, strEcoTo);
-    env->ReleaseStringUTFChars(yearFrom, strYearFrom);
-    env->ReleaseStringUTFChars(yearTo, strYearTo);
-    env->ReleaseStringUTFChars(idFrom, strId[0]);
-    env->ReleaseStringUTFChars(idTo, strId[1]);
-    return result;
+    return true;
 }
-
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    importPgn
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_importPgn
-(JNIEnv* env, jclass cls, jstring fileName, jobject progress)
-{
-    const char* pgnName = env->GetStringUTFChars(fileName, NULL);
-    std::string resultString = "";
-    if (pgnName) {
-        MFile * pgnFile = new MFile;
-        PgnParser pgnParser (pgnFile);
-        ByteBuffer *bbuf = new ByteBuffer;
-        Index * idx = new Index;
-        Game * game = new Game;
-        GFile * gameFile = new GFile;
-        NameBase * nb = new NameBase;
-        IndexEntry * ie = new IndexEntry;
-        uint t = 0;   // = time(0);
-        int lastCallbackPercent = -1;
-        uint pgnFileSize = fileSize (pgnName, "");
-        // Ensure positive file size counter to avoid division by zero:
-        if (pgnFileSize < 1) { pgnFileSize = 1; }
-        PREPARE_PROGRESS(pgnFileSize);
-
-        // Make baseName from pgnName if baseName is not provided:
-        fileNameT baseName;
-        strCopy (baseName, pgnName);
-        // Trim the ".pgn" suffix:
-        strTrimFileSuffix (baseName);
-
-        // Try opening the log file:
-        fileNameT fname;
-        strCopy (fname, baseName);
-        strAppend (fname, ".err");
-        FILE * logFile = fopen (fname, "w");
-
-        if (pgnFile->Open (pgnName, FMODE_ReadOnly) != OK) {
-            resultString.append("Could not open file ");
-            resultString.append(pgnName);
-            resultString.append("\n");
-            goto cleanup;
-        }
-
-        if (logFile == NULL) {
-            resultString.append("Could not open log file.\n");
-            goto cleanup;
-        }
-
-        scid_Init();
-
-        if ((gameFile->Create (baseName, FMODE_WriteOnly)) != OK) {
-            // could not create the game file
-            pgnFile->Close();
-            goto cleanup;
-        }
-        idx->SetFileName (baseName);
-        idx->CreateIndexFile (FMODE_WriteOnly);
-        gameNumberT gNumber;
-
-        bbuf->SetBufferSize (BBUF_SIZE); // 32768
-
-        pgnParser.SetErrorFile (logFile);
-        pgnParser.SetPreGameText (true);
-
-        // TODO: Add command line option for ignored tags, rather than
-        //       just hardcoding PlyCount as the only ignored tag.
-        pgnParser.AddIgnoredTag ("PlyCount");
-
-        // Add each game found to the database:
-        while (pgnParser.ParseGame(game) != ERROR_NotFound) {
-            ie->Init();
-
-            if (idx->AddGame (&gNumber, ie) != OK) {
-                resultString.append("Too many games!");
-                goto cleanup;
-            }
-
-            // Add the names to the namebase:
-            idNumberT id = 0;
-
-            if (nb->AddName (NAME_PLAYER, game->GetWhiteStr(), &id) != OK) {
-                resultString.append("Too many names: ");
-                resultString.append(NAME_PLAYER);
-                goto cleanup;
-            }
-            nb->IncFrequency (NAME_PLAYER, id, 1);
-            ie->SetWhite (id);
-
-            if (nb->AddName (NAME_PLAYER, game->GetBlackStr(), &id) != OK) {
-                resultString.append("Too many names: ");
-                resultString.append(NAME_PLAYER);
-                goto cleanup;
-            }
-            nb->IncFrequency (NAME_PLAYER, id, 1);
-            ie->SetBlack (id);
-
-            if (nb->AddName (NAME_EVENT, game->GetEventStr(), &id) != OK) {
-                resultString.append("Too many names: ");
-                resultString.append(NAME_TYPE_STRING [NAME_EVENT]);
-                goto cleanup;
-            }
-            nb->IncFrequency (NAME_EVENT, id, 1);
-            ie->SetEvent (id);
-
-            if (nb->AddName (NAME_SITE, game->GetSiteStr(), &id) != OK) {
-                resultString.append("Too many names: ");
-                resultString.append(NAME_TYPE_STRING [NAME_SITE]);
-                goto cleanup;
-            }
-            nb->IncFrequency (NAME_SITE, id, 1);
-            ie->SetSite (id);
-
-            if (nb->AddName (NAME_ROUND, game->GetRoundStr(), &id) != OK) {
-                resultString.append("Too many names: ");
-                resultString.append(NAME_TYPE_STRING [NAME_ROUND]);
-                goto cleanup;
-            }
-            nb->IncFrequency (NAME_ROUND, id, 1);
-            ie->SetRound (id);
-
-            bbuf->Empty();
-            if (game->Encode (bbuf, ie) != OK) {
-                resultString.append("Fatal error encoding game!\n");
-                goto cleanup;
-            }
-            uint offset = 0;
-            if (gameFile->AddGame (bbuf, &offset) != OK) {
-                resultString.append("Fatal error writing game file!\n");
-                goto cleanup;
-            }
-            ie->SetOffset (offset);
-            ie->SetLength (bbuf->GetByteCount());
-            idx->WriteEntries (ie, gNumber, 1);
-
-            int bytesSeen = pgnParser.BytesUsed();
-            DO_PROGRESS(bytesSeen, pgnFileSize);
-        }
-
-        nb->SetTimeStamp(t);
-        nb->SetFileName (baseName);
-        if (nb->WriteNameFile() != OK) {
-            resultString.append("Fatal error writing name file!\n");
-            goto cleanup;
-        }
-        //progBar.Finish();
-
-        /*printf ("\nDatabase `%s': %d games, %d players, %d events, %d sites.\n",
-                baseName, idx->GetNumGames(), nb->GetNumNames (NAME_PLAYER),
-                nb->GetNumNames (NAME_EVENT), nb->GetNumNames (NAME_SITE));*/
-        fclose (logFile);
-        if (pgnParser.ErrorCount() > 0) {
-            FILE * errFile = fopen (fname, "r");
-            char line[100];
-            while( fgets(line, sizeof(line), errFile) != NULL ) {
-                resultString.append(line);
-            }
-            fclose(errFile);
-        }
-        removeFile (baseName, ".err");
-        gameFile->Close();
-        idx->CloseIndexFile();
-        idx->Clear();
-
-        // If there is a tree cache file for this database, it is out of date:
-        removeFile (baseName, TREEFILE_SUFFIX);
-        pgnFile->Close();
-
-      cleanup:
-        env->ReleaseStringUTFChars(fileName, pgnName);
-        return env->NewStringUTF(resultString.c_str());
-    }
-}
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    setFavorite
- */
-extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setFavorite
-                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean isFavorite)
-{
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    if (sourceFileName) {
-        Index sourceIndex;
-        sourceIndex.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_Both) != OK) {
-            goto cleanup;
-        }
-
-        if (gameNo < sourceIndex.GetNumGames()) {
-            IndexEntry iE;
-            errorT err = 0;
-            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
-            if (err != OK) {
-                goto cleanup;
-            }
-            iE.SetUserFlag(isFavorite);
-            sourceIndex.WriteEntries(&iE, gameNo, 1);
-            sourceIndex.CloseIndexFile();
-            sourceIndex.Clear();
-        }
-      cleanup:
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return;
-    }
-}
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    setDeleted
- */
-extern "C" JNIEXPORT void JNICALL Java_org_scid_database_DataBase_setDeleted
-                (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jboolean isDeleted)
-{
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    if (sourceFileName) {
-        Index sourceIndex;
-        sourceIndex.SetFileName(sourceFileName);
-        if (sourceIndex.OpenIndexFile(FMODE_Both) != OK) {
-            goto cleanup;
-        }
-
-        if (gameNo < sourceIndex.GetNumGames()) {
-            IndexEntry iE;
-            errorT err = 0;
-            err = sourceIndex.ReadEntries(&iE, gameNo, 1);
-            if (err != OK) {
-                goto cleanup;
-            }
-            iE.SetDeleteFlag(isDeleted);
-            game->SetAltered(isDeleted);
-            // remove any favorite flag
-            iE.SetUserFlag(false);
-            sourceIndex.WriteEntries(&iE, gameNo, 1);
-            sourceIndex.CloseIndexFile();
-            sourceIndex.Clear();
-        }
-      cleanup:
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return;
-    }
-}
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    isDeleted
- */
-extern "C" JNIEXPORT jboolean JNICALL Java_org_scid_database_DataBase_isDeleted
-                (JNIEnv* env, jclass cls)
-{
-    // misused altered flag for delete flag
-    return game->GetAltered();
-}
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    getFavorites
- */
-extern "C" JNIEXPORT jintArray JNICALL Java_org_scid_database_DataBase_getFavorites
-        (JNIEnv *env, jclass cls, jstring fileName, jobject progress)
-{
-    jintArray result;
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    if (!sourceFileName) {
-      result = env->NewIntArray(0);
-      return result;
-    }
-    Index sourceIndex;
-
-    sourceIndex.SetFileName(sourceFileName);
-    if (sourceIndex.OpenIndexFile(FMODE_ReadOnly) != OK) {
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
+JCM(jintArray, getFavorites, jobject progress){
+    FILE_LOADED;
+    vector<int> result;
+    int noGames = sourceIndex.GetNumGames();
+    if(noGames <= 0){
+        LOGI("getFavorites: no games in sourceIndex");
         return env->NewIntArray(0);
     }
 
-    int noGames = sourceIndex.GetNumGames();
-    if (noGames <= 0) {
-        result = env->NewIntArray(0);
-        sourceIndex.CloseIndexFile();
-        sourceIndex.Clear();
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return result;
-    }
-
-    // initialize filter
-    jint *fill = new jint[noGames];
-    memset(fill, 0, sizeof(fill));
-
-    IndexEntry * ie;
-
-    // reset filter
-    for (int i=0; i < noGames; i++) {
-        fill[i] = 1;
-    }
-
     // Here is the loop that searches on each game:
     PREPARE_PROGRESS(noGames);
-    uint i = 0;
-    for (; i < noGames; i++) {
+    for(uint i = 0; i < noGames; ++i){
         DO_PROGRESS(i, noGames);
-        // First, apply the filter operation:
-        // Skip any games not in the filter:
-        if (fill[i] == 0) {
-            continue;
-        }
-
-        ie = sourceIndex.FetchEntry (i);
-        if (ie->GetLength() == 0) {  // Skip games with no gamefile record
-            fill[i] = 0;
-            continue;
-        }
-
-        // skip games that have no user flag set
-        if (!ie->GetUserFlag()) {
-            fill[i] = 0;
-            continue;
-        }
-
-        // Update the filter value. Only change it
-        // to 1 if it is currently 0:
-        if (fill[i] == 0) {
-            fill[i] == 1; // set ply number to 1
+        IndexEntry * ie = sourceIndex.FetchEntry(i);
+        if(ie->GetLength() != 0 and ie->GetUserFlag()){
+            // game has record and the user flag is set
+            result.push_back(i);
         }
     }
 
-    result = env->NewIntArray(i);
-    if (i > 0) {
-        if (result == NULL) {
-            delete [] fill;
-            return NULL; // out of memory error thrown
-        }
-        env->SetIntArrayRegion(result, 0, i, fill);
-    }
-    delete [] fill;
-
-    // cleanup
-    sourceIndex.CloseIndexFile();
-    sourceIndex.Clear();
-    env->ReleaseStringUTFChars(fileName, sourceFileName);
-    return result;
+    jintArray jresult = env->NewIntArray(result.size());
+    if(result.size() and jresult)
+        env->SetIntArrayRegion(jresult, 0, result.size(), &result[0]);
+    return jresult;
 }
-
-
-/*
- * Class:     org_scid_database_DataBase
- * Method:    saveGame
- */
-extern "C" JNIEXPORT jstring JNICALL Java_org_scid_database_DataBase_saveGame
-        (JNIEnv* env, jclass cls, jstring fileName, jint gameNo, jstring pgn)
-{
-    const char* pgnString = env->GetStringUTFChars(pgn, NULL);
-    const char* sourceFileName = env->GetStringUTFChars(fileName, NULL);
-    std::string resultString = "";
-    if (pgnString) {
-        if (sourceFileName) {
-            ByteBuffer *bbuf = new ByteBuffer;
-            bbuf->SetBufferSize (BBUF_SIZE);
-            PgnParser parser;
-            parser.Reset (pgnString);
-            uint size=16000;
-            LOGD("parsing game");
-            game->Clear();
-            parser.ParseGame(game);
-            LOGD("create index entry");
-            // Grab a new idx entry, if needed:
-            IndexEntry * oldIE = NULL;
-            IndexEntry * iE = new IndexEntry;
-            iE->Init();
-
-            bbuf->Empty();
-            LOGD("encode game");
-            if (game->Encode (bbuf, iE) != OK) {
-                resultString.append("Error encoding game.");
-                goto cleanup;
-            }
-            LOGD("finished encoding game");
-
-            bool replaceMode = false;
-            gameNumberT gNumber = gameNo;
-            if (gameNo >= 0) {
-                replaceMode = true;
-            }
-
-            Index sourceIndex;
-            GFile sourceGFile;
-            errorT err = 0;
-            LOGD("Saving game.");
-
-            sourceIndex.SetFileName(sourceFileName);
-            if (sourceIndex.OpenIndexFile(FMODE_Both) != OK) {
-                resultString.append("Unable to load index file.");
-                goto cleanup;
-            }
-            if (sourceGFile.Open(sourceFileName, FMODE_Both) != OK) {
-                resultString.append("Unable to load game file.");
-                goto cleanup;
-            }
-            NameBase sourceNameBase;
-            sourceNameBase.SetFileName(sourceFileName);
-            if (sourceNameBase.ReadNameFile() != OK) {
-                resultString.append("Unable to read name base.");
-                goto cleanup;
-            }
-            err = sourceIndex.ReadEntries(iE, gNumber, 1);
-            if (err != OK) {
-                resultString.append("Error reading index entry.");
-                goto cleanup;
-            }
-            LOGD("All files read.");
-
-            // game->Encode computes flags, so we have to re-set flags if replace mode
-            if (replaceMode) {
-                oldIE = sourceIndex.FetchEntry (gNumber);
-                LOGD("Old index entry fetched.");
-                // Remember previous user-settable flags:
-                for (uint flag = 0; flag < IDX_NUM_FLAGS; flag++) {
-                    char flags [32];
-                    oldIE->GetFlagStr (flags, NULL);
-                    iE->SetFlagStr (flags);
-                }
-            } else {
-                // add game without resetting the index, because it has been filled by game->encode above
-                if (sourceIndex.AddGame (&gNumber, iE, false) != OK) {
-                    resultString.append("Too many games in this database.");
-                    goto cleanup;
-                }
-            }
-            int noGames = sourceIndex.GetNumGames();
-
-            bbuf->BackToStart();
-
-            // Now try writing the game to the gfile:
-            LOGD("Trying to write game to gfile.");
-            uint offset = 0;
-            if (sourceGFile.AddGame (bbuf, &offset) != OK) {
-                resultString.append("Error writing game file.");
-                goto cleanup;
-            }
-            iE->SetOffset (offset);
-            iE->SetLength (bbuf->GetByteCount());
-            LOGD("Game written to gfile.");
-
-            // Now we add the names to the NameBase
-            // If replacing, we decrement the frequency of the old names.
-            const char * s;
-            idNumberT id = 0;
-
-            // WHITE:
-            s = game->GetWhiteStr();  if (!s) { s = "?"; }
-            if (sourceNameBase.AddName (NAME_PLAYER, s, &id) == ERROR_NameBaseFull) {
-                resultString.append("Too many player names.");
-                goto cleanup;
-            }
-            sourceNameBase.IncFrequency (NAME_PLAYER, id, 1);
-            iE->SetWhite (id);
-            LOGD("White written to name base.");
-
-            // BLACK:
-            s = game->GetBlackStr();  if (!s) { s = "?"; }
-            if (sourceNameBase.AddName (NAME_PLAYER, s, &id) == ERROR_NameBaseFull) {
-                resultString.append("Too many player names.");
-                goto cleanup;
-            }
-            sourceNameBase.IncFrequency (NAME_PLAYER, id, 1);
-            iE->SetBlack (id);
-            LOGD("Black written to name base.");
-
-            // EVENT:
-            s = game->GetEventStr();  if (!s) { s = "?"; }
-            if (sourceNameBase.AddName (NAME_EVENT, s, &id) == ERROR_NameBaseFull) {
-                resultString.append("Too many event names.");
-                goto cleanup;
-            }
-            sourceNameBase.IncFrequency (NAME_EVENT, id, 1);
-            iE->SetEvent (id);
-            LOGD("Event written to name base.");
-
-            // SITE:
-            s = game->GetSiteStr();  if (!s) { s = "?"; }
-            if (sourceNameBase.AddName (NAME_SITE, s, &id) == ERROR_NameBaseFull) {
-                resultString.append("Too many site names.");
-                goto cleanup;
-            }
-            sourceNameBase.IncFrequency (NAME_SITE, id, 1);
-            iE->SetSite (id);
-            LOGD("Site written to name base.");
-
-            // ROUND:
-            s = game->GetRoundStr();  if (!s) { s = "?"; }
-            if (sourceNameBase.AddName (NAME_ROUND, s, &id) == ERROR_NameBaseFull) {
-                resultString.append("Too many round names.");
-                goto cleanup;
-            }
-            sourceNameBase.IncFrequency (NAME_ROUND, id, 1);
-            iE->SetRound (id);
-            LOGD("Round written to name base.");
-
-            // RESULT:
-            iE->SetResult(game->GetResult());
-
-            // If replacing, decrement the frequency of the old names:
-            if (replaceMode) {
-                sourceNameBase.IncFrequency (NAME_PLAYER, oldIE->GetWhite(), -1);
-                sourceNameBase.IncFrequency (NAME_PLAYER, oldIE->GetBlack(), -1);
-                sourceNameBase.IncFrequency (NAME_EVENT,  oldIE->GetEvent(), -1);
-                sourceNameBase.IncFrequency (NAME_SITE,   oldIE->GetSite(),  -1);
-                sourceNameBase.IncFrequency (NAME_ROUND,  oldIE->GetRound(), -1);
-            }
-            LOGD("Frequencies incremented.");
-
-            // Flush the gfile so it is up-to-date with other files:
-            // This made copying games between databases VERY slow, so it
-            // is now done elsewhere OUTSIDE a loop that copies many
-            // games, such as in sc_filter_copy().
-            sourceGFile.FlushAll();
-            LOGD("All flushed.");
-
-            // Last of all, we write the new idxEntry
-            if (sourceIndex.WriteEntries (iE, gNumber, 1) != OK) {
-                resultString.append("Error writing index file.");
-                goto cleanup;
-            }
-            LOGD("Index file written.");
-            if (sourceIndex.WriteHeader() != OK) {
-                resultString.append("Error writing index header.");
-                goto cleanup;
-            }
-            LOGD("Index header written.");
-            if (sourceNameBase.WriteNameFile() != OK) {
-                resultString.append("Error writing name file.");
-                goto cleanup;
-            }
-            LOGD("Name file written.");
-
-            sourceIndex.CloseIndexFile();
-            sourceIndex.Clear();
-            sourceNameBase.Clear();
-            sourceGFile.Close();
-
-            // We need to increase the filter size if a game was added:
-            if (! replaceMode) {
-                // TODO
-            }
-            initialized = false;
-        }
-    }
-    cleanup:
-        env->ReleaseStringUTFChars(pgn, pgnString);
-        env->ReleaseStringUTFChars(fileName, sourceFileName);
-        return env->NewStringUTF(resultString.c_str());
+
+/// Modifications
+JCM(jboolean, setFavorite, jint gameId, jboolean isFavorite){
+    FILE_LOADED;
+    if(gameId < 0 or gameId >= sourceIndex.GetNumGames())
+        return false;
+    CHECK(reopenIndexForWriting());
+    IndexEntry iE;
+    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
+    iE.SetUserFlag(isFavorite);
+    sourceIndex.WriteEntries(&iE, gameId, 1);
+    return true;
 }
+JCM(jboolean, setDeleted, jint gameId, jboolean isDeleted){
+    FILE_LOADED;
+    if(gameId < 0 or gameId >= sourceIndex.GetNumGames())
+        return false;
+    CHECK(reopenIndexForWriting());
+    IndexEntry iE;
+    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
+    iE.SetDeleteFlag(isDeleted);
+    game.SetAltered(isDeleted);
+    // remove any favorite flag, TODO: why?
+    iE.SetUserFlag(false);
+    sourceIndex.WriteEntries(&iE, gameId, 1);
+    return true;
+}
+JCM(jstring, saveGame, jint gameId, jstring jpgn){
+    FILE_LOADED;
+    unloadGame();
 
+    AJS(pgn);
+    if(not pgn){
+        LOGE("saveGame: pgn is null");
+        return 0;
+    }
+
+#define _(op,msg) if((op) != OK) return env->NewStringUTF(msg)
+
+    ByteBuffer *bbuf = new ByteBuffer;
+    bbuf->SetBufferSize(BBUF_SIZE);
+    PgnParser parser;
+    parser.Reset(pgn);
+    uint size=16000;
+    LOGD("parsing game");
+    parser.ParseGame(&game);
+    LOGD("create index entry");
+    // Grab a new idx entry, if needed:
+    IndexEntry * oldIE = 0;
+    IndexEntry * iE = new IndexEntry;
+    iE->Init();
+
+    bbuf->Empty();
+    LOGD("encode game");
+    _(game.Encode(bbuf, iE), "Error encoding game.");
+    LOGD("finished encoding game");
+
+    bool replaceMode = false;
+    gameNumberT gNumber = gameId;
+    if(gameId >= 0){
+        replaceMode = true;
+    }
+
+    LOGD("Saving game.");
+
+    _(reopenIndexForWriting(), "Unable to reopen index file for writing.");
+    _(reopenGFileForWriting(), "Unable to reopen game file for writing.");
+    _(sourceIndex.ReadEntries(iE, gNumber, 1), "Error reading index entry.");
+    LOGD("All files loaded.");
+
+    // game.Encode computes flags, so we have to re-set flags if replace mode
+    if(replaceMode){
+        oldIE = sourceIndex.FetchEntry(gNumber);
+        LOGD("Old index entry fetched.");
+        // Remember previous user-settable flags:
+        for(uint flag = 0; flag < IDX_NUM_FLAGS; ++flag){
+            char flags [32];
+            oldIE->GetFlagStr(flags, 0);
+            iE->SetFlagStr(flags);
+        }
+    } else {
+        // add game without resetting the index, because it has been filled by game.encode above
+        _(sourceIndex.AddGame(&gNumber, iE, false), "Too many games in this database.");
+    }
+    int noGames = sourceIndex.GetNumGames();
+
+    bbuf->BackToStart();
+
+    // Now try writing the game to the gfile:
+    LOGD("Trying to write game to gfile.");
+    uint offset = 0;
+    _(sourceGFile.AddGame(bbuf, &offset), "Error writing game file.");
+    iE->SetOffset(offset);
+    iE->SetLength(bbuf->GetByteCount());
+    LOGD("Game written to gfile.");
+
+    // Now we add the names to the NameBase
+    // If replacing, we decrement the frequency of the old names.
+    const char * s;
+    idNumberT id = 0;
+
+#define __(Name, TYPE)                                                  \
+    s = game.Get##Name##Str();  if(not s){ s = "?"; }                      \
+    _(sourceNameBase.AddName(NAME_##TYPE, s, &id),                      \
+      "Cannot add " #Name " as " #TYPE ".");                            \
+    sourceNameBase.IncFrequency(NAME_##TYPE, id, 1);                    \
+    iE->Set##Name(id);                                                  \
+    LOGD(#Name " written to name base.")
+
+    __(White, PLAYER);
+    __(Black, PLAYER);
+    __(Event, EVENT);
+    __(Site, SITE);
+    __(Round, ROUND);
+#undef __
+
+    // If replacing, decrement the frequency of the old names:
+    if(replaceMode){
+        sourceNameBase.IncFrequency(NAME_PLAYER, oldIE->GetWhite(), -1);
+        sourceNameBase.IncFrequency(NAME_PLAYER, oldIE->GetBlack(), -1);
+        sourceNameBase.IncFrequency(NAME_EVENT,  oldIE->GetEvent(), -1);
+        sourceNameBase.IncFrequency(NAME_SITE,   oldIE->GetSite(),  -1);
+        sourceNameBase.IncFrequency(NAME_ROUND,  oldIE->GetRound(), -1);
+    }
+    LOGD("Frequencies incremented.");
+
+    iE->SetResult(game.GetResult());
+
+    // Flush the gfile so it is up-to-date with other files:
+    // This made copying games between databases VERY slow, so it
+    // is now done elsewhere OUTSIDE a loop that copies many
+    // games, such as in sc_filter_copy().
+    sourceGFile.FlushAll();
+    LOGD("All flushed.");
+
+    // Last of all, we write the new idxEntry
+    _(sourceIndex.WriteEntries(iE, gNumber, 1), "Error writing index file.");
+    LOGD("Index file written.");
+    _(sourceIndex.WriteHeader(), "Error writing index header.");
+    LOGD("Index header written.");
+    _(sourceNameBase.WriteNameFile(), "Error writing name file.");
+    LOGD("Name file written.");
+
+    // We need to increase the filter size if a game was added:
+    if(not replaceMode){
+        // TODO
+    }
+    return env->NewStringUTF("");
+#undef _
+}
 // Local Variables:
 // tab-width: 4
 // c-basic-offset: 4
