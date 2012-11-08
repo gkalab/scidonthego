@@ -809,7 +809,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_new_game: {
-			setDataBaseViewFromFile();
+			setDataBaseViewFromFile(true);
 			newGame();
 			return true;
 		}
@@ -1201,8 +1201,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						// a new game was added
 						// TODO: reset dbv for now - saving should be done
 						// within the
-						// data provider and dbv
-						DataBaseView dbv = setDataBaseViewFromFile();
+						// reset data provider and dbv
+						DataBaseView dbv = setDataBaseViewFromFile(true);
 						// move to newly added game
 						if (dbv != null && dbv.moveToLast()) {
 							setPgnFromDataBaseView();
@@ -1818,13 +1818,23 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private DataBaseView setDataBaseViewFromFile() {
+		return setDataBaseViewFromFile(false);
+	}
+	
+	/**
+	 * Set the database view from the current scid file
+	 * @param alwaysResetDbView if set to true always reset the dbv, 
+	 *     if set to false only reset the dbv if the file name changes or the current dbv is null
+	 */
+	private DataBaseView setDataBaseViewFromFile(boolean alwaysResetDbView) {
 		final String currentScidFile = settings.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
 		String scidFileName = Tools.stripExtension(currentScidFile);
 		DataBaseView dbv = getScidAppContext().getDataBaseView();
-		if (dbv == null || !scidFileName.equals(dbv.getFileName())) {
+		if (alwaysResetDbView || dbv == null
+				|| !scidFileName.equals(dbv.getFileName())) {
 			dbv = new DataBaseView(scidFileName);
 		} else { // The file is already loaded
 			if (!dbv.reloadFile())
