@@ -30,7 +30,15 @@ public class SearchHeaderActivity extends SearchActivityBase {
 		public String getItem(int position) {
 			return dbv.getName(nameType, names[position]);
 		}
-		public long getItemId(int position) { return names[position]; }
+		
+		public long getItemId(int position) {
+			if (position < names.length) {
+				return names[position];
+			} else {
+				return -1;
+			}
+		}
+		
 		public boolean hasStableIds() { return true; }
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view = convertView;
