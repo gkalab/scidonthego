@@ -317,12 +317,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			String[] names = myPlayerNames.split("\\n");
 			for (int i = 0; i < names.length; i++) {
 				String playerName = names[i].trim();
-				if (white.equalsIgnoreCase(playerName)) {
-					setFlipped(false);
-					break;
-				} else if (black.equalsIgnoreCase(playerName)) {
-					setFlipped(true);
-					break;
+				if (playerName.length() > 0) {
+					if (white.equalsIgnoreCase(playerName)) {
+						setFlipped(false);
+						break;
+					} else if (black.equalsIgnoreCase(playerName)) {
+						setFlipped(true);
+						break;
+					}
 				}
 			}
 		}
