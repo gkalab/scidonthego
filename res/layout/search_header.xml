@@ -39,7 +39,7 @@
             android:id="@+id/result_text"
             android:text="@string/result"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></TextView>
+            android:layout_height="wrap_content" />
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="fill_parent"
@@ -179,22 +179,36 @@
             android:orientation="horizontal"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/search_header_previous"
+                android:onClick="onPreviousClick"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:src="@drawable/previous"
+                android:contentDescription="@string/search_previous_request" />
+            <ImageButton
+                android:id="@+id/search_header_next"
+                android:onClick="onNextClick"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:src="@drawable/next"
+                android:contentDescription="@string/search_next_request" />
             <Button
                 android:id="@+id/search_header_ok"
                 android:onClick="onOkClick"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/ok">
-            </Button>
+                android:text="@string/ok" />
             <Button
                 android:id="@+id/search_header_cancel"
                 android:onClick="onCancelClick"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/cancel">
-            </Button>
+                android:text="@string/cancel" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
