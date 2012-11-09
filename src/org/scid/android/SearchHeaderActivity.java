@@ -28,17 +28,23 @@ public class SearchHeaderActivity extends SearchActivityBase {
 		}
 		public int getCount() { return names.length; }
 		public String getItem(int position) {
-			return dbv.getName(nameType, names[position]);
+			int[] n = names; // local copy to prevent TOCTOU
+			if (position >= 0 && position < n.length) {
+				return dbv.getName(nameType, n[position]);
+            } else {
+				return null;
+            }
 		}
-		
+
 		public long getItemId(int position) {
-			if (position < names.length) {
-				return names[position];
+			int[] n = names; // local copy to prevent TOCTOU
+			if (position >= 0 && position < n.length) {
+				return n[position];
 			} else {
 				return -1;
 			}
 		}
-		
+
 		public boolean hasStableIds() { return true; }
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view = convertView;
