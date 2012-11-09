@@ -1,5 +1,7 @@
 package org.scid.android;
 
+import java.util.ArrayList;
+
 import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
 
@@ -8,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
@@ -16,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class SearchHeaderActivity extends SearchActivityBase {
 	private DataBaseView dbv;
@@ -102,6 +106,66 @@ public class SearchHeaderActivity extends SearchActivityBase {
 				new FilterableNames(DataBaseView.NAME_EVENT));
 		((AutoCompleteTextView) findViewById(R.id.search_site)).setAdapter(
 				new FilterableNames(DataBaseView.NAME_SITE));
+
+		findViewById(R.id.search_header_next)
+		.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				return onNextLongClick(v);
+			}
+		});
+	}
+
+	/** list of previous requests */
+	private static ArrayList<Bundle> requestHistory = new ArrayList<Bundle>();
+	private int requestIndex;
+	private Bundle savedRequest; // saved on the first "Previous" click
+	private Bundle currentState() {
+		Bundle result = new Bundle();
+		onSaveInstanceState(result);
+		return result;
+	}
+
+	public void onPreviousClick(View view) {
+		if (requestHistory.isEmpty()) {
+			Toast.makeText(this, getString(R.string.search_no_history), Toast.LENGTH_LONG).show();
+		} else 	if (savedRequest == null) { // there is history but "Previous" was not yet touched
+			savedRequest = currentState();
+			requestIndex = requestHistory.size() - 1;
+			onRestoreInstanceState(requestHistory.get(requestIndex));
+		} else 	if (requestIndex == 0){ // last time we showed the first request, rewind
+			Toast.makeText(this, getString(R.string.search_history_done), Toast.LENGTH_LONG).show();
+			requestIndex = requestHistory.size();
+			onRestoreInstanceState(savedRequest);
+		} else {
+			onRestoreInstanceState(requestHistory.get(--requestIndex));
+		}
+	}
+	public void onNextClick(View view) {
+		if (requestHistory.isEmpty()) {
+			Toast.makeText(this, getString(R.string.search_no_history), Toast.LENGTH_LONG).show();
+		} else 	if (savedRequest == null || requestIndex == requestHistory.size()) {
+			Toast.makeText(this, getString(R.string.search_nothing_to_redo), Toast.LENGTH_LONG).show();
+		} else 	if (requestIndex == requestHistory.size() - 1){ // last redo
+			requestIndex = requestHistory.size();
+			onRestoreInstanceState(savedRequest);
+		} else {
+			onRestoreInstanceState(requestHistory.get(++requestIndex));
+		}
+	}
+	public boolean onNextLongClick(View view) {
+		if (savedRequest == null) { // let onNextClick explain that there is no history
+			return false;
+		} else {
+			cancelHistoryNavigation();
+			return true;
+		}
+	}
+	private void cancelHistoryNavigation() {
+		// cancel history navigation and return to the state before history was touched
+		onRestoreInstanceState(savedRequest);
+		savedRequest = null;
+		Toast.makeText(this, getString(R.string.search_redo), Toast.LENGTH_LONG).show();
 	}
 
     private String ets(int id){ // id of EditText => String
@@ -122,6 +186,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 				resultBlackWins = cbb(R.id.result_black_wins),
 				resultUnspecified = cbb(R.id.result_unspecified),
 				ecoNone = cbb(R.id.eco_none);
+		requestHistory.add(currentState());
 		(new SearchTask(this){
 			@Override
 			protected GameFilter doInBackground(Void... params) {

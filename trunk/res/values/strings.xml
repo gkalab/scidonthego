@@ -116,6 +116,12 @@ GNU GPL v2\n\
     <string name="ignore_colors">Ignore colors</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="search_previous_request">Previous request</string>
+    <string name="search_next_request">Next request</string>
+    <string name="search_no_history">The requests history is empty</string>
+    <string name="search_history_done">The whole history is already explored,\nrewinding</string>
+    <string name="search_nothing_to_redo">Nothing to redo</string>
+    <string name="search_redo">Let us pretend that request history was never touched</string>
     <string name="result">Result:</string>
     <string name="event">Event</string>
     <string name="site">Site</string>
