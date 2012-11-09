@@ -71,10 +71,7 @@ public class DataBase {
         (String fen, int searchType,
          int filterOperation, short[]/*in-out*/ filter, Progress progress);
 	public static final native boolean searchHeader
-        (String white, String black, boolean ignoreColors,
-         boolean resultWinWhite, boolean resultDraw, boolean resultWinBlack, boolean resultNone,
-         String event, String site, String ecoFrom, String ecoTo, boolean includeEcoNone,
-         String yearFrom, String yearTo, String idFrom, String idTo,
+        (SearchHeaderRequest request,
          int filterOperation, short[]/*in-out*/ filter, Progress progress);
 	/** Return the list of favorites. */
 	public static final native int[] getFavorites(Progress progress);
