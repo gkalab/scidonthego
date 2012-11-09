@@ -763,24 +763,33 @@ inline bool matchGameFlags
 }
 */
 JCM(jboolean, searchHeader,
-    jstring jwhite, jstring jblack, jboolean ignoreColors,
-    jboolean resultWinWhite, jboolean resultDraw, jboolean resultWinBlack, jboolean resultNone,
-    jstring jevent, jstring jsite,
-    jstring jecoFrom, jstring jecoTo, jboolean includeEcoNone,
-    jstring jyearFrom, jstring jyearTo,
-    jstring jidFrom, jstring jidTo,
-    jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
+    jobject request, jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
     FILE_LOADED;
 
-    AJS(white); AJS(black); AJS(event); AJS(site);
-    AJS(ecoFrom); AJS(ecoTo); AJS(yearFrom); AJS(yearTo);
-    AJS(idFrom); AJS(idTo);
-    if(not (white and black and event and site and ecoFrom and ecoTo
-         and yearFrom and yearTo and idFrom and idTo)){
-        LOGE("searchHeader: one of jstring parameters is null");
-        return 0;
-    }
+    jclass requestClass = env->GetObjectClass(request);
+    // String fields of request
+#define _(field)                                                        \
+    jstring j##field = jstring(env->GetObjectField                      \
+        (request,                                                       \
+         env->GetFieldID(requestClass, #field, "Ljava/lang/String;"))); \
+    if(not j##field){                                                   \
+        LOGE("searchHeader: " #field " is null");                       \
+        return 0;                                                       \
+    }                                                                   \
+    AJS(field);
 
+    _(white); _(black); _(event); _(site);
+    _(ecoFrom); _(ecoTo); _(yearFrom); _(yearTo); _(idFrom); _(idTo);
+#undef _
+    // Boolean fields
+#define _(field)                                                \
+    jboolean field = env->GetBooleanField                       \
+        (request, env->GetFieldID(requestClass, #field, "Z"))
+
+    _(ignoreColors);
+    _(resultNone); _(resultWhiteWins); _(resultBlackWins); _(resultDraw);
+    _(ecoNone);
+#undef _
     AJA(filter);
     if(not filter){
         LOGE("searchHeader: filter is null");
@@ -809,7 +818,7 @@ JCM(jboolean, searchHeader,
     }
 
     bool results[NUM_RESULT_TYPES] = // order from RESULT_None, ...
-        {resultNone, resultWinWhite, resultWinBlack, resultDraw};
+        {resultNone, resultWhiteWins, resultBlackWins, resultDraw};
 
     /* TODO
     uint wEloRange [2];   // White rating range
@@ -834,7 +843,6 @@ JCM(jboolean, searchHeader,
     halfMoveRange[1] = 999;
     */
 
-    bool ecoNone = includeEcoNone;  // Whether to include games with no ECO code.
     ecoT ecoRange[2];    // ECO code range.
     if(ecoFrom[0] and ecoTo[0]){
         ecoRange[0] = eco_FromString(ecoFrom);

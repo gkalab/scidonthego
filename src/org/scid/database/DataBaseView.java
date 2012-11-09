@@ -48,21 +48,10 @@ public class DataBaseView {
 		return wasPreserved;
 	}
 
-	public GameFilter getMatchingHeaders(int filterOperation,
-			String white, String black, boolean ignoreColors,
-			boolean result_win_white, boolean result_draw,
-			boolean result_win_black, boolean result_none,
-			String event, String site,
-			String ecoFrom, String ecoTo, boolean ecoNone,
-			String yearFrom, String yearTo,
-			String idFrom, String idTo,
+	public GameFilter getMatchingHeaders(int filterOperation, SearchHeaderRequest request,
 			Progress progress) {
 		short[] filterArray = GameFilter.getFilterArray(filter, count);
-        if (!DataBase.searchHeader(white, black,
-        		ignoreColors, result_win_white, result_draw,
-        		result_win_black, result_none, event, site, ecoFrom,
-        		ecoTo, ecoNone, yearFrom, yearTo, idFrom, idTo,
-        		filterOperation, filterArray, progress)) {
+        if (!DataBase.searchHeader(request, filterOperation, filterArray, progress)) {
         	Log.e("DBV", "error in searchHeader");
         	return null;
         }

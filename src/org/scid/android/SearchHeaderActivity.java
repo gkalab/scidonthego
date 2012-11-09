@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
+import org.scid.database.SearchHeaderRequest;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -175,31 +176,29 @@ public class SearchHeaderActivity extends SearchActivityBase {
         return ((CheckBox) findViewById(id)).isChecked();
     }
 	public void onOkClick(View view) {
-		final String white = ets(R.id.search_white), black = ets(R.id.search_black),
-				event = ets(R.id.search_event), site = ets(R.id.search_site),
-				ecoFrom = ets(R.id.search_eco_from), ecoTo = ets(R.id.search_eco_to),
-				yearFrom = ets(R.id.search_year_from), yearTo = ets(R.id.search_year_to),
-				idFrom = ets(R.id.search_game_id_from), idTo = ets(R.id.search_game_id_to);
-		final boolean ignoreColors = cbb(R.id.ignore_colors),
-				resultWhiteWins = cbb(R.id.result_white_wins),
-				resultDraw = cbb(R.id.result_draw),
-				resultBlackWins = cbb(R.id.result_black_wins),
-				resultUnspecified = cbb(R.id.result_unspecified),
-				ecoNone = cbb(R.id.eco_none);
-		requestHistory.add(currentState());
-		(new SearchTask(this){
-			@Override
+      requestHistory.add(currentState());
+      final SearchHeaderRequest r = new SearchHeaderRequest();
+      r.white = ets(R.id.search_white);
+      r.black = ets(R.id.search_black);
+      r.event = ets(R.id.search_event);
+      r.site = ets(R.id.search_site);
+      r.ecoFrom = ets(R.id.search_eco_from);
+      r.ecoTo = ets(R.id.search_eco_to);
+      r.yearFrom = ets(R.id.search_year_from);
+      r.yearTo = ets(R.id.search_year_to);
+      r.idFrom = ets(R.id.search_game_id_from);
+      r.idTo = ets(R.id.search_game_id_to);
+      r.ignoreColors = cbb(R.id.ignore_colors);
+      r.resultNone = cbb(R.id.result_unspecified);
+      r.resultWhiteWins = cbb(R.id.result_white_wins);
+      r.resultDraw = cbb(R.id.result_draw);
+      r.resultBlackWins = cbb(R.id.result_black_wins);
+      r.ecoNone = cbb(R.id.eco_none);
+      (new SearchTask(this){
+          @Override
 			protected GameFilter doInBackground(Void... params) {
-				return dbv.getMatchingHeaders(filterOperation,
-						white, black, ignoreColors,
-						resultWhiteWins, resultDraw,
-						resultBlackWins, resultUnspecified,
-						event, site,
-						ecoFrom, ecoTo, ecoNone,
-						yearFrom, yearTo,
-						idFrom, idTo,
-						progress);
-			}
+            return dbv.getMatchingHeaders(filterOperation, r, progress);
+          }
 		}).execute();
 	}
 }
