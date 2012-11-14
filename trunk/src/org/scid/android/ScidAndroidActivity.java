@@ -228,6 +228,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onNextGameClick(View view) {
+		if (hasNoDataBaseViewOpened())
+			return;
 		nextOrRandomGame();
 	}
 
@@ -331,6 +333,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousGameClick(View view) {
+		if (hasNoDataBaseViewOpened())
+			return;
 		previousGame();
 	}
 
@@ -562,12 +566,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		nextGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
+				if (hasNoDataBaseViewOpened())
+					return true;
 				DataBaseView dbv = getDataBaseView();
-				if (dbv != null) {
-					int position = dbv.getPosition(), total = dbv.getCount();
-					if (position != total-1 && dbv.moveToPosition(total-1)) {
-						setPgnFromDataBaseView();
-					}
+				int position = dbv.getPosition(), total = dbv.getCount();
+				if (position != total-1 && dbv.moveToPosition(total-1)) {
+					setPgnFromDataBaseView();
 				}
 				return true;
 			}
@@ -576,11 +580,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		previousGameButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
+				if (hasNoDataBaseViewOpened())
+					return true;
 				DataBaseView dbv = getDataBaseView();
-				if (dbv != null) {
-					if (dbv.moveToFirst()) {
-						setPgnFromDataBaseView();
-					}
+				if (dbv.moveToFirst()) {
+					setPgnFromDataBaseView();
 				}
 				return true;
 			}
@@ -925,14 +929,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				&& getScidAppContext().getNoGames() > 0;
 		SubMenu gameMenu = menu.findItem(R.id.item_game).getSubMenu();
 		gameMenu.findItem(R.id.item_save_game).setEnabled(isSaveEnabled);
-		gameMenu.findItem(R.id.item_game_deleted).setChecked(
-				getScidAppContext().isDeleted());
-		gameMenu.findItem(R.id.item_game_deleted).setEnabled(
-				isRestOfGameMenuEnabled);
-		gameMenu.findItem(R.id.item_game_isfavorite).setChecked(
-				getScidAppContext().isFavorite());
-		gameMenu.findItem(R.id.item_game_isfavorite).setEnabled(
-				isRestOfGameMenuEnabled);
+		gameMenu.findItem(R.id.item_game_deleted).setChecked(getScidAppContext().isDeleted());
+		gameMenu.findItem(R.id.item_game_deleted).setEnabled(isRestOfGameMenuEnabled);
+		gameMenu.findItem(R.id.item_game_isfavorite).setChecked(getScidAppContext().isFavorite());
+		gameMenu.findItem(R.id.item_game_isfavorite).setEnabled(isRestOfGameMenuEnabled);
+		gameMenu.findItem(R.id.item_goto_game).setEnabled(isRestOfGameMenuEnabled);
+		gameMenu.findItem(R.id.item_random_game).setEnabled(isRestOfGameMenuEnabled);
 		// adapt edit menu
 		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
