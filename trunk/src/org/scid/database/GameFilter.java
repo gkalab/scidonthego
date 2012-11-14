@@ -47,7 +47,7 @@ public class GameFilter {
 
 	public int getGameId(int position) {
 		if (position < 0 || position >= id.length) { // TODO: this should not be needed
-			Log.e("Filter", "getGameId: bad position " + position);
+			Log.e("GameFilter", "getGameId: bad position " + position);
 			return -1;
 		} else {
 			return id[position];
@@ -56,7 +56,7 @@ public class GameFilter {
 
 	public int getGamePly(int position) {
 		if (position < 0 || position >= ply.length) { // TODO: this should not be needed
-			Log.e("Filter", "getGamePly: bad position " + position);
+			Log.e("GameFilter", "getGamePly: bad position " + position);
 			return -1;
 		} else {
 			return ply[position];

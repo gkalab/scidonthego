@@ -138,7 +138,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		int gameId = settings.getInt("currentGameId", 0);
 		DataBaseView dbv = setDataBaseViewFromFile();
 		if (dbv != null)
-			dbv.moveToPosition(gameId);
+			dbv.moveToId(gameId);
 
 		byte[] data = null;
 		if (savedInstanceState != null) {
@@ -1034,11 +1034,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				if (fileName != null) {
 					final String currentScidFile = settings.getString(
 							"currentScidFile", "");
-					int gameNo = 0;
+					int gameId = 0;
 					if (fileName.equals(currentScidFile)) {
-						gameNo = settings.getInt("currentGameId", 0);
+						gameId = settings.getInt("currentGameId", 0);
 					}
-					loadScidFile(fileName, gameNo);
+					loadScidFile(fileName, gameId);
 				}
 			}
 			break;
@@ -1216,14 +1216,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
-	private void loadScidFile(String fileName, int gameNo) {
+	private void loadScidFile(String fileName, int gameId) {
 		Editor editor = settings.edit();
 		editor.putString("currentScidFile", fileName);
 		editor.commit();
 		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
 
 		DataBaseView dbv = setDataBaseViewFromFile();
-		if (dbv.moveToPosition(gameNo) || dbv.moveToFirst()) {
+		if (dbv.moveToId(gameId) || dbv.moveToFirst()) {
 			setPgnFromDataBaseView();
 		} else {
 			newGame();
@@ -1822,10 +1822,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private DataBaseView setDataBaseViewFromFile() {
 		return setDataBaseViewFromFile(false);
 	}
-	
+
 	/**
 	 * Set the database view from the current scid file
-	 * @param alwaysResetDbView if set to true always reset the dbv, 
+	 * @param alwaysResetDbView if set to true always reset the dbv,
 	 *     if set to false only reset the dbv if the file name changes or the current dbv is null
 	 */
 	private DataBaseView setDataBaseViewFromFile(boolean alwaysResetDbView) {
