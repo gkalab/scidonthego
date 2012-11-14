@@ -148,6 +148,10 @@ public class DataBaseView {
 		return moveToPosition(newPosition, false);
 	}
 
+	public boolean moveToId(int id) {
+		return moveToPosition(filter == null ? id : filter.getPosition(id), false);
+	}
+
 	public boolean moveToFirst() {
 		return moveToPosition(0);
 	}
