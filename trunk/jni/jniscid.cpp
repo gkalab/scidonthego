@@ -313,9 +313,9 @@ JCM(jstring, getMoves){
 
     return env->NewStringUTF(tbuf.GetBuffer());
 }
-JCM(jstring, getResult){
+JCM(jint, getResult){
     GAME_LOADED;
-    return env->NewStringUTF(RESULT_LONGSTR[game.GetResult()]);
+    return game.GetResult();
 }
 #define _(funcionName, fieldAccessor)                                   \
     JCM(jbyteArray, funcionName){                                       \
@@ -337,6 +337,14 @@ JCM(jstring, getDate){
     char dateStr[20];
     date_DecodeToString(game.GetDate(), dateStr);
     return env->NewStringUTF(dateStr);
+}
+JCM(jint, getWhiteElo){
+    GAME_LOADED;
+    return game.GetWhiteElo();
+}
+JCM(jint, getBlackElo){
+    GAME_LOADED;
+    return game.GetBlackElo();
 }
 JCM(jboolean, isFavorite){
     GAME_LOADED;
@@ -666,62 +674,66 @@ JCM(jboolean, searchBoard,
 // Called by search header to test a particular game against the
 // header search criteria.
 inline bool matchGameHeader
-(IndexEntry * ie,
- NameBase * nb,
- const bit_vector& mWhite, const bit_vector& mBlack,
- const bit_vector& mEvent, const bit_vector& mSite,
- /* TODO const bit_vector& mRound, */
+(IndexEntry * ie, NameBase * nb,
+ const bit_vector& mWhite, const bit_vector& mBlack, bool ignoreColors,
+ const bit_vector& mEvent, const bit_vector& mSite, const bit_vector& mRound,
  dateT dateMin, dateT dateMax,
  bool results[NUM_RESULT_TYPES],
- /* TODO int weloMin, int weloMax, int beloMin, int beloMax,
-    int diffeloMin, int diffeloMax, */
- ecoT ecoMin, ecoT ecoMax, bool ecoNone
- /* TODO uint halfmovesMin, uint halfmovesMax,
-    bool wToMove, bool bToMove, bool bAnnotaded */){
+ bool allowUnknownElo,
+ int whiteEloMin, int whiteEloMax, int blackEloMin, int blackEloMax,
+ int diffEloMin, int diffEloMax,
+ int minEloMin, int minEloMax, int maxEloMin, int maxEloMax,
+ uint halfMovesMin, uint halfMovesMax, bool halfMovesEven, bool halfMovesOdd,
+ ecoT ecoMin, ecoT ecoMax, bool ecoNone,
+ bool annotatedOnly){
 #define CI(op) /* continue if */ if(not (op)) return false
-#define CIIR(a,min,max) /*continue if in range */ \
-        CI((a) >= (min) and (a) <= (max))
-#define _(Name)                                     \
-    CI(m##Name.empty() or m##Name[ie->Get##Name()])
-    _(White); _(Black);
-    _(Event); _(Site); /* TODO _(Round); */
+#define CIIR(a) /*continue if in range */ \
+        CI((a) >= (a##Min) and (a) <= (a##Max))
+#define _(Name) CI(m##Name.empty() or m##Name[ie->Get##Name()])
+    if(ignoreColors){
+        CI(mWhite.empty() or (mWhite[ie->GetWhite()] or mWhite[ie->GetBlack()]));
+        CI(mBlack.empty() or (mBlack[ie->GetWhite()] or mBlack[ie->GetBlack()]));
+    }else{
+        _(White); _(Black);
+    }
+    _(Event); _(Site); _(Round);
 #undef _
     CI(results[ie->GetResult()]);
 
-    /* TODO
-    uint halfmoves = ie->GetNumHalfMoves();
-    CIIR(halfmoves, halfmovesMin, halfmovesMax);
-    if((halfmoves % 2) == 0){// This game ends with White to move
-        CI(wToMove);
-    } else {// This game ends with Black to move
-        CI(bToMove);
+    uint halfMoves = ie->GetNumHalfMoves(); CIIR(halfMoves);
+    if((halfMoves % 2) == 0){
+        // This game ends with White to move *if* White moves first
+        CI(halfMovesEven);
+    } else {
+        CI(halfMovesOdd);
     }
-    */
 
-    dateT date = ie->GetDate();
-    CIIR(date, dateMin, dateMax);
+    dateT date = ie->GetDate(); CIIR(date);
 
-    /* TODO
     // Check Elo ratings:
-    int whiteElo =(int) ie->GetWhiteElo();
-    int blackElo =(int) ie->GetBlackElo();
+    int whiteElo = ie->GetWhiteElo();
+    int blackElo = ie->GetBlackElo();
     if(whiteElo == 0){ whiteElo = nb->GetElo(ie->GetWhite()); }
     if(blackElo == 0){ blackElo = nb->GetElo(ie->GetBlack()); }
-    int diffElo = whiteElo - blackElo;
-    CIIR(whiteElo, weloMin, weloMax);
-    CIIR(blackElo, beloMin, beloMax);
-    CIIR(diffElo, diffeloMin, diffeloMax);
+    if(whiteElo and blackElo){  // diff, min, max are useful only if both ELOs are known
+        int minElo = min(whiteElo, blackElo); CIIR(minElo);
+        int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
+        int diffElo = maxElo - minElo; CIIR(diffElo);
+    }else{ // there are unknown ELOs
+        CI(allowUnknownElo);
+    }
+    if(whiteElo) CIIR(whiteElo);
+    if(blackElo) CIIR(blackElo);
 
-	if(bAnnotaded)
-        CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
-    */
-
-    ecoT ecoCode = ie->GetEcoCode();
-    if(ecoCode == ECO_None){
+    ecoT eco = ie->GetEcoCode();
+    if(eco == ECO_None){
         CI(ecoNone);
     } else {
-        CIIR(ecoCode, ecoMin, ecoMax);
+        CIIR(eco);
     }
+
+    if(annotatedOnly)
+        CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
 #undef CI
 #undef CIIR
     // If we reach here, this game matches all criteria.
@@ -767,29 +779,44 @@ JCM(jboolean, searchHeader,
     FILE_LOADED;
 
     jclass requestClass = env->GetObjectClass(request);
-    // String fields of request
-#define _(field)                                                        \
+    // String, boolean, int fields of request
+#define SF(field)                                                       \
     jstring j##field = jstring(env->GetObjectField                      \
         (request,                                                       \
          env->GetFieldID(requestClass, #field, "Ljava/lang/String;"))); \
     if(not j##field){                                                   \
         LOGE("searchHeader: " #field " is null");                       \
-        return 0;                                                       \
+        return false;                                                   \
     }                                                                   \
-    AJS(field);
-
-    _(white); _(black); _(event); _(site);
-    _(ecoFrom); _(ecoTo); _(yearFrom); _(yearTo); _(idFrom); _(idTo);
-#undef _
-    // Boolean fields
-#define _(field)                                                \
+    AJS(field)
+#define BF(field)                                               \
     jboolean field = env->GetBooleanField                       \
         (request, env->GetFieldID(requestClass, #field, "Z"))
+#define IF(field)                                               \
+    jint field = env->GetIntField                               \
+        (request, env->GetFieldID(requestClass, #field, "I"))
 
-    _(ignoreColors);
-    _(resultNone); _(resultWhiteWins); _(resultBlackWins); _(resultDraw);
-    _(ecoNone);
+#define _(name) SF(name); BF(name##Exact)
+    _(white); _(black); _(event); _(site); _(round);
 #undef _
+
+    SF(ecoFrom); SF(ecoTo);
+
+    BF(ignoreColors);
+    BF(resultNone); BF(resultWhiteWins); BF(resultBlackWins); BF(resultDraw);
+    BF(ecoNone); BF(allowUnknownElo);  BF(annotatedOnly);
+    BF(halfMovesEven); BF(halfMovesOdd);
+
+#define _(a) IF(a##Min); IF(a##Max)
+    _(date); _(id);
+    _(whiteElo); _(blackElo);
+    _(diffElo); _(minElo); _(maxElo);
+    _(halfMoves);
+#undef _
+
+#undef SF
+#undef BF
+
     AJA(filter);
     if(not filter){
         LOGE("searchHeader: filter is null");
@@ -801,63 +828,19 @@ JCM(jboolean, searchHeader,
         return false;
     }
 
-    dateT dateRange[2];
-    dateRange[0] = ZERO_DATE;
-    if(yearFrom[0] != 0){
-        uint year = strGetUnsigned(yearFrom);
-        if(year <= YEAR_MAX and year > 1000){
-            dateRange[0] = DATE_MAKE(year, 1, 1);
-        }
-    }
-    dateRange[1] = DATE_MAKE(YEAR_MAX, 12, 31);
-    if(yearTo[0] != 0){
-        uint year = strGetUnsigned(yearTo);
-        if(year <= YEAR_MAX and year > 1000){
-            dateRange[1] = DATE_MAKE(year, 12, 31);
-        }
-    }
-
     bool results[NUM_RESULT_TYPES] = // order from RESULT_None, ...
         {resultNone, resultWhiteWins, resultBlackWins, resultDraw};
 
-    /* TODO
-    uint wEloRange [2];   // White rating range
-    uint bEloRange [2];   // Black rating range
-    int  dEloRange [2];   // Rating difference(White minus Black) range
-    wEloRange[0] = bEloRange[0] = 0;
-    wEloRange[1] = bEloRange[1] = MAX_ELO;
-    dEloRange[0] = -(int)MAX_ELO;
-    dEloRange[1] = MAX_ELO;
-
-    // Swap rating difference values if necessary:
-    if(dEloRange[0] > dEloRange[1])
-        swap(dEloRange[0], dEloRange[1]);
-
-	bool bAnnotated = false;
-
-    bool wToMove = true;
-    bool bToMove = true;
-
-    uint halfMoveRange[2];
-    halfMoveRange[0] = 0;
-    halfMoveRange[1] = 999;
-    */
-
-    ecoT ecoRange[2];    // ECO code range.
+    ecoT ecoMin, ecoMax;    // ECO code range.
     if(ecoFrom[0] and ecoTo[0]){
-        ecoRange[0] = eco_FromString(ecoFrom);
+        ecoMin = eco_FromString(ecoFrom);
         // Set eco maximum to be the largest subcode, for example,
         // "B07" -> "B07z4" to make sure subcodes are included in the range:
-        ecoRange[1] = eco_LastSubCode(eco_FromString(ecoTo));
+        ecoMax = eco_LastSubCode(eco_FromString(ecoTo));
     } else {
-        ecoRange[0] = eco_FromString("A00");
-        ecoRange[1] = eco_FromString("E99");
+        ecoMin = eco_FromString("A00");
+        ecoMax = eco_FromString("E99");
     }
-
-    // gameIdRange: a range of game numbers to search.
-    int gameIdRange[2] = {1, -1}; // Default: from first game to last
-    if(idFrom[0]) gameIdRange[0] = strGetUnsigned(idFrom);
-    if(idTo[0]) gameIdRange[1] = strGetUnsigned(idTo);
 
     /* TODO
     flagT fStdStart = FLAG_BOTH;
@@ -891,33 +874,26 @@ JCM(jboolean, searchHeader,
     if(name[0]){                                                        \
         idNumberT numNames = sourceNameBase.GetNumNames(NAME_##TYPE);   \
         m##Name.resize(numNames);                                       \
-        for(idNumberT i = 0; i < numNames; ++i)                         \
-            m##Name[i] = strAlphaContains                                \
-                (sourceNameBase.GetName(NAME_##TYPE, i), name);         \
+        if(name##Exact){                                                \
+            idNumberT id;                                               \
+            if(sourceNameBase.FindExactName(NAME_##TYPE, name, &id) == OK) \
+                m##Name[id] = true;                                     \
+            else{                                                       \
+                LOGW("searchHeader: " #name " does not match exactly"); \
+                return false;                                           \
+            }                                                           \
+        }else{                                                          \
+            for(idNumberT i = 0; i < numNames; ++i)                     \
+                m##Name[i] = strAlphaContains                           \
+                    (sourceNameBase.GetName(NAME_##TYPE, i), name);     \
+        }                                                               \
     }
     _(white, White, PLAYER);
     _(black, Black, PLAYER);
     _(event, Event, EVENT);
     _(site, Site, SITE);
-    /* TODO _(round, Round, ROUND); */
+    _(round, Round, ROUND);
 #undef _
-
-    // Set up game number range
-    // A negative number means a count from the end
-    for(uint i = 0; i < 2; ++i){
-        int t = gameIdRange[i];
-        if(t < 0) // -1 -> last game
-            t += noGames + 1;
-        if(t < 1)
-            t = 1;
-        else if(t > noGames)
-            t = noGames;
-        gameIdRange[i] = t - 1; // t \in [1,noGames]; gameIdRange[i] \in [0,noGames)
-    }
-    if(gameIdRange[0] > gameIdRange[1])
-        swap(gameIdRange[0], gameIdRange[1]);
-
-    IndexEntry * ie;
 
     // Here is the loop that searches on each game:
     PREPARE_PROGRESS(noGames);
@@ -929,7 +905,8 @@ JCM(jboolean, searchHeader,
             // no need to change filter[i]
             continue;
         }
-        if((i >= gameIdRange[0] and i <= gameIdRange[1])
+        IndexEntry * ie;
+        if((i >= idMin and i <= idMax)
            and (ie = sourceIndex.FetchEntry(i)) != 0
            and ie->GetLength() // Skip games with no gamefile record
            /* TODO
@@ -942,34 +919,18 @@ JCM(jboolean, searchHeader,
                           fCustom1, fCustom2, fCustom3, fCustom4, fCustom5, fCustom6)
            */
            and
-           (matchGameHeader(ie, &sourceNameBase, mWhite, mBlack,
-                            mEvent, mSite, /* TODO mRound, */
-                            dateRange[0], dateRange[1], results,
-                            /* TODO
-                            wEloRange[0], wEloRange[1],
-                            bEloRange[0], bEloRange[1],
-                            dEloRange[0], dEloRange[1],
-                            */
-                            ecoRange[0], ecoRange[1], ecoNone
-                            /* TODO
-                            halfMoveRange[0], halfMoveRange[1],
-                            wToMove, bToMove, bAnnotated
-                            */)
-            or
-            ignoreColors and /* as above, but swap players */
-            matchGameHeader(ie, &sourceNameBase, mBlack, mWhite,
-                            mEvent, mSite, /* TODO mRound, */
-                            dateRange[0], dateRange[1], results,
-                            /* TODO
-                            wEloRange[0], wEloRange[1],
-                            bEloRange[0], bEloRange[1],
-                            dEloRange[0], dEloRange[1],
-                            */
-                            ecoRange[0], ecoRange[1], ecoNone
-                            /* TODO
-                            halfMoveRange[0], halfMoveRange[1],
-                            wToMove, bToMove, bAnnotated
-                            */))){
+           matchGameHeader(ie, &sourceNameBase,
+                           mWhite, mBlack, ignoreColors,
+                           mEvent, mSite, mRound,
+                           dateMin, dateMax,
+                           results,
+                           allowUnknownElo,
+                           whiteEloMin, whiteEloMax, blackEloMin, blackEloMax,
+                           diffEloMin, diffEloMax,
+                           minEloMin, minEloMax, maxEloMin, maxEloMax,
+                           halfMovesMin, halfMovesMax, halfMovesEven, halfMovesOdd,
+                           ecoMin, ecoMax, ecoNone,
+                           annotatedOnly)){
             // Game matches
             if(filter[i] == 0)
                 filter[i] = 1;

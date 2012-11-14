@@ -27,7 +27,7 @@ public class LinkListArrayAdapter extends ArrayAdapter<Link> {
 		if (view == null) {
 			LayoutInflater vi = (LayoutInflater) context
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			view = vi.inflate(R.layout.gamelist_item, null);
+			view = vi.inflate(R.layout.chessok_list_item, null);
 		}
 		Link item = this.getItem(position);
 		if (item != null) {

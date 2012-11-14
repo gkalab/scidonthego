@@ -34,7 +34,6 @@
             android:name=".ScidAndroidActivity" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
@@ -68,6 +67,7 @@
         </activity>
         <activity
             android:configChanges="orientation"
+            android:windowSoftInputMode="stateUnchanged"
             android:label="Header Search"
             android:name="SearchHeaderActivity" >
         </activity>
