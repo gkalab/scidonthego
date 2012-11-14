@@ -28,8 +28,10 @@ public class DataBase {
 	public static final native byte[] getPGN();
 	/** Get the move list (including the result) of the current game. */
 	public static final native String getMoves();
+    public static final int /* from common.h */
+        RESULT_NONE = 0, RESULT_WHITE_WINS = 1, RESULT_BLACK_WINS = 2, RESULT_DRAW  = 3;
 	/** Get the header [Result] of the current game. */
-	public static final native String getResult();
+	public static final native int getResult();
 	/** Get the header [White] of the current game. */
 	public static final native byte[] getWhite();
 	/** Get the header [Black] of the current game. */
@@ -42,6 +44,8 @@ public class DataBase {
 	public static final native String getDate();
 	/** Get the header [Round] of the current game. */
 	public static final native byte[] getRound();
+	public static final native int getWhiteElo();
+	public static final native int getBlackElo();
 	/** Return true if the current game is favorite. */
 	public static final native boolean isFavorite();
 	/** Return true if the current game is marked as deleted. */

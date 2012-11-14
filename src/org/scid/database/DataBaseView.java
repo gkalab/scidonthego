@@ -10,7 +10,6 @@ public class DataBaseView {
 	private String fileName;
 	private int count; // total games in file
 	private GameFilter filter;
-	private GameInfo gameInfo = new GameInfo(); // TODO: remove and use JNI directly
 	private int position, id; // non equal if filter is in effect
 
 	public DataBaseView(String fileName) {
@@ -84,50 +83,13 @@ public class DataBaseView {
 		return count;
 	}
 
-	private void setGameInfo(boolean onlyHeaders) {
-		try {
-			gameInfo.setEvent(getSanitizedString(DataBase.getEvent()));
-			if (gameInfo.getEvent().equals("?")) {
-				gameInfo.setEvent("");
-			}
-			gameInfo.setSite(getSanitizedString(DataBase.getSite()));
-			if (gameInfo.getSite().equals("?")) {
-				gameInfo.setSite("");
-			}
-			String date = DataBase.getDate();
-			if (date.endsWith(".??.??")) {
-				date = date.substring(0, date.length() - 6);
-			} else if (date.endsWith(".??")) {
-				date = date.substring(0, date.length() - 3);
-			}
-			if (date.equals("?") || date.equals("????")) {
-				date = "";
-			}
-			gameInfo.setDate(date);
-			gameInfo.setRound(getSanitizedString(DataBase.getRound()));
-			if (gameInfo.getRound().equals("?")) {
-				gameInfo.setRound("");
-			}
-			gameInfo.setWhite(getSanitizedString(DataBase.getWhite()));
-			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
-			gameInfo.setResult(DataBase.getResult());
-			gameInfo.setPgn(onlyHeaders
-					? null
-					: new String(DataBase.getPGN(), DataBase.SCID_ENCODING));
-		} catch (UnsupportedEncodingException e) {
-			Log.e("SCID", "Error converting byte[] to String", e);
-		}
-		gameInfo.setFavorite(DataBase.isFavorite());
-		gameInfo.setDeleted(DataBase.isDeleted());
-	}
-
-	public GameInfo getGameInfo(){ // Do not changed the returned value!
-		return gameInfo;
-	}
-
-	private String getSanitizedString(byte[] value)
-			throws UnsupportedEncodingException {
-		return Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
+	private static String getSanitizedString(byte[] value) {
+        try {
+            String s = Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
+            return s.equals("?") ? "" : s;
+        } catch (UnsupportedEncodingException e) {
+            return "";
+        }
 	}
 
 	public boolean moveToPosition(int newPosition, boolean onlyHeaders) {
@@ -138,9 +100,6 @@ public class DataBaseView {
 		this.id = id;
 		this.position = newPosition;
 		DataBase.loadGame(id, onlyHeaders); // TODO: check errors
-		setGameInfo(onlyHeaders);
-		if (filter != null)
-			gameInfo.setCurrentPly(filter.getGamePly(position));
 		return true;
 	}
 
@@ -169,30 +128,49 @@ public class DataBaseView {
 		return (filter == null) ? id : filter.getPosition(id);
 	}
 
+    public int getResult() { return DataBase.getResult(); }
+    public int getWhiteElo() { return DataBase.getWhiteElo(); }
+    public int getBlackElo() { return DataBase.getBlackElo(); }
+    public String getWhite() { return getSanitizedString(DataBase.getWhite()); }
+    public String getBlack() { return getSanitizedString(DataBase.getBlack()); }
+    public String getEvent() { return getSanitizedString(DataBase.getEvent()); }
+    public String getSite()  { return getSanitizedString(DataBase.getSite());  }
+    public String getRound() { return getSanitizedString(DataBase.getRound()); }
+    public String getDate() {
+        String date = DataBase.getDate();
+        if (date.endsWith(".??.??")) {
+            date = date.substring(0, date.length() - 6);
+        } else if (date.endsWith(".??")) {
+            date = date.substring(0, date.length() - 3);
+        }
+        if (date.equals("?") || date.equals("????")) {
+            date = "";
+        }
+        return date;
+    }
+
 	public int getId() {
 		return id;
 	}
 
 	public void setDeleted(boolean value) {
 		if (value != isDeleted()) {
-			gameInfo.setDeleted(value);
 			DataBase.setDeleted(id, value);
 		}
 	}
 
 	public boolean isDeleted() {
-		return gameInfo.isDeleted();
+		return DataBase.isDeleted();
 	}
 
 	public void setFavorite(boolean value) {
 		if (value != isFavorite()) {
-			gameInfo.setFavorite(value);
 			DataBase.setFavorite(id, value);
 		}
 	}
 
 	public boolean isFavorite() {
-		return gameInfo.isFavorite();
+		return DataBase.isFavorite();
 	}
 
 	public int getGameId() {
@@ -200,11 +178,11 @@ public class DataBaseView {
 	}
 
 	public String getPGN() {
-		return gameInfo.getPgn();
+		return getSanitizedString(DataBase.getPGN());
 	}
 
 	public int getCurrentPly(){
-		return gameInfo.getCurrentPly();
+		return (filter != null) ? filter.getGamePly(position) : 0;
 	}
 
 	/* nameType is one of NAME_PLAYER, NAME_EVENT, NAME_SITE, NAME_ROUND */

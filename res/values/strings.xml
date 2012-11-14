@@ -107,13 +107,13 @@ GNU GPL v2\n\
 	<string name="no_scid_files">No files found in directory\n/scid on the SD card.\n</string>
     <string name="reset_filter">Reset search filter</string>
     <string name="search_current_board">Search current board</string>
-    <string name="search_header">Search header</string>
     <string name="search">Search</string>
     <string name="search_exact_position">Exact Position (all pieces on same squares)</string>
     <string name="search_pawns">Pawns (same material, all pawns on same squares)</string>
     <string name="search_files">Files (same material, all pawns on same files)</string>
     <string name="search_any">Any (same material, pawns and pieces anywhere)</string>
     <string name="ignore_colors">Ignore colors</string>
+    <string name="search_header">Search header</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="search_previous_request">Previous request</string>
@@ -122,34 +122,54 @@ GNU GPL v2\n\
     <string name="search_history_done">The whole history is already explored,\nrewinding</string>
     <string name="search_nothing_to_redo">Nothing to redo</string>
     <string name="search_redo">Let us pretend that request history was never touched</string>
-    <string name="result">Result:</string>
+    <string name="search_exact">Exact</string>
     <string name="event">Event</string>
     <string name="site">Site</string>
+    <string name="round">Round</string>
     <string name="halfmove">Halfmove clock</string>
     <string name="fullmove">Fullmove counter</string>
-    <string name="search_year_from">Year from</string>
-    <string name="search_year_to">Year to</string>
+    <string name="search_date_range">Date range:</string>
+    <string name="search_year_hint">YYYY</string>
+    <string name="search_month_hint">MM</string>
+    <string name="search_day_hint">DD</string>
+    <string name="result">Result:</string>
+    <string name="result_none">*</string>
+    <string name="result_white_wins">1–0</string>
+    <string name="result_black_wins">0–1</string>
+    <string name="result_draw">½</string>
     <string name="eco_code">ECO:</string>
+    <string name="en_dash"> – </string>
     <string name="search_eco_from_default">A00</string>
     <string name="search_eco_to_default">E99</string>
     <string name="search_filter_prompt">Operation on current filter:</string>
-    <string name="search_game_id_from">ID from</string>
-    <string name="search_game_id_to">ID to</string>
+    <string name="search_game_id_hint">ID min</string>
+    <string name="search_min_hint">min</string>
+    <string name="search_max_hint">max</string>
+    <string name="search_white_elo">White ELO:</string>
+    <string name="search_black_elo">Black ELO:</string>
+    <string name="search_diff_elo">ELO difference:</string>
+    <string name="search_min_elo">ELO of the weaker:</string>
+    <string name="search_max_elo">ELO of the stronger:</string>
+    <string name="search_allow_unknown_elo">Allow games with unknown ELO</string>
+    <string name="search_half_moves">Half moves:</string>
     <string-array name="search_filter_array">
-        <item>IGNORE (Reset filter)</item>
-        <item>OR (Add to filter)</item>
-        <item>AND (Restrict filter)</item>
+        <item>Ignore current filter</item>
+        <item>Add to current filter</item>
+        <item>Intersect with filter</item>
     </string-array>
     <string name="eco_none">no ECO</string>
+    <string name="search_half_moves_even">Even</string>
+    <string name="search_half_moves_odd">Odd</string>
+    <string name="search_annotated_only">Only annotated</string>
     <string name="error">Error</string>
     <string name="study_mode_enabled">Study mode enabled</string>
     <string name="study_mode_disabled">Study mode turned off</string>
     <string name="analysis_mode_enabled">Analysis enabled using \n%s</string>
     <string name="analysis_mode_disabled">Analysis turned off</string>
-    <string name="filter_no_games">No games found.\nFilter is preserved.</string>
+    <string name="filter_no_games">No games found.</string>
     <string name="filter_one_game_reset_filter">Only one game is found.\nFilter is reset.</string>
     <string name="filter_one_game_preserved_filter">Only one game is found.\nFilter is preserved.</string>
-    <string name="filter_numberof_games">games in current filter</string>
+    <string name="filter_number_of_games">games in current filter</string>
     <string name="downloading">Downloading...</string>
     <string name="download_started">Download started in the background.</string>
     <string name="twic_downloading">Downloading from TWIC</string>

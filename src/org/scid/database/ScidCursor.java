@@ -136,7 +136,8 @@ public class ScidCursor extends AbstractCursor {
 			}
 			gameInfo.setWhite(getSanitizedString(DataBase.getWhite()));
 			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
-			gameInfo.setResult(DataBase.getResult());
+			String[] results = {"*","1-0","0-1","1/2"};
+			gameInfo.setResult(results[DataBase.getResult()]);
 			gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
 					DataBase.SCID_ENCODING) : null);
 		} catch (UnsupportedEncodingException e) {
