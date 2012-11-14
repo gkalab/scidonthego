@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.scid.android.chessok.ImportChessOkActivity;
 import org.scid.android.dialog.MoveListDialog;
@@ -239,6 +241,39 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		} else {
 			nextGame();
 		}
+		if (gameMode.studyMode()) {
+			int studyAutoMoveDelay = Integer.valueOf(settings.getString("studyAutoMoveDelay", "0"));
+			if (studyAutoMoveDelay != 0)
+				startAutoMove(studyAutoMoveDelay * 1000);
+		}
+	}
+
+	private Timer autoMoveTimer;
+	private void cancelAutoMove() {
+		if (autoMoveTimer != null)
+			autoMoveTimer.cancel();
+		autoMoveTimer = null;
+	}
+	@Override
+	public void onUserInteraction() {
+		cancelAutoMove();
+	}
+	/** delay in milliseconds */
+	private void startAutoMove(long delay) {
+		cancelAutoMove();
+		if (!ctrl.canRedoMove())
+			return;
+		autoMoveTimer = new Timer();
+		autoMoveTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						ctrl.redoMove();
+					}});
+			}
+		}, delay);
 	}
 
 	private void previousGame() {
