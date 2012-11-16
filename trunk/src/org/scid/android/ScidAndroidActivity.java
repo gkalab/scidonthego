@@ -247,6 +247,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				scheduleAutoplay(studyAutoMoveDelay * 1000, false);
 			}
 		}
+		resetHumanThinkingTimer();
 	}
 
 	private Timer autoMoveTimer;
@@ -264,6 +265,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
             runOnUiThread(new Runnable() { public void run() {
                 if (ctrl.canRedoMove()) {
                     ctrl.redoMove();
+                    resetHumanThinkingTimer();
                 } else { // no more moves
                     cancelAutoMove();
                 }
@@ -640,23 +642,43 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		});
 	}
 
+	/** track time needed for human move */
+	private long humanStartThinkingNanoTime;
+	private void resetHumanThinkingTimer() {
+		humanStartThinkingNanoTime = System.nanoTime();
+	}
+	private double getHumanThinkingTime() {
+		return (double)(System.nanoTime() - humanStartThinkingNanoTime) / 1e9;
+	}
+
 	private void makeHumanMove(Move m) {
-		if (m != null) {
-			if (gameMode.studyMode() && !ctrl.canRedoMove()) {
-				Toast.makeText(getApplicationContext(),
-						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
-						.show();
-			} else {
-				ctrl.makeHumanMove(m);
-				// display end of variation if there are no more moves
-				if (gameMode.studyMode() && !ctrl.canRedoMove()) {
-					if (settings.getBoolean("cruiseModeInStudy", false)) {
-						nextOrRandomGame();
-					} else {
-						Toast.makeText(getApplicationContext(),
-								getText(R.string.end_of_variation),
-								Toast.LENGTH_SHORT).show();
-					}
+		if (m == null)
+			return;
+		if (!gameMode.studyMode()) {
+			ctrl.makeHumanMove(m);
+			return;
+		}
+		// in study mode
+		if (!ctrl.canRedoMove()) {
+			Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
+			return;
+        }
+
+		invalidMoveReported = false;
+		ctrl.makeHumanMove(m); // updates invalidMoveReported
+		if (invalidMoveReported) {
+			// TODO: implement "add to favorites on wrong move"
+		} else { // correct move
+			if (settings.getBoolean("reportThinkingTime", false)) {
+				Toast.makeText(this, String.format(getString(R.string.your_time), getHumanThinkingTime()),
+						Toast.LENGTH_LONG).show();
+			}
+			resetHumanThinkingTimer();
+			if (!ctrl.canRedoMove()) { // that was last move in variation
+				if (settings.getBoolean("cruiseModeInStudy", false)) {
+					nextOrRandomGame();
+				} else {
+					Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
@@ -690,6 +712,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (gameMode.analysisMode()) {
 			startAnalysis();
 		}
+
+		resetHumanThinkingTimer();
 		super.onResume();
 	}
 
@@ -1906,6 +1930,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		});
 	}
 
+	private boolean invalidMoveReported;
 	@Override
 	public void reportInvalidMove(Move m) {
 		String msg = "";
@@ -1917,6 +1942,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					TextIO.squareToString(m.from), TextIO.squareToString(m.to));
 		}
 		Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+		invalidMoveReported = true;
 	}
 
 	@Override

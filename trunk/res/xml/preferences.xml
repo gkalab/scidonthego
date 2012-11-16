@@ -41,6 +41,11 @@
             android:title="Study first move delay"
             android:summary="If non-zero, then in study mode the computer waits so many seconds after the next game is loaded and do a move"
             android:defaultValue="0" />
+        <CheckBoxPreference
+            android:key="reportThinkingTime"
+            android:title="Report thinking time"
+            android:summary="Report the time it takes you to make the correct move in study mode"
+            android:defaultValue="0" />
         <EditTextPreference
             android:key="autoPlayInterval"
             android:inputType="number"

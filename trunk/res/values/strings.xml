@@ -190,6 +190,7 @@ GNU GPL v2\n\
     <string name="gamelist_loading">Loading game information.</string>
     <string name="invalid_move">Invalid move %1$s-%2$s</string>
     <string name="wrong_move">Wrong move %1$s-%2$s</string>
+    <string name="your_time">Your thought for %.2f seconds</string>
     <string name="add_favorites">Add to Favorites</string>
     <string name="remove_favorites">Remove from Favorites</string>
     <string name="add_favorites_success">Game added to Favorites.</string>
