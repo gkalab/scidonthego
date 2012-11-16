@@ -141,7 +141,6 @@ GNU GPL v2\n\
     <string name="en_dash"> – </string>
     <string name="search_eco_from_default">A00</string>
     <string name="search_eco_to_default">E99</string>
-    <string name="search_filter_prompt">Operation on current filter:</string>
     <string name="search_game_id_hint">ID min</string>
     <string name="search_min_hint">min</string>
     <string name="search_max_hint">max</string>
@@ -152,10 +151,12 @@ GNU GPL v2\n\
     <string name="search_max_elo">ELO of the stronger:</string>
     <string name="search_allow_unknown_elo">Allow games with unknown ELO</string>
     <string name="search_half_moves">Half moves:</string>
+    <string name="search_filter_prompt">Operation on the current filter:</string>
     <string-array name="search_filter_array">
-        <item>Ignore current filter</item>
-        <item>Add to current filter</item>
+        <item>Ignore filter</item>
+        <item>Add to filter</item>
         <item>Intersect with filter</item>
+        <item>Subtract from filter</item>
     </string-array>
     <string name="eco_none">no ECO</string>
     <string name="search_half_moves_even">Even</string>

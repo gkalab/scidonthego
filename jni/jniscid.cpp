@@ -123,7 +123,8 @@ public:
 
 /// Global state
 typedef uint filterOpT;
-const filterOpT FILTEROP_RESET = 0, FILTEROP_OR = 1, FILTEROP_AND = 2;
+const filterOpT FILTEROP_RESET = 0, FILTEROP_OR = 1, FILTEROP_AND = 2, FILTEROP_SUBTRACT = 3;
+const int MAX_JSHORT = (1<<15) - 1; // 2**15 - 1
 
 static Index sourceIndex;
 static NameBase sourceNameBase;
@@ -584,7 +585,7 @@ JCM(jboolean, searchBoard,
         useHpSigSpeedup = false;
         break;
     default:
-        LOGE("searchBoard: wrong typeOfSearch %d", searchType);
+        LOGE("searchBoard: wrong searchType %d", searchType);
         return false;
     }
 
@@ -599,182 +600,84 @@ JCM(jboolean, searchBoard,
         return false;
     }
 
-    // Here is the loop that searches on each game:
-    Game g;
+    // TODO: do ReadEntireFile() with progress
+
+    /// the loop that goes thru each game
     PREPARE_PROGRESS(noGames);
-    for(gameNumberT i = 0; i < noGames; ++i){
-        DO_PROGRESS(i, noGames);
-        // First, apply the filter operation:
-        if(filterOperation == FILTEROP_AND and !filter[i]
-           or filterOperation == FILTEROP_OR and filter[i]){
-            // no need to change filter[i]
-            continue;
+    IndexEntry* ie;
+    Game g;
+    uint ply;
+    for(gameNumberT id = 0; id < noGames; ++id){
+        DO_PROGRESS(id, noGames);
+#define APPLY_FILTER_OPERATION /* also used in searchHeader */          \
+        if(((filterOperation == FILTEROP_AND or filterOperation == FILTEROP_SUBTRACT) \
+            and not filter[id])                                         \
+           or filterOperation == FILTEROP_OR and filter[id]){           \
+            /* no need to change filter[id] */                          \
+            continue;                                                   \
         }
-        IndexEntry ie;
-        if(sourceIndex.ReadEntries(&ie, i, 1) != OK){ // TODO: maybe FetchEntry?
-            // Skip games with no gamefile record:
-            filter[i] = 0;
-            continue;
-        }
+        APPLY_FILTER_OPERATION;
 
-        bool possibleMatch = true;
-        bool useVars = false; // TODO: allow user to change
-        // Apply speedups if we are not searching in variations:
-        if(not useVars){
-            if(not ie.GetStartFlag()){
-                // Speedups that only apply to standard start games:
-                if(useHpSigSpeedup and hpSig != 0xFFFF){
-                    const byte * hpData = ie.GetHomePawnData();
-                    if(not hpSig_PossibleMatch(hpSig, hpData)){
-                        possibleMatch = false;
-                    }
-                }
-            }
-
-            // If this game has no promotions, check the material of its final
-            // position, since the searched position might be unreachable:
-            if(possibleMatch){
-                if(not matsig_isReachable(msig, ie.GetFinalMatSig(),
-                                         ie.GetPromotionsFlag(),
-                                         ie.GetUnderPromoFlag())){
-                    possibleMatch = false;
-                }
-            }
+#define FETCH_ENTRY                                                 \
+        ie = sourceIndex.FetchEntry(id);                            \
+        if(not (ie and ie->GetLength())){                           \
+            /* Skip games with no gamefile record */                \
+            LOGW("search*: game %d has no gamefile record", id);    \
+            goto really_no_match;                                   \
         }
+        FETCH_ENTRY;
 
-        if(not possibleMatch){
-            filter[i] = 0;
-            continue;
-        }
+#define CI(op) /* continue processing if */ do{if(not (op)) goto no_match;}while(false)
+#define CIIR(a) /*continue if in range */ \
+        CI((a) >= (a##Min) and (a) <= (a##Max))
+
+        // TODO: allow user to search in variations
+        // Apply speedups if we are not searching in variations
+        if(not ie->GetStartFlag() /* if game does not have its own start position */
+           and useHpSigSpeedup and hpSig != 0xFFFF)
+            CI(hpSig_PossibleMatch(hpSig, ie->GetHomePawnData()));
+
+        // If this game has no promotions, check the material of its final
+        // position, since the searched position might be unreachable
+        CI(matsig_isReachable(msig, ie->GetFinalMatSig(),
+                              ie->GetPromotionsFlag(),
+                              ie->GetUnderPromoFlag()));
 
         // At this point, the game needs to be loaded:
         bbuf.Empty();
-        if(sourceGFile.ReadGame(&bbuf, ie.GetOffset(), ie.GetLength()) != OK){
-            LOGI("searchBoard: cannot read game %d", i);
-            filter[i] = 0;
-            continue;
+        if(sourceGFile.ReadGame(&bbuf, ie->GetOffset(), ie->GetLength()) != OK){
+            LOGW("searchBoard: cannot read game %d", id);
+            goto really_no_match;
         }
-        uint ply = 0;
-        // No searching in variations:
-        if(possibleMatch){
-            if(g.ExactMatch(&pos, &bbuf, 0, gameExactMatchT(searchType))){
-                // Set its auto-load move number to the matching move:
-                ply = g.GetCurrentPly() + 1;
-                const int MAX_JSHORT = (1<<15) - 1; // 2^15 - 1
-                if(ply > MAX_JSHORT) ply = MAX_JSHORT;
-            }
-        }
-        filter[i] = jshort(ply);
-    }
+
+        // No searching in variations
+        CI(g.ExactMatch(&pos, &bbuf, 0, gameExactMatchT(searchType)));
+
+        // Set its auto-load move number to the matching move:
+        ply = g.GetCurrentPly() + 1;
+        if(ply > MAX_JSHORT) ply = MAX_JSHORT;
+
+    match:
+        // If we reach here, this game matches all criteria, but we
+        // also need to support subtraction that inverts the meaning
+        // of the result.
+        if(filterOperation == FILTEROP_SUBTRACT) goto really_no_match;
+        filter[id] = jshort(ply);
+        continue; // to next game
+    no_match:
+        if(filterOperation == FILTEROP_SUBTRACT)
+            continue; // do not change filter[id]
+    really_no_match:
+        filter[id] = 0;
+        continue; // to next game
+    } // for each game
     return true;
 }
-// Called by search header to test a particular game against the
-// header search criteria.
-inline bool matchGameHeader
-(IndexEntry * ie, NameBase * nb,
- const bit_vector& mWhite, const bit_vector& mBlack, bool ignoreColors,
- const bit_vector& mEvent, const bit_vector& mSite, const bit_vector& mRound,
- dateT dateMin, dateT dateMax,
- bool results[NUM_RESULT_TYPES],
- bool allowUnknownElo,
- int whiteEloMin, int whiteEloMax, int blackEloMin, int blackEloMax,
- int diffEloMin, int diffEloMax,
- int minEloMin, int minEloMax, int maxEloMin, int maxEloMax,
- uint halfMovesMin, uint halfMovesMax, bool halfMovesEven, bool halfMovesOdd,
- ecoT ecoMin, ecoT ecoMax, bool ecoNone,
- bool annotatedOnly){
-#define CI(op) /* continue if */ if(not (op)) return false
-#define CIIR(a) /*continue if in range */ \
-        CI((a) >= (a##Min) and (a) <= (a##Max))
-#define _(Name) CI(m##Name.empty() or m##Name[ie->Get##Name()])
-    if(ignoreColors){
-        CI(mWhite.empty() or (mWhite[ie->GetWhite()] or mWhite[ie->GetBlack()]));
-        CI(mBlack.empty() or (mBlack[ie->GetWhite()] or mBlack[ie->GetBlack()]));
-    }else{
-        _(White); _(Black);
-    }
-    _(Event); _(Site); _(Round);
-#undef _
-    CI(results[ie->GetResult()]);
-
-    uint halfMoves = ie->GetNumHalfMoves(); CIIR(halfMoves);
-    if((halfMoves % 2) == 0){
-        // This game ends with White to move *if* White moves first
-        CI(halfMovesEven);
-    } else {
-        CI(halfMovesOdd);
-    }
-
-    dateT date = ie->GetDate(); CIIR(date);
-
-    // Check Elo ratings:
-    int whiteElo = ie->GetWhiteElo();
-    int blackElo = ie->GetBlackElo();
-    if(whiteElo == 0){ whiteElo = nb->GetElo(ie->GetWhite()); }
-    if(blackElo == 0){ blackElo = nb->GetElo(ie->GetBlack()); }
-    if(whiteElo and blackElo){  // diff, min, max are useful only if both ELOs are known
-        int minElo = min(whiteElo, blackElo); CIIR(minElo);
-        int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
-        int diffElo = maxElo - minElo; CIIR(diffElo);
-    }else{ // there are unknown ELOs
-        CI(allowUnknownElo);
-    }
-    if(whiteElo) CIIR(whiteElo);
-    if(blackElo) CIIR(blackElo);
-
-    ecoT eco = ie->GetEcoCode();
-    if(eco == ECO_None){
-        CI(ecoNone);
-    } else {
-        CIIR(eco);
-    }
-
-    if(annotatedOnly)
-        CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
-#undef CI
-#undef CIIR
-    // If we reach here, this game matches all criteria.
-    return true;
-}
-/* TODO
-// Called by search header to test a particular game against the
-// specified index flag restrictions, for example, excluding
-// deleted games or games without comments.
-inline bool matchGameFlags
-(IndexEntry * ie,
- flagT fStart, flagT fPromotions, flagT fComments, flagT fVariations, flagT fNags,
- flagT fDelete, flagT fWhiteOp, flagT fBlackOp, flagT fMiddlegame, flagT fEndgame,
- flagT fNovelty, flagT fPawnStruct, flagT fTactics, flagT fKingside, flagT fQueenside,
- flagT fBrilliancy, flagT fBlunder, flagT fUser,
- flagT fCustom1, flagT fCustom2, flagT fCustom3,
- flagT fCustom4, flagT fCustom5, flagT fCustom6){
-    bool flag;
-#define _(flagName)                                 \
-    flag = ie->Get##flagName##Flag();               \
-    if(    flag and not flag_Yes(f##flagName) or    \
-       not flag and not flag_No(f##flagName))       \
-       return false
-
-    _(Start); _(Promotions); _(Comments); _(Variations); _(Nags);
-    _(Delete); _(WhiteOp); _(BlackOp); _(Middlegame); _(Endgame);
-    _(Novelty); _(PawnStruct); _(Tactics); _(Kingside); _(Queenside);
-    _(Brilliancy); _(Blunder); _(User);
-#undef _
-#define _(n)                                    \
-    flag = ie->GetCustomFlag(n);                \
-    if( flag and !flag_Yes(fCustom##n) or        \
-       !flag and !flag_No (fCustom##n))          \
-       return false
-    _(1); _(2); _(3); _(4); _(5); _(6);
-#undef _
-    // If we reach here, the game matched all flag restrictions.
-    return true;
-}
-*/
 JCM(jboolean, searchHeader,
     jobject request, jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
     FILE_LOADED;
 
+    /// unpack request data
     jclass requestClass = env->GetObjectClass(request);
     // String, boolean, int fields of request
 #define SF(field)                                                       \
@@ -793,6 +696,7 @@ JCM(jboolean, searchHeader,
     jint field = env->GetIntField                               \
         (request, env->GetFieldID(requestClass, #field, "I"))
 
+    // name and nameExact
 #define _(name) SF(name); BF(name##Exact)
     _(white); _(black); _(event); _(site); _(round);
 #undef _
@@ -804,6 +708,7 @@ JCM(jboolean, searchHeader,
     BF(ecoNone); BF(allowUnknownElo);  BF(annotatedOnly);
     BF(halfMovesEven); BF(halfMovesOdd);
 
+    // ranges
 #define _(a) IF(a##Min); IF(a##Max)
     _(date); _(id);
     _(whiteElo); _(blackElo);
@@ -814,6 +719,7 @@ JCM(jboolean, searchHeader,
 #undef SF
 #undef BF
 
+    /// prepare to the loop
     AJA(filter);
     if(not filter){
         LOGE("searchHeader: filter is null");
@@ -840,30 +746,13 @@ JCM(jboolean, searchHeader,
     }
 
     /* TODO
-    flagT fStdStart = FLAG_BOTH;
-    flagT fPromotions = FLAG_BOTH;
-    flagT fComments = FLAG_BOTH;
-    flagT fVariations = FLAG_BOTH;
-    flagT fAnnotations = FLAG_BOTH;
-    flagT fDelete = FLAG_BOTH;
-    flagT fWhiteOp = FLAG_BOTH;
-    flagT fBlackOp = FLAG_BOTH;
-    flagT fMiddlegame = FLAG_BOTH;
-    flagT fEndgame = FLAG_BOTH;
-    flagT fNovelty = FLAG_BOTH;
-    flagT fPawnStruct = FLAG_BOTH;
-    flagT fTactics = FLAG_BOTH;
-    flagT fKside = FLAG_BOTH;
-    flagT fQside = FLAG_BOTH;
-    flagT fBrilliancy = FLAG_BOTH;
-    flagT fBlunder = FLAG_BOTH;
-    flagT fUser = FLAG_BOTH;
-    flagT fCustom1 = FLAG_BOTH;
-    flagT fCustom2 = FLAG_BOTH;
-    flagT fCustom3 = FLAG_BOTH;
-    flagT fCustom4 = FLAG_BOTH;
-    flagT fCustom5 = FLAG_BOTH;
-    flagT fCustom6 = FLAG_BOTH;
+#define _(flagName) flagT f##flagName = FLAG_BOTH
+    _(Start); _(Promotions); _(Comments); _(Variations); _(Nags);
+    _(Delete); _(WhiteOp); _(BlackOp); _(Middlegame); _(Endgame);
+    _(Novelty); _(PawnStruct); _(Tactics); _(Kingside); _(Queenside);
+    _(Brilliancy); _(Blunder); _(User);
+    _(Custom1); _(Custom2); _(Custom3); _(Custom4); _(Custom5); _(Custom6);
+#undef _
     */
 
 #define _(name, Name, TYPE)                                             \
@@ -892,51 +781,104 @@ JCM(jboolean, searchHeader,
     _(round, Round, ROUND);
 #undef _
 
-    // Here is the loop that searches on each game:
+    // TODO: do ReadEntireFile() with progress
+
+    /// the loop that goes thru each game
     PREPARE_PROGRESS(noGames);
-    for(uint i = 0; i < noGames; ++i){
-        DO_PROGRESS(i, noGames);
-        // First, apply the filter operation:
-        if(filterOperation == FILTEROP_AND and !filter[i]
-           or filterOperation == FILTEROP_OR and filter[i]){
-            // no need to change filter[i]
-            continue;
+    IndexEntry* ie;
+    for(uint id = 0; id < noGames; ++id){
+        DO_PROGRESS(id, noGames);
+        APPLY_FILTER_OPERATION; // the macros defined in searchBoard above
+        CIIR(id);
+        FETCH_ENTRY;
+
+        /* TODO
+        bool flag;
+#define _(flagName)                                     \
+        flag = ie->Get##flagName##Flag();               \
+        CI(flag and flag_Yes(f##flagName) or            \
+           not flag and flag_No(f##flagName))
+
+        _(Start); _(Promotions); _(Comments); _(Variations); _(Nags);
+        _(Delete); _(WhiteOp); _(BlackOp); _(Middlegame); _(Endgame);
+        _(Novelty); _(PawnStruct); _(Tactics); _(Kingside); _(Queenside);
+        _(Brilliancy); _(Blunder); _(User);
+#undef _
+#define _(n)                                    \
+        flag = ie->GetCustomFlag(n);            \
+        CI(flag and flag_Yes(fCustom##n) or     \
+           not flag and flag_No(fCustom##n))
+        _(1); _(2); _(3); _(4); _(5); _(6);
+#undef _
+        */
+
+#define _(Name) CI(m##Name.empty() or m##Name[ie->Get##Name()])
+        if(ignoreColors){
+            CI(mWhite.empty() or (mWhite[ie->GetWhite()] or mWhite[ie->GetBlack()]));
+            CI(mBlack.empty() or (mBlack[ie->GetWhite()] or mBlack[ie->GetBlack()]));
+        }else{
+            _(White); _(Black);
         }
-        IndexEntry * ie;
-        if((i >= idMin and i <= idMax)
-           and (ie = sourceIndex.FetchEntry(i)) != 0
-           and ie->GetLength() // Skip games with no gamefile record
-           /* TODO
-           and
-           matchGameFlags(ie, fStdStart, fPromotions,
-                          fComments, fVariations, fAnnotations, fDelete,
-                          fWhiteOp, fBlackOp, fMiddlegame, fEndgame,
-                          fNovelty, fPawnStruct, fTactics, fKside,
-                          fQside, fBrilliancy, fBlunder, fUser,
-                          fCustom1, fCustom2, fCustom3, fCustom4, fCustom5, fCustom6)
-           */
-           and
-           matchGameHeader(ie, &sourceNameBase,
-                           mWhite, mBlack, ignoreColors,
-                           mEvent, mSite, mRound,
-                           dateMin, dateMax,
-                           results,
-                           allowUnknownElo,
-                           whiteEloMin, whiteEloMax, blackEloMin, blackEloMax,
-                           diffEloMin, diffEloMax,
-                           minEloMin, minEloMax, maxEloMin, maxEloMax,
-                           halfMovesMin, halfMovesMax, halfMovesEven, halfMovesOdd,
-                           ecoMin, ecoMax, ecoNone,
-                           annotatedOnly)){
-            // Game matches
-            if(filter[i] == 0)
-                filter[i] = 1;
-            // otherwise preserve non-zero value of filter[i]
-        } else {
-            // This game does NOT match
-            filter[i] = 0;
+        _(Event); _(Site); _(Round);
+#undef _
+
+        CI(results[ie->GetResult()]);
+
+        {
+            uint halfMoves = ie->GetNumHalfMoves(); CIIR(halfMoves);
+            if((halfMoves % 2) == 0){
+                // This game ends with White to move *if* White moves first
+                CI(halfMovesEven);
+            } else {
+                CI(halfMovesOdd);
+            }
         }
-    }
+        {
+            dateT date = ie->GetDate(); CIIR(date);
+        }
+        {   // Check Elo ratings:
+            int whiteElo = ie->GetWhiteElo();
+            int blackElo = ie->GetBlackElo();
+            if(whiteElo == 0){ whiteElo = sourceNameBase.GetElo(ie->GetWhite()); }
+            if(blackElo == 0){ blackElo = sourceNameBase.GetElo(ie->GetBlack()); }
+            if(whiteElo and blackElo){  // diff, min, max are useful only if both ELOs are known
+                int minElo = min(whiteElo, blackElo); CIIR(minElo);
+                int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
+                int diffElo = maxElo - minElo; CIIR(diffElo);
+            }else{ // there are unknown ELOs
+                CI(allowUnknownElo);
+            }
+            if(whiteElo) CIIR(whiteElo);
+            if(blackElo) CIIR(blackElo);
+        }
+        {
+            ecoT eco = ie->GetEcoCode();
+            if(eco == ECO_None){
+                CI(ecoNone);
+            } else {
+                CIIR(eco);
+            }
+        }
+        if(annotatedOnly)
+            CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
+
+    match:
+        // If we reach here, this game matches all criteria, but we
+        // also need to support subtraction that inverts the meaning
+        // of the result. In addition to what we do in searchBoard
+        // above, we need to preserve filter[id] value if we want it
+        // to be non-zero and it is already non-zero.
+        if(filterOperation == FILTEROP_SUBTRACT) goto really_no_match;
+    really_match:
+        if(filter[id] == 0)
+            filter[id] = 1;
+        continue; // to next game
+    no_match: // Get here if one of CI, CIIR fails
+        if(filterOperation == FILTEROP_SUBTRACT) goto really_match;
+    really_no_match:
+        filter[id] = 0;
+        continue; // to next game
+    } // for each game
     return true;
 }
 JCM(jintArray, getFavorites, jobject progress){
