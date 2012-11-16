@@ -368,7 +368,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 
         r.ecoFrom = ets(R.id.search_eco_from);
         r.ecoTo = ets(R.id.search_eco_to);
-        r.ecoNone = cbb(R.id.eco_none);
+        r.allowEcoNone = cbb(R.id.eco_none);
 
         r.annotatedOnly = cbb(R.id.search_annotated_only);
 

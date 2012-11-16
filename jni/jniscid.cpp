@@ -721,17 +721,25 @@ JCM(jboolean, searchHeader,
 
     BF(ignoreColors);
     BF(resultNone); BF(resultWhiteWins); BF(resultBlackWins); BF(resultDraw);
-    BF(ecoNone); BF(allowUnknownElo);  BF(annotatedOnly);
+    BF(allowEcoNone); BF(allowUnknownElo);  BF(annotatedOnly);
     BF(halfMovesEven); BF(halfMovesOdd);
 
     // ranges
 #define _(a) IF(a##Min); IF(a##Max)
-    _(date); _(id);
-    _(whiteElo); _(blackElo);
-    _(diffElo); _(minElo); _(maxElo);
-    _(halfMoves);
+    _(date); _(id); _(halfMoves);
 #undef _
 
+    // "active" means we need to check it
+    bool halfMovesActive = not (halfMovesEven and halfMovesOdd and
+                                halfMovesMin == 0 and halfMovesMax == 9999);
+#define _(a)                                                            \
+    IF(a##EloMin); IF(a##EloMax);                                       \
+    bool a##EloActive = not (a##EloMin == 0 and a##EloMax == MAX_ELO);
+    _(white); _(black); _(diff); _(min); _(max);
+#undef _
+    // diff, min, max are useful only if both ELOs are known
+    bool bothEloActive = diffEloActive or minEloActive or maxEloActive,
+        eloActive = whiteEloActive or blackEloActive or bothEloActive;
 #undef SF
 #undef BF
 
@@ -750,13 +758,17 @@ JCM(jboolean, searchHeader,
     bool results[NUM_RESULT_TYPES] = // order from RESULT_None, ...
         {resultNone, resultWhiteWins, resultBlackWins, resultDraw};
 
+    bool ecoActive = false;
     ecoT ecoMin, ecoMax;    // ECO code range.
     if(ecoFrom[0] and ecoTo[0]){
+        ecoActive = true;
         ecoMin = eco_FromString(ecoFrom);
         // Set eco maximum to be the largest subcode, for example,
         // "B07" -> "B07z4" to make sure subcodes are included in the range:
         ecoMax = eco_LastSubCode(eco_FromString(ecoTo));
-    } else {
+    } else if(not allowEcoNone){
+        // there is no range, but user wants to exclude games with ECO_None
+        ecoActive = true;
         ecoMin = eco_FromString("A00");
         ecoMax = eco_FromString("E99");
     }
@@ -771,9 +783,11 @@ JCM(jboolean, searchHeader,
 #undef _
     */
 
+    bool namesActive = false;
 #define _(name, Name, TYPE)                                             \
     bit_vector m##Name;                                                 \
     if(name[0]){                                                        \
+        namesActive = true;                                             \
         idNumberT numNames = sourceNameBase.GetNumNames(NAME_##TYPE);   \
         m##Name.resize(numNames);                                       \
         if(name##Exact){                                                \
@@ -828,19 +842,21 @@ JCM(jboolean, searchHeader,
 #undef _
         */
 
+        if(namesActive){
 #define _(Name) CI(m##Name.empty() or m##Name[ie->Get##Name()])
-        if(ignoreColors){
-            CI(mWhite.empty() or (mWhite[ie->GetWhite()] or mWhite[ie->GetBlack()]));
-            CI(mBlack.empty() or (mBlack[ie->GetWhite()] or mBlack[ie->GetBlack()]));
-        }else{
-            _(White); _(Black);
-        }
-        _(Event); _(Site); _(Round);
+            if(ignoreColors){
+                CI(mWhite.empty() or (mWhite[ie->GetWhite()] or mWhite[ie->GetBlack()]));
+                CI(mBlack.empty() or (mBlack[ie->GetWhite()] or mBlack[ie->GetBlack()]));
+            }else{
+                _(White); _(Black);
+            }
+            _(Event); _(Site); _(Round);
 #undef _
+        }
 
         CI(results[ie->GetResult()]);
 
-        {
+        if(halfMovesActive){
             uint halfMoves = ie->GetNumHalfMoves(); CIIR(halfMoves);
             if((halfMoves % 2) == 0){
                 // This game ends with White to move *if* White moves first
@@ -849,32 +865,45 @@ JCM(jboolean, searchHeader,
                 CI(halfMovesOdd);
             }
         }
+
         {
             dateT date = ie->GetDate(); CIIR(date);
         }
-        {   // Check Elo ratings:
+
+        if(eloActive){
             int whiteElo = ie->GetWhiteElo();
             int blackElo = ie->GetBlackElo();
             if(whiteElo == 0){ whiteElo = sourceNameBase.GetElo(ie->GetWhite()); }
             if(blackElo == 0){ blackElo = sourceNameBase.GetElo(ie->GetBlack()); }
-            if(whiteElo and blackElo){  // diff, min, max are useful only if both ELOs are known
-                int minElo = min(whiteElo, blackElo); CIIR(minElo);
-                int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
-                int diffElo = maxElo - minElo; CIIR(diffElo);
-            }else{ // there are unknown ELOs
-                CI(allowUnknownElo);
+#define _(a)                                    \
+            if(a##EloActive){                   \
+                if(a##Elo)                      \
+                    CIIR(a##Elo);               \
+                else                            \
+                    CI(allowUnknownElo);        \
             }
-            if(whiteElo) CIIR(whiteElo);
-            if(blackElo) CIIR(blackElo);
+            _(white); _(black);
+#undef _
+            if(bothEloActive){
+                if(whiteElo and blackElo){
+                    int minElo = min(whiteElo, blackElo); CIIR(minElo);
+                    int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
+                    int diffElo = maxElo - minElo; CIIR(diffElo);
+                }else{ // there are unknown ELOs
+                    CI(allowUnknownElo);
+                }
+            }
         }
-        {
+
+        if(ecoActive){
             ecoT eco = ie->GetEcoCode();
             if(eco == ECO_None){
-                CI(ecoNone);
+                CI(allowEcoNone);
             } else {
                 CIIR(eco);
             }
         }
+
         if(annotatedOnly)
             CI(ie->GetCommentsFlag() or ie->GetVariationsFlag() or ie->GetNagsFlag());
 

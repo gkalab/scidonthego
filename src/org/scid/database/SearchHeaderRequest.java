@@ -7,7 +7,7 @@ public class SearchHeaderRequest {
         whiteExact, blackExact, eventExact, siteExact, roundExact,
         resultNone, resultWhiteWins, resultBlackWins, resultDraw,
         halfMovesEven, halfMovesOdd,
-        ecoNone, allowUnknownElo, annotatedOnly;
+        allowEcoNone, allowUnknownElo, annotatedOnly;
     public int dateMin, dateMax, idMin, idMax, halfMovesMin, halfMovesMax,
         whiteEloMin, whiteEloMax, blackEloMin, blackEloMax,
         diffEloMin, diffEloMax,
