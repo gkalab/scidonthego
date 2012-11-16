@@ -481,6 +481,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			gameNo = (TextView) findViewById(R.id.gameNo);
 		}
 		favoriteRating = (RatingBar) findViewById(R.id.favorite);
+		favoriteRating.setOnTouchListener(new OnTouchListener() {
+			// it is tricky to intercept onClick of RatingBar, let us use touch instead
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if ((event.getAction() & MotionEvent.ACTION_MASK) // TODO: use getActionMasked (API Level 8)
+						== MotionEvent.ACTION_UP) {
+					invertIsFavorite();
+				}
+				return true;
+			}
+		});
 		status = (TextView) findViewById(R.id.status);
 		moveListScroll = (ScrollView) findViewById(R.id.moveListScrollView);
 		moveList = (TextView) findViewById(R.id.moveList);

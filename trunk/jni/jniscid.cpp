@@ -131,9 +131,10 @@ static GFile sourceGFile;
 static ByteBuffer bbuf;
 static bool fileLoaded = false;
 
-static Game game;
-static bool isFavorite;
 static bool gameLoaded = false;
+static gameNumberT gameId;
+static IndexEntry ie;
+static Game game;
 
 static void unloadGame(){
     if(gameLoaded){
@@ -256,23 +257,20 @@ JCM(jboolean, loadGame, jint gameId, jboolean onlyHeaders){
         LOGE("loadGame: %d is out of range", gameId);
         return false;
     }
-    IndexEntry iE;
-    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
-    isFavorite = iE.GetUserFlag();
+    ::gameId = gameId;
+    CHECK(sourceIndex.ReadEntries(&ie, gameId, 1));
     bbuf.Empty();
-    CHECK(sourceGFile.ReadGame(&bbuf, iE.GetOffset(), iE.GetLength()));
+    CHECK(sourceGFile.ReadGame(&bbuf, ie.GetOffset(), ie.GetLength()));
     if(onlyHeaders){
-        game.SetNumHalfMoves(iE.GetNumHalfMoves());
+        game.SetNumHalfMoves(ie.GetNumHalfMoves());
     } else {
         CHECKL(game.Decode(&bbuf, GAME_DECODE_ALL), "Unable to decode game.");
     }
-    game.LoadStandardTags(&iE, &sourceNameBase);
+    game.LoadStandardTags(&ie, &sourceNameBase);
     game.AddPgnStyle(PGN_STYLE_TAGS);
     game.AddPgnStyle(PGN_STYLE_COMMENTS);
     game.AddPgnStyle(PGN_STYLE_VARS);
     game.SetPgnFormat(PGN_FORMAT_Plain);
-    // Altered flag is here misused for the delete flag
-    game.SetAltered(iE.GetDeleteFlag());
 
     gameLoaded = true;
     return true;
@@ -348,12 +346,11 @@ JCM(jint, getBlackElo){
 }
 JCM(jboolean, isFavorite){
     GAME_LOADED;
-    return isFavorite;
+    return ie.GetUserFlag();
 }
 JCM(jboolean, isDeleted){
     GAME_LOADED;
-    // misused altered flag for delete flag
-    return game.GetAltered();
+    return ie.GetDeleteFlag();
 }
 
 /// Create database (new or import)
@@ -969,29 +966,25 @@ JCM(jintArray, getFavorites, jobject progress){
 }
 
 /// Modifications
-JCM(jboolean, setFavorite, jint gameId, jboolean isFavorite){
+JCM(jboolean, setFavorite, jboolean isFavorite){
     FILE_LOADED;
-    if(gameId < 0 or gameId >= sourceIndex.GetNumGames())
-        return false;
-    CHECK(reopenIndexForWriting());
-    IndexEntry iE;
-    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
-    iE.SetUserFlag(isFavorite);
-    sourceIndex.WriteEntries(&iE, gameId, 1);
+    GAME_LOADED;
+    if(isFavorite != ie.GetUserFlag()){
+        CHECK(reopenIndexForWriting());
+        ie.SetUserFlag(isFavorite);
+        sourceIndex.WriteEntries(&ie, gameId, 1);
+    }
     return true;
 }
-JCM(jboolean, setDeleted, jint gameId, jboolean isDeleted){
+JCM(jboolean, setDeleted, jboolean isDeleted){
     FILE_LOADED;
-    if(gameId < 0 or gameId >= sourceIndex.GetNumGames())
-        return false;
-    CHECK(reopenIndexForWriting());
-    IndexEntry iE;
-    CHECK(sourceIndex.ReadEntries(&iE, gameId, 1));
-    iE.SetDeleteFlag(isDeleted);
-    game.SetAltered(isDeleted);
-    // remove any favorite flag, TODO: why?
-    iE.SetUserFlag(false);
-    sourceIndex.WriteEntries(&iE, gameId, 1);
+    GAME_LOADED;
+    if(isDeleted != ie.GetDeleteFlag()){
+        CHECK(reopenIndexForWriting());
+        ie.SetDeleteFlag(isDeleted);
+        game.SetAltered(isDeleted);
+        sourceIndex.WriteEntries(&ie, gameId, 1);
+    }
     return true;
 }
 JCM(jstring, saveGame, jint gameId, jstring jpgn){

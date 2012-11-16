@@ -154,9 +154,7 @@ public class DataBaseView {
 	}
 
 	public void setDeleted(boolean value) {
-		if (value != isDeleted()) {
-			DataBase.setDeleted(id, value);
-		}
+		DataBase.setDeleted(value);
 	}
 
 	public boolean isDeleted() {
@@ -164,9 +162,7 @@ public class DataBaseView {
 	}
 
 	public void setFavorite(boolean value) {
-		if (value != isFavorite()) {
-			DataBase.setFavorite(id, value);
-		}
+		DataBase.setFavorite(value);
 	}
 
 	public boolean isFavorite() {
