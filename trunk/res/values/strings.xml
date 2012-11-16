@@ -136,7 +136,7 @@ GNU GPL v2\n\
     <string name="result_none">*</string>
     <string name="result_white_wins">1–0</string>
     <string name="result_black_wins">0–1</string>
-    <string name="result_draw">½</string>
+    <string name="result_draw">½–½</string>
     <string name="eco_code">ECO:</string>
     <string name="en_dash"> – </string>
     <string name="search_eco_from_default">A00</string>
@@ -172,7 +172,7 @@ GNU GPL v2\n\
     <string name="filter_one_game_reset_filter">Only one game is found.\nFilter is reset.</string>
     <string name="filter_one_game_preserved_filter">Only one game is found.\nFilter is preserved.</string>
     <string name="filter_number_of_games">games in current filter</string>
-    <string name="downloading">Downloading...</string>
+    <string name="downloading">Downloading…</string>
     <string name="download_started">Download started in the background.</string>
     <string name="twic_downloading">Downloading from TWIC</string>
     <string name="get_twic_information">Getting information from TWIC</string>
@@ -221,7 +221,7 @@ GNU GPL v2\n\
     <string name="engine_added">Engine \"%s\" added.</string>
     <string name="engine_added_copied">Engine \"%s\" added. The executable file was copied to internal storage for execution.</string>
     <string name="engine_removed">Engine \"%s\" removed.</string>
-    <string name="engine_copy_title">Copying executable...</string>
+    <string name="engine_copy_title">Copying executable…</string>
     <string name="engine_copy_msg">Copying executable \"%s\" to internal storage.</string>
     <string name="engine_copy_failed">Error occurred copying executable: %s</string>
     <string name="engine_copy_canceled">Addition of engine \"%s\" canceled.</string>
@@ -241,9 +241,9 @@ GNU GPL v2\n\
     <string name="save_as_new">Save as new game</string>
     <string-array name="result_array">
         <item>*</item>
-        <item>1/2-1/2</item>
-        <item>1-0</item>
-        <item>0-1</item>
+        <item>½–½</item>
+        <item>1–0</item>
+        <item>0–1</item>
     </string-array>
     <string name="edit_game">Edit Game</string>
     <string name="truncate_gametree">Strip moves to the end</string>
