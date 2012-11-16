@@ -140,7 +140,7 @@ IndexEntry::SetEventDate (dateT edate)
     if (eyear < (dyear - 3)  ||  eyear > (dyear + 3)) { eyear = 0; }
 
     if (eyear == 0) {
-        codedDate = 0; 
+        codedDate = 0;
     } else {
         codedDate |= (((eyear + 4 - dyear) & 7) << 9);
     }
@@ -177,7 +177,7 @@ IndexEntry::Read (MFile * fp, versionT version)
     Offset = fp->ReadFourBytes ();
     Length_Low = fp->ReadTwoBytes ();
     Length_High = fp->ReadOneByte();
-    Flags = fp->ReadTwoBytes (); 
+    Flags = fp->ReadTwoBytes ();
 
     // White and Black player names:
     WhiteBlack_High = fp->ReadOneByte ();
@@ -241,9 +241,9 @@ IndexEntry::Write (MFile * fp, versionT version)
     if (version < 400) { return ERROR_FileVersion; }
 
     version = 0;  // We dont have any version-specific code.
-    
+
     fp->WriteFourBytes (Offset);
-    
+
     fp->WriteTwoBytes (Length_Low);
     fp->WriteOneByte (Length_High);
     fp->WriteTwoBytes (Flags);
@@ -266,7 +266,7 @@ IndexEntry::Write (MFile * fp, versionT version)
     fp->WriteTwoBytes (BlackElo);
 
     fp->WriteFourBytes (FinalMatSig);
-    fp->WriteOneByte (NumHalfMoves & 255); 
+    fp->WriteOneByte (NumHalfMoves & 255);
 
     // Write the 9-byte homePawnData array:
     byte * pb = HomePawnData;
@@ -950,8 +950,8 @@ Index::Open (fileModeT fmode, bool old)
     errorT result = OK;
     if (!old) {
         if (Header.version > SCID_VERSION) { result = ERROR_OldScidVersion; }
-        if (Header.version < SCID_OLDEST_VERSION) { 
-            result = ERROR_FileVersion; 
+        if (Header.version < SCID_OLDEST_VERSION) {
+            result = ERROR_FileVersion;
         }
         if (result != OK) {
             FilePtr->Close ();
@@ -1044,9 +1044,7 @@ Index::CloseIndexFile ( bool NoHeader )
 //
 errorT
 Index::ReadEntireFile (int reportFrequency,
-                       void (*progressFn)(void * data,
-                                          uint progress,
-                                          uint total),
+                       ProgressFn progressFn,
                        void * progressData)
 {
     ASSERT (FilePtr != NULL);
@@ -1061,45 +1059,39 @@ Index::ReadEntireFile (int reportFrequency,
 
     Entries = new IndexEntryPtr [numChunks];
 
-    uint progressCounter = 0;
     int reportAfter = reportFrequency;
     // Allocate and read in each chunk of entries:
-    uint readCount = 0;
-
-    for (uint chunkCount = 0; chunkCount < numChunks; chunkCount++) {
+    uint readCount = 0, chunkCount = 0;
+    for (; chunkCount < numChunks; chunkCount++) {
         Entries[chunkCount] = new IndexEntry [INDEX_ENTRY_CHUNKSIZE];
 
         uint gamesToRead = GetNumGames() - readCount;
         if (gamesToRead > INDEX_ENTRY_CHUNKSIZE) {
             gamesToRead = INDEX_ENTRY_CHUNKSIZE;
         }
-        err = ReadEntries (Entries[chunkCount], readCount, gamesToRead);
-        if (err != OK) {
-            for (uint i = 0; i <= chunkCount; i++) {
-                delete[] Entries[i];
-            }
-            delete[] Entries;
-            Entries = NULL;
-            InMemory = false;
-            return err;
-        }
+        if ((err = ReadEntries(Entries[chunkCount], readCount, gamesToRead)) != OK)
+            goto cancelled;
         readCount += gamesToRead;
-        progressCounter += INDEX_ENTRY_CHUNKSIZE;
         reportAfter -= INDEX_ENTRY_CHUNKSIZE;
 
         if (reportAfter <= 0) {
-            if (progressFn != NULL) {
-                (*progressFn) (progressData, progressCounter, GetNumGames());
-            }
+            if (progressFn and
+                (err = progressFn(progressData, readCount, GetNumGames())) != OK)
+                goto cancelled;
             reportAfter = reportFrequency;
         }
-//         printf ("Chunk %u: %u games\n", chunkCount, gamesToRead);
     }
-    if (progressFn != NULL) {
-        (*progressFn) (progressData, 1, 1);
-    }
+    if (progressFn)
+        progressFn(progressData, GetNumGames(), GetNumGames());
     InMemory = true;
     return OK;
+ cancelled:
+    for (uint i = 0; i <= chunkCount; i++)
+      delete[] Entries[i];
+    delete[] Entries;
+    Entries = NULL;
+    InMemory = false;
+    return err;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

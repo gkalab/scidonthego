@@ -682,10 +682,9 @@ class Index
 
     errorT      ReadEntries (IndexEntry * ie, gameNumberT start, uint count);
     errorT      WriteEntries (IndexEntry * ie, gameNumberT start, uint count);
+    typedef errorT ProgressFn(void * data, uint progress, uint total);
     errorT      ReadEntireFile (int reportFrequency,
-                                void (*progressFn)(void * data,
-                                                   uint progress,
-                                                   uint total),
+                                ProgressFn progressFn,
                                 void * progressData);
     inline errorT ReadEntireFile () {
         return ReadEntireFile (0, NULL, NULL);

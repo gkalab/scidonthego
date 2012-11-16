@@ -68,7 +68,8 @@ public class DataBaseView {
 	}
 
 	public GameFilter getFavorites(Progress progress) {
-		return new GameFilter(DataBase.getFavorites(progress));
+		int[] f = DataBase.getFavorites(progress);
+		return (f == null) ? null : new GameFilter(f);
 	}
 
 	public int getCount() {

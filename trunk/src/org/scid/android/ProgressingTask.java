@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 /**
  * ProgressingTask&lt;Result&gt; is an asynchronous task with ProgressDialog.
@@ -72,6 +73,7 @@ public abstract class ProgressingTask<Result> extends
 
 	@Override
 	protected void onCancelled() {
+		Toast.makeText(activity, activity.getText(R.string.cancelled), Toast.LENGTH_SHORT).show();
 		progressDialog.dismiss();
 		activity.setResult(Activity.RESULT_CANCELED);
 		activity.finish();

@@ -116,6 +116,7 @@ GNU GPL v2\n\
     <string name="search_header">Search header</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="cancelled">Cancelled</string>
     <string name="search_previous_request">Previous request</string>
     <string name="search_next_request">Next request</string>
     <string name="search_no_history">The requests history is empty</string>
