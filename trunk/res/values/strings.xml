@@ -168,6 +168,7 @@ GNU GPL v2\n\
     <string name="analysis_mode_enabled">Analysis enabled using \n%s</string>
     <string name="analysis_mode_disabled">Analysis turned off</string>
     <string name="filter_no_games">No games found.</string>
+    <string name="filter_no_favorites">There are no favorite games.</string>
     <string name="filter_one_game_reset_filter">Only one game is found.\nFilter is reset.</string>
     <string name="filter_one_game_preserved_filter">Only one game is found.\nFilter is preserved.</string>
     <string name="filter_number_of_games">games in current filter</string>

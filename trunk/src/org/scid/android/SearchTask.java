@@ -10,14 +10,17 @@ public abstract class SearchTask extends ProgressingTask<GameFilter> {
 	public SearchTask(Activity activity){
 		super(activity, R.string.search, R.string.please_wait);
 	}
-
+	/** called from onPostExecute if the result is empty */
+	void onNothingFound(){
+		Toast.makeText(activity.getApplicationContext(),
+                R.string.filter_no_games, Toast.LENGTH_LONG).show();
+	}
 	@Override
 	protected void onPostExecute(GameFilter filter) {
 		dismissProgress();
 		int filterSize = (filter == null) ? 0 : filter.getSize();
 		if (filterSize == 0) { // nothing was found
-			Toast.makeText(activity.getApplicationContext(),
-                           R.string.filter_no_games, Toast.LENGTH_LONG).show();
+			onNothingFound();
 		} else { // something was found
 			DataBaseView dbv = ((ScidApplication) activity.getApplicationContext())
 					.getDataBaseView();

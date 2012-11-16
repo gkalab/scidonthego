@@ -4,6 +4,7 @@ import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 public class FavoritesSearchActivity extends SearchActivityBase {
 	@Override
@@ -17,6 +18,12 @@ public class FavoritesSearchActivity extends SearchActivityBase {
 			@Override
 			protected GameFilter doInBackground(Void... params) {
 				return dbv.getFavorites(progress);
+			}
+			@Override
+			void onNothingFound(){
+				Toast.makeText(activity.getApplicationContext(),
+		                R.string.filter_no_favorites, Toast.LENGTH_LONG).show();
+				activity.finish();
 			}
 		}).execute();
 	}
