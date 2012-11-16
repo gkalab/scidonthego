@@ -76,7 +76,7 @@ using namespace std;
 #define DO_PROGRESS(gameNum, noGames)                               \
     if(progress and (gameNum) >= nextCallbackGameNo){               \
         nextCallbackGameNo = (gameNum) + progressDelta;             \
-        int percent = float(gameNum)*100/(noGames);                 \
+        int percent = double(gameNum)*100/(noGames);                \
         env->CallVoidMethod(progress, midPublishProgress, percent); \
         if(env->CallBooleanMethod(progress, midIsCanceled)){        \
             LOGD("cancelled");                                      \
@@ -554,6 +554,16 @@ JCM(jstring, importPgn, jstring jpgnName, jobject progress){
 }
 
 /// Filtering
+struct ProgressData{
+    JNIEnv* env;
+    jobject progress;
+    jmethodID midPublishProgress;
+};
+static void readEntireIndexCallback(void* data, uint progress, uint total){
+    ProgressData* pd = (ProgressData*) data;
+    pd->env->CallVoidMethod(pd->progress, pd->midPublishProgress,
+                            jint(double(progress)*100 / total));
+}
 JCM(jboolean, searchBoard,
     jstring jfen, jint/*gameExactMatchT*/ searchType,
     jint filterOperation, jshortArray/*in-out*/ jfilter, jobject progress){
@@ -600,10 +610,16 @@ JCM(jboolean, searchBoard,
         return false;
     }
 
-    // TODO: do ReadEntireFile() with progress
+    PREPARE_PROGRESS(noGames);
+    // read index with progress, instead of doing it silently in FetchEntry
+#define READ_INDEX_FILE                                                 \
+    ProgressData pd = {env, progress, midPublishProgress};              \
+    sourceIndex.ReadEntireFile(progressDelta, readEntireIndexCallback, &pd)
+    // TODO: change progress title, so that progress does not go 0..100
+    // twice with the same title
+    READ_INDEX_FILE;
 
     /// the loop that goes thru each game
-    PREPARE_PROGRESS(noGames);
     IndexEntry* ie;
     Game g;
     uint ply;
@@ -781,10 +797,10 @@ JCM(jboolean, searchHeader,
     _(round, Round, ROUND);
 #undef _
 
-    // TODO: do ReadEntireFile() with progress
+    PREPARE_PROGRESS(noGames);
+    READ_INDEX_FILE;
 
     /// the loop that goes thru each game
-    PREPARE_PROGRESS(noGames);
     IndexEntry* ie;
     for(uint id = 0; id < noGames; ++id){
         DO_PROGRESS(id, noGames);
@@ -890,14 +906,16 @@ JCM(jintArray, getFavorites, jobject progress){
         return env->NewIntArray(0);
     }
 
-    // Here is the loop that searches on each game:
     PREPARE_PROGRESS(noGames);
-    for(uint i = 0; i < noGames; ++i){
-        DO_PROGRESS(i, noGames);
-        IndexEntry * ie = sourceIndex.FetchEntry(i);
+    READ_INDEX_FILE;
+
+    /// the loop that goes thru each game
+    for(uint id = 0; id < noGames; ++id){
+        DO_PROGRESS(id, noGames);
+        IndexEntry * ie = sourceIndex.FetchEntry(id);
         if(ie->GetLength() != 0 and ie->GetUserFlag()){
             // game has record and the user flag is set
-            result.push_back(i);
+            result.push_back(id);
         }
     }
 
