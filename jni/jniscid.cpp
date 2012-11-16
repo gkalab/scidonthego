@@ -33,12 +33,12 @@ using namespace std;
   (JNIEnv* env, jclass cls, ##__VA_ARGS__)
 
 #define CHECK(op)                               \
-    if((op) != OK) return false
+    if((op) != OK) return 0
 
 #define CHECKL(op,...)                          \
     if((op) != OK){                             \
         LOGW(__VA_ARGS__);                      \
-        return false;                           \
+        return 0;                               \
     }
 
 #define FILE_LOADED                             \
@@ -79,7 +79,7 @@ using namespace std;
         int percent = double(gameNum)*100/(noGames);                \
         env->CallVoidMethod(progress, midPublishProgress, percent); \
         if(env->CallBooleanMethod(progress, midIsCanceled)){        \
-            LOGD("cancelled");                                      \
+            LOGI("cancelled");                                      \
             break;                                                  \
         }                                                           \
     }
@@ -557,12 +557,18 @@ JCM(jstring, importPgn, jstring jpgnName, jobject progress){
 struct ProgressData{
     JNIEnv* env;
     jobject progress;
-    jmethodID midPublishProgress;
+    jmethodID midIsCanceled, midPublishProgress;
 };
-static void readEntireIndexCallback(void* data, uint progress, uint total){
+static errorT readEntireIndexCallback(void* data, uint progress, uint total){
     ProgressData* pd = (ProgressData*) data;
     pd->env->CallVoidMethod(pd->progress, pd->midPublishProgress,
                             jint(double(progress)*100 / total));
+    if(pd->env->CallBooleanMethod(pd->progress, pd->midIsCanceled)){
+        LOGI("cancelled");
+        return ERROR;
+    }else{
+        return OK;
+    }
 }
 JCM(jboolean, searchBoard,
     jstring jfen, jint/*gameExactMatchT*/ searchType,
@@ -612,9 +618,9 @@ JCM(jboolean, searchBoard,
 
     PREPARE_PROGRESS(noGames);
     // read index with progress, instead of doing it silently in FetchEntry
-#define READ_INDEX_FILE                                                 \
-    ProgressData pd = {env, progress, midPublishProgress};              \
-    sourceIndex.ReadEntireFile(progressDelta, readEntireIndexCallback, &pd)
+#define READ_INDEX_FILE                                                   \
+    ProgressData pd = {env, progress, midIsCanceled, midPublishProgress}; \
+    CHECK(sourceIndex.ReadEntireFile(progressDelta, readEntireIndexCallback, &pd))
     // TODO: change progress title, so that progress does not go 0..100
     // twice with the same title
     READ_INDEX_FILE;
