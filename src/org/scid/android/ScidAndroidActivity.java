@@ -678,7 +678,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		invalidMoveReported = false;
 		ctrl.makeHumanMove(m); // updates invalidMoveReported
 		if (invalidMoveReported) {
-			// TODO: implement "add to favorites on wrong move"
+			if (settings.getBoolean("makeFavoriteOnWrongMove", false)
+					&& !getScidAppContext().isFavorite()) {
+				invertIsFavorite(); // that is set it
+			}
 		} else { // correct move
 			if (settings.getBoolean("reportThinkingTime", false)) {
 				Toast.makeText(this, String.format(getString(R.string.your_time), getHumanThinkingTime()),
