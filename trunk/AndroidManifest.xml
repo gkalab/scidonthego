@@ -63,7 +63,7 @@
         <activity
             android:configChanges="orientation"
             android:label="Board Search"
-            android:name="SearchCurrentBoardActivity" >
+            android:name=".SearchBoardActivity" >
         </activity>
         <activity
             android:configChanges="orientation"
@@ -74,7 +74,7 @@
         <activity
             android:configChanges="orientation"
             android:label="Favorites"
-            android:name="FavoritesSearchActivity" >
+            android:name=".SearchFavoritesActivity" >
         </activity>
         <activity
             android:configChanges="orientation"

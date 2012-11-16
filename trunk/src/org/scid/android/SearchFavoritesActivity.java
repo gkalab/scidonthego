@@ -6,7 +6,7 @@ import org.scid.database.GameFilter;
 import android.os.Bundle;
 import android.widget.Toast;
 
-public class FavoritesSearchActivity extends SearchActivityBase {
+public class SearchFavoritesActivity extends SearchActivityBase {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

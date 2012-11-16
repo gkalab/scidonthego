@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioGroup;
 
-public class SearchCurrentBoardActivity extends SearchActivityBase {
+public class SearchBoardActivity extends SearchActivityBase {
 	private String fen;
 
 	@Override

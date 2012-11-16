@@ -1615,7 +1615,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						}
 						case SEARCH_CURRENT_BOARD: {
 							Intent i = new Intent(ScidAndroidActivity.this,
-									SearchCurrentBoardActivity.class);
+									SearchBoardActivity.class);
 							i.setAction(ctrl.getFEN());
 							startActivityForResult(i, RESULT_SEARCH);
 							break;
@@ -1628,7 +1628,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						}
 						case SHOW_FAVORITES: {
 							Intent i = new Intent(ScidAndroidActivity.this,
-									FavoritesSearchActivity.class);
+									SearchFavoritesActivity.class);
 							startActivityForResult(i, RESULT_SEARCH);
 							break;
 						}
