@@ -243,8 +243,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		if (gameMode.studyMode()) {
 			int studyAutoMoveDelay = Integer.valueOf(settings.getString("studyAutoMoveDelay", "0"));
-			if (studyAutoMoveDelay != 0)
-				startAutoMove(studyAutoMoveDelay * 1000);
+			if (studyAutoMoveDelay != 0) {
+				scheduleAutoplay(studyAutoMoveDelay * 1000, false);
+			}
 		}
 	}
 
@@ -258,22 +259,36 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	public void onUserInteraction() {
 		cancelAutoMove();
 	}
-	/** delay in milliseconds */
-	private void startAutoMove(long delay) {
+	private class MoverTask extends TimerTask {
+        public void run() {
+            runOnUiThread(new Runnable() { public void run() {
+                if (ctrl.canRedoMove()) {
+                    ctrl.redoMove();
+                } else { // no more moves
+                    cancelAutoMove();
+                }
+            }});
+        }
+    }
+	private void scheduleAutoplay(long timeInMs, boolean isRepeated) {
 		cancelAutoMove();
-		if (!ctrl.canRedoMove())
-			return;
 		autoMoveTimer = new Timer();
-		autoMoveTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				runOnUiThread(new Runnable(){
-					@Override
-					public void run() {
-						ctrl.redoMove();
-					}});
-			}
-		}, delay);
+		if (isRepeated) {
+			autoMoveTimer.scheduleAtFixedRate(new MoverTask(), 0, timeInMs);
+		} else {
+			autoMoveTimer.schedule(new MoverTask(), timeInMs);
+		}
+	}
+
+	/** If the NextMove button is long-clicked we either start auto play or go to the end of variation */
+	private void onNextMoveLongClick() {
+		int autoPlayInterval = Integer.valueOf(settings.getString("autoPlayInterval", "0"));
+		if (autoPlayInterval != 0) {
+			scheduleAutoplay(autoPlayInterval * 1000, true);
+		} else {
+			ctrl.gotoMove(9999);
+			lastEndOfVariation = null;
+		}
 	}
 
 	private void previousGame() {
@@ -582,8 +597,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		nextButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				ctrl.gotoMove(999);
-				lastEndOfVariation = null;
+				onNextMoveLongClick();
 				return true;
 			}
 		});
