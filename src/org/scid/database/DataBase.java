@@ -80,11 +80,11 @@ public class DataBase {
 	/** Return the list of favorites. */
 	public static final native int[] getFavorites(Progress progress);
 
-    /// Modifications
-	/** Set the favorite flag on a game. */
-	public static final native boolean setFavorite(int gameId, boolean isFavorite);
-    /** Set the deleted flag on a game. */
-	public static final native boolean setDeleted(int gameId, boolean isDeleted);
+	/// Modifications
+	/** Set the favorite flag on the current game. */
+	public static final native boolean setFavorite(boolean isFavorite);
+	/** Set the deleted flag on the current game. */
+	public static final native boolean setDeleted(boolean isDeleted);
 	/** Save the game with the game number. */
 	public static final native String saveGame(int gameId, String pgn);
 }
