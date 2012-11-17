@@ -52,85 +52,70 @@
             </intent-filter>
         </activity>
         <activity
-            android:label="Preferences"
-            android:name="Preferences" >
-        </activity>
+            android:label="@string/menu_preferences"
+            android:name=".Preferences" />
         <activity
             android:configChanges="orientation"
-            android:label="Edit Board"
-            android:name="EditBoard" >
-        </activity>
+            android:label="@string/activity_edit"
+            android:name=".EditBoard" />
         <activity
             android:configChanges="orientation"
-            android:label="Board Search"
-            android:name=".SearchBoardActivity" >
-        </activity>
+            android:label="@string/activity_search_board"
+            android:name=".SearchBoardActivity" />
         <activity
             android:configChanges="orientation"
             android:windowSoftInputMode="stateUnchanged"
-            android:label="Header Search"
-            android:name="SearchHeaderActivity" >
-        </activity>
+            android:label="@string/activity_search_header"
+            android:name="SearchHeaderActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="Favorites"
-            android:name=".SearchFavoritesActivity" >
-        </activity>
+            android:label="@string/favorites"
+            android:name=".SearchFavoritesActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="PGN Import"
-            android:name="ImportPgnActivity" >
-        </activity>
+            android:label="@string/import_pgn_title"
+            android:name=".ImportPgnActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="TWIC Import"
-            android:name=".twic.ImportTwicActivity" >
-        </activity>
+            android:label="@string/import_twic"
+            android:name=".twic.ImportTwicActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="ChessOK Import"
-            android:name=".chessok.ImportChessOkActivity" >
-        </activity>
+            android:label="@string/import_chessok"
+            android:name=".chessok.ImportChessOkActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="ChessOK Import"
-            android:name=".chessok.PgnLinkListActivity" >
-        </activity>
+            android:label="@string/import_chessok"
+            android:name=".chessok.PgnLinkListActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="ChessOK Import"
-            android:name=".chessok.ChessOkLinkMapActivity" >
-        </activity>
+            android:label="@string/import_chessok"
+            android:name=".chessok.ChessOkLinkMapActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="Select File"
+            android:label="@string/activity_select_file"
             android:name=".SelectFileActivity" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
             android:configChanges="orientation"
-            android:label="Game List"
-            android:name="GameListActivity" >
-        </activity>
+            android:label="@string/gamelist"
+            android:name=".GameListActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="Add Engine"
-            android:name="AddEngineActivity" >
-        </activity>
+            android:label="@string/add_engine"
+            android:name=".AddEngineActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="Remove Engine"
-            android:name="RemoveEngineActivity" >
-        </activity>
+            android:label="@string/remove_engine"
+            android:name=".RemoveEngineActivity" />
         <activity
             android:configChanges="orientation"
-            android:label="Save Game"
-            android:name="SaveGameActivity" >
-        </activity>
+            android:label="@string/saving"
+            android:name=".SaveGameActivity" />
 
         <provider
             android:authorities="org.scid.database.scidprovider"

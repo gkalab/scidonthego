@@ -2,82 +2,82 @@
 <PreferenceScreen
 	xmlns:android="http://schemas.android.com/apk/res/android">
 	<PreferenceCategory
-		android:title="Usage">
+		android:title="@string/pref_behavior">
         <ListPreference
             android:key="analysisEngine"
-            android:title="Analysis Engine"
-            android:summary="Select engine for analysis mode" />
+            android:title="@string/pref_analysisEngine_title"
+            android:summary="@string/pref_analysisEngine_summary" />
         <EditTextPreference
             android:key="playerNames"
-            android:title="My Player Names..."
-            android:summary="After loading a game the chessboard will be rotated to show the game from that players perspective.\nEnter one name per line."
+            android:title="@string/pref_playerNames_title"
+            android:summary="@string/pref_playerNames_summary"
             android:singleLine="false"
             android:defaultValue="" />
         <ListPreference
             android:key="studyOrientation"
-            android:title="Orientation in Study Mode..."
-            android:summary="Select initial orientation of the board in the study mode"
+            android:title="@string/pref_studyOrientation_title"
+            android:summary="@string/pref_studyOrientation_summary"
             android:entryValues="@array/study_orientation_values"
             android:entries="@array/study_orientation_texts"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="cruiseMode"
-            android:title="Cruise Mode"
-            android:summary='If enabled, "next" acts as "next game" in the end of variation'
+            android:title="@string/pref_cruiseMode_title"
+            android:summary="@string/pref_cruiseMode_summary"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="cruiseModeInStudy"
-            android:title="Cruise in Study Mode"
-            android:summary='If enabled, in the study mode making a move in the end of variation goes to the next game'
+            android:title="@string/pref_cruiseModeInStudy_title"
+            android:summary="@string/pref_cruiseModeInStudy_summary"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="nextGameIsRandom"
-            android:title="Next Game is Random"
-            android:summary="If enabled, the next game is chosen randomly"
+            android:title="@string/pref_nextGameIsRandom_title"
+            android:summary="@string/pref_nextGameIsRandom_summary"
             android:defaultValue="0" />
         <EditTextPreference
             android:key="studyAutoMoveDelay"
             android:inputType="number"
-            android:title="Study first move delay"
-            android:summary="If non-zero, then in study mode the computer waits so many seconds after the next game is loaded and do a move"
+            android:title="@string/pref_studyAutoMoveDelay_title"
+            android:summary="@string/pref_studyAutoMoveDelay_summary"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="reportThinkingTime"
-            android:title="Report thinking time"
-            android:summary="Report the time it takes you to make the correct move in study mode"
+            android:title="@string/pref_reportThinkingTime_title"
+            android:summary="@string/pref_reportThinkingTime_summary"
             android:defaultValue="0" />
         <EditTextPreference
             android:key="autoPlayInterval"
             android:inputType="number"
-            android:title="Auto play interval"
-            android:summary="If non-zero, then a long click on next move button starts autoplay with this interval in seconds"
+            android:title="@string/pref_autoPlayInterval_title"
+            android:summary="@string/pref_autoPlayInterval_summary"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="makeFavoriteOnWrongMove"
-            android:title="Make game favorite on wrong move"
-            android:summary="If enabled, then once you guess a wrong move in study mode, the game is marked as favorite"
+            android:title="@string/pref_makeFavoriteOnWrongMove_title"
+            android:summary="@string/pref_makeFavoriteOnWrongMove_summary"
             android:defaultValue="0" />
    	</PreferenceCategory>
 	<PreferenceCategory
-		android:title="User Interface">
+		android:title="@string/pref_appearance">
         <ListPreference
             android:key="moveDisplay"
-            android:title="Move List"
-            android:summary="Display all moves or current move only"
+            android:title="@string/pref_moveDisplay_title"
+            android:summary="@string/pref_moveDisplay_summary"
             android:entryValues="@array/move_display_values"
             android:entries="@array/move_display_texts"
             android:defaultValue="0" />
 		<ListPreference
 			android:key="fontSize"
-			android:title="Text Size"
-			android:summary="Font size for move list and game information"
+			android:title="@string/pref_fontSize_title"
+			android:summary="@string/pref_fontSize_summary"
 			android:entryValues="@array/font_size_values"
 			android:entries="@array/font_size_texts"
 			android:defaultValue="12" />
         <ListPreference
             android:key="colorTheme"
-            android:title="Color Theme"
-            android:summary="Change the color theme"
+            android:title="@string/pref_colorTheme_title"
+            android:summary="@string/pref_colorTheme_summary"
             android:entryValues="@array/theme_values"
             android:entries="@array/theme_texts"
             android:defaultValue="0" />

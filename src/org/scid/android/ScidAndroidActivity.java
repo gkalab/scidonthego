@@ -79,7 +79,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private TextView blackPlayer;
 	private TextView gameNo;
 
-	SharedPreferences settings;
+	SharedPreferences preferences;
 
 	private float scrollSensitivity = 3;
 	private boolean invertScrollDirection = false;
@@ -109,8 +109,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		checkUciEngine();
 		engineManager = EngineManager.getInstance();
 		engineManager.setContext(this);
-		settings = PreferenceManager.getDefaultSharedPreferences(this);
-		settings.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+		preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		preferences.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
 			@Override
 			public void onSharedPreferenceChanged(
 					SharedPreferences sharedPreferences, String key) {
@@ -137,7 +137,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		readPrefs();
 		ctrl.newGame(gameMode);
 
-		int gameId = settings.getInt("currentGameId", 0);
+		int gameId = preferences.getInt("currentGameId", 0);
 		DataBaseView dbv = setDataBaseViewFromFile();
 		if (dbv != null)
 			dbv.moveToId(gameId);
@@ -146,7 +146,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (savedInstanceState != null) {
 			data = savedInstanceState.getByteArray("gameState");
 		} else {
-			String dataStr = settings.getString("gameState", null);
+			String dataStr = preferences.getString("gameState", null);
 			if (dataStr != null) {
 				data = strToByteArr(dataStr);
 			}
@@ -236,13 +236,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void nextOrRandomGame() {
-		if (settings.getBoolean("nextGameIsRandom", false)) {
+		if (preferences.getBoolean("nextGameIsRandom", false)) {
 			randomGame();
 		} else {
 			nextGame();
 		}
 		if (gameMode.studyMode()) {
-			int studyAutoMoveDelay = Integer.valueOf(settings.getString("studyAutoMoveDelay", "0"));
+			int studyAutoMoveDelay = Integer.valueOf(preferences.getString("studyAutoMoveDelay", "0"));
 			if (studyAutoMoveDelay != 0) {
 				scheduleAutoplay(studyAutoMoveDelay * 1000, false);
 			}
@@ -284,7 +284,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	/** If the NextMove button is long-clicked we either start auto play or go to the end of variation */
 	private void onNextMoveLongClick() {
-		int autoPlayInterval = Integer.valueOf(settings.getString("autoPlayInterval", "0"));
+		int autoPlayInterval = Integer.valueOf(preferences.getString("autoPlayInterval", "0"));
 		if (autoPlayInterval != 0) {
 			scheduleAutoplay(autoPlayInterval * 1000, true);
 		} else {
@@ -397,7 +397,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			String currentPosition = ctrl.getFEN();
 			if (lastEndOfVariation == null
 					|| !lastEndOfVariation.equals(currentPosition)) {
-				if (settings.getBoolean("cruiseMode", false)) {
+				if (preferences.getBoolean("cruiseMode", false)) {
 					nextOrRandomGame();
 				} else {
 					lastEndOfVariation = currentPosition;
@@ -678,18 +678,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		invalidMoveReported = false;
 		ctrl.makeHumanMove(m); // updates invalidMoveReported
 		if (invalidMoveReported) {
-			if (settings.getBoolean("makeFavoriteOnWrongMove", false)
+			if (preferences.getBoolean("makeFavoriteOnWrongMove", false)
 					&& !getScidAppContext().isFavorite()) {
 				invertIsFavorite(); // that is set it
 			}
 		} else { // correct move
-			if (settings.getBoolean("reportThinkingTime", false)) {
+			if (preferences.getBoolean("reportThinkingTime", false)) {
 				Toast.makeText(this, String.format(getString(R.string.your_time), getHumanThinkingTime()),
 						Toast.LENGTH_LONG).show();
 			}
 			resetHumanThinkingTimer();
 			if (!ctrl.canRedoMove()) { // that was last move in variation
-				if (settings.getBoolean("cruiseModeInStudy", false)) {
+				if (preferences.getBoolean("cruiseModeInStudy", false)) {
 					nextOrRandomGame();
 				} else {
 					Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
@@ -743,7 +743,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void saveGameState() {
 		byte[] data = ctrl.toByteArray();
-		Editor editor = settings.edit();
+		Editor editor = preferences.edit();
 		String dataStr = byteArrToString(data);
 		editor.putString("gameState", dataStr);
 		editor.commit();
@@ -758,21 +758,21 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private final void readPrefs() {
-		this.myPlayerNames = settings.getString("playerNames", "");
-		setFlipped(settings.getBoolean("boardFlipped", false));
-		studyOrientation = Integer.parseInt(settings.getString("studyOrientation", "0"));
-		cb.oneTouchMoves = settings.getBoolean("oneTouchMoves", false);
-		mShowThinking = settings.getBoolean("showThinking", false);
-		String tmp = settings.getString("thinkingArrows", "6");
+		this.myPlayerNames = preferences.getString("playerNames", "");
+		setFlipped(preferences.getBoolean("boardFlipped", false));
+		studyOrientation = Integer.parseInt(preferences.getString("studyOrientation", "0"));
+		cb.oneTouchMoves = preferences.getBoolean("oneTouchMoves", false);
+		mShowThinking = preferences.getBoolean("showThinking", false);
+		String tmp = preferences.getString("thinkingArrows", "6");
 		maxNumArrows = Integer.parseInt(tmp);
-		mShowBookHints = settings.getBoolean("bookHints", false);
-		gameMode = new GameMode(settings.getInt("gameMode",
+		mShowBookHints = preferences.getBoolean("bookHints", false);
+		gameMode = new GameMode(preferences.getInt("gameMode",
 				GameMode.TWO_PLAYERS));
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
 
-		tmp = settings.getString("fontSize", "12");
+		tmp = preferences.getString("fontSize", "12");
 		int fontSize = Integer.parseInt(tmp);
 		status.setTextSize(fontSize);
 		moveList.setTextSize(fontSize);
@@ -782,7 +782,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		pgnOptions.view.nag = true;
 		pgnOptions.view.headers = false;
 		pgnOptions.view.allMoves = true;
-		String moveDisplayString = settings.getString("moveDisplay", "0");
+		String moveDisplayString = preferences.getString("moveDisplay", "0");
 		int moveDisplay = Integer.parseInt(moveDisplayString);
 		if (moveDisplay != 0) {
 			pgnOptions.view.allMoves = false;
@@ -796,14 +796,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		pgnOptions.exp.playerAction = false;
 		pgnOptions.exp.clockInfo = false;
 
-		ColorTheme.instance().readColors(settings);
+		ColorTheme.instance().readColors(preferences);
 		cb.setColors();
 
-		String engineName = settings.getString("analysisEngine", EngineManager
+		String engineName = preferences.getString("analysisEngine", EngineManager
 				.getDefaultEngine().getName());
 		engineManager.setCurrentEngineName(engineName);
 
-		final String currentScidFile = settings
+		final String currentScidFile = preferences
 				.getString("currentScidFile", "");
 		if (currentScidFile.length() > 0) {
 			this.getScidAppContext().setCurrentFileName(
@@ -835,7 +835,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	static private final int RESULT_EDITBOARD = 0;
-	static private final int RESULT_SETTINGS = 1;
+	static private final int RESULT_PREFERENCES = 1;
 	static private final int RESULT_SEARCH = 2;
 	static private final int RESULT_PGN_FILEDIALOG = 3;
 	static private final int RESULT_GAMELIST = 4;
@@ -857,13 +857,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			startActivityForResult(intent, RESULT_LOAD_SCID_FILE);
 			refreshMenu();
 			return true;
-		case R.id.item_settings: {
+		case R.id.item_preferences: {
 			Intent i = new Intent(ScidAndroidActivity.this, Preferences.class);
 			i.putExtra(Preferences.DATA_ENGINE_NAMES,
 					engineManager.getEngineNames(true));
 			i.putExtra(Preferences.DATA_ENGINE_NAME,
 					engineManager.getCurrentEngineName());
-			startActivityForResult(i, RESULT_SETTINGS);
+			startActivityForResult(i, RESULT_PREFERENCES);
 			return true;
 		}
 		case R.id.item_create_database: {
@@ -1107,7 +1107,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		boolean changed = false;
 		if (ctrl.setGameMode(gameMode)) {
 			changed = true;
-			Editor editor = settings.edit();
+			Editor editor = preferences.edit();
 			editor.putInt("gameMode", gameMode.getMode());
 			editor.commit();
 		}
@@ -1121,20 +1121,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (resultCode == RESULT_OK && data != null) {
 				String fileName = data.getAction();
 				if (fileName != null) {
-					final String currentScidFile = settings.getString(
+					final String currentScidFile = preferences.getString(
 							"currentScidFile", "");
 					int gameId = 0;
 					if (fileName.equals(currentScidFile)) {
-						gameId = settings.getInt("currentGameId", 0);
+						gameId = preferences.getInt("currentGameId", 0);
 					}
 					loadScidFile(fileName, gameId);
 				}
 			}
 			break;
-		case RESULT_SETTINGS:
+		case RESULT_PREFERENCES:
 			readPrefs();
-			String theme = settings.getString("colorTheme", "0");
-			ColorTheme.instance().setTheme(settings, Integer.parseInt(theme));
+			String theme = preferences.getString("colorTheme", "0");
+			ColorTheme.instance().setTheme(preferences, Integer.parseInt(theme));
 			cb.setColors();
 			setGameMode();
 			break;
@@ -1256,7 +1256,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						.getStringExtra(RemoveEngineActivity.DATA_ENGINE_NAME);
 				if (_engineName != null && _engineName.length() > 0) {
 					// Update preferences if removing current analysis engine
-					String analysisEngine = settings.getString(
+					String analysisEngine = preferences.getString(
 							"analysisEngine", null);
 					if (analysisEngine != null
 							&& analysisEngine.equals(_engineName)) {
@@ -1267,7 +1267,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 								if (_engineName.equals(event.getEngineName())
 										&& event.getChangeType() == EngineChangeEvent.REMOVE_ENGINE
 										&& event.getSuccess()) {
-									Editor editor = settings.edit();
+									Editor editor = preferences.edit();
 									editor.putString("analysisEngine",
 											EngineManager.getDefaultEngine()
 													.getName());
@@ -1306,7 +1306,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void loadScidFile(String fileName, int gameId) {
-		Editor editor = settings.edit();
+		Editor editor = preferences.edit();
 		editor.putString("currentScidFile", fileName);
 		editor.commit();
 		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
@@ -1330,7 +1330,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					if (_engineName.equals(event.getEngineName())
 							&& event.getChangeType() == EngineChangeEvent.ADD_ENGINE
 							&& event.getSuccess()) {
-						Editor editor = settings.edit();
+						Editor editor = preferences.edit();
 						editor.putString("analysisEngine", _engineName);
 						editor.commit();
 						engineManager.setCurrentEngineName(_engineName);
@@ -1348,7 +1348,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			cb.setFlipped(flipped);
 			ImageButton flip_button = (ImageButton)findViewById(R.id.flip_board);
 			flip_button.setImageResource(flipped ? R.drawable.flip_flipped : R.drawable.flip_normal);
-			Editor editor = settings.edit();
+			Editor editor = preferences.edit();
 			editor.putBoolean("boardFlipped", flipped);
 			editor.commit();
 		}
@@ -1826,7 +1826,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				Toast.makeText(getApplicationContext(),
 						getString(R.string.create_db_success),
 						Toast.LENGTH_SHORT).show();
-				Editor editor = settings.edit();
+				Editor editor = preferences.edit();
 				editor.putString("currentScidFile", scidFileName);
 				editor.commit();
 				getScidAppContext().setCurrentFileName(
@@ -1850,7 +1850,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void saveCurrentGameId() {
-		Editor editor = settings.edit();
+		Editor editor = preferences.edit();
 		editor.putInt("currentGameId", getScidAppContext().getGameId());
 		editor.commit();
 	}
@@ -1918,7 +1918,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	 *     if set to false only reset the dbv if the file name changes or the current dbv is null
 	 */
 	private DataBaseView setDataBaseViewFromFile(boolean alwaysResetDbView) {
-		final String currentScidFile = settings.getString("currentScidFile", "");
+		final String currentScidFile = preferences.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
 			return null;
 		}
