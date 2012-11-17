@@ -26,8 +26,7 @@ public abstract class SearchTask extends ProgressingTask<GameFilter> {
 					.getDataBaseView();
 			String toast;
 			if (filterSize > 1) { // several games were found
-				toast = ""	+ filterSize + " "
-						+ activity.getString(R.string.filter_number_of_games);
+				toast = String.format(activity.getString(R.string.filter_number_of_games), filterSize);
 				boolean wasPreserved = dbv.setFilter(filter, true);
 				activity.setResult(wasPreserved
 						? SearchActivityBase.RESULT_SHOW_LIST_AND_KEEP_OLD_GAME

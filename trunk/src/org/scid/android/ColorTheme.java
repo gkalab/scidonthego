@@ -51,11 +51,11 @@ public class ColorTheme {
 					"#FFFFFFFF", "#FF666666", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" } };
 
-	final void readColors(SharedPreferences settings) {
+	final void readColors(SharedPreferences preferences) {
 		for (int i = 0; i < numColors; i++) {
 			String prefName = prefPrefix + prefNames[i];
 			String defaultColor = themeColors[0][i];
-			String colorString = settings.getString(prefName, defaultColor);
+			String colorString = preferences.getString(prefName, defaultColor);
 			try {
 				colorTable[i] = Color.parseColor(colorString);
 			} catch (IllegalArgumentException e) {
@@ -64,13 +64,13 @@ public class ColorTheme {
 		}
 	}
 
-	final void setTheme(SharedPreferences settings, int themeType) {
-		Editor editor = settings.edit();
+	final void setTheme(SharedPreferences preferences, int themeType) {
+		Editor editor = preferences.edit();
 		for (int i = 0; i < numColors; i++)
 			editor.putString(prefPrefix + prefNames[i],
 					themeColors[themeType][i]);
 		editor.commit();
-		readColors(settings);
+		readColors(preferences);
 	}
 
 	final int getColor(int colorType) {

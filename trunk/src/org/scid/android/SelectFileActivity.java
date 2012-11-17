@@ -54,9 +54,9 @@ public class SelectFileActivity extends ListActivity {
 			this.extension = "*";
 		}
 		path = getStringStackPref(this, "lastPath");
-		SharedPreferences settings = PreferenceManager
+		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		defaultItem = settings.getInt("lastPathDefaultItem", 0);
+		defaultItem = preferences.getInt("lastPathDefaultItem", 0);
 		final SelectFileActivity fileList = this;
 		File scidFileDir = new File(Environment.getExternalStorageDirectory()
 				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
@@ -108,9 +108,9 @@ public class SelectFileActivity extends ListActivity {
 					} else {
 						setResult(Activity.RESULT_OK,
 								(new Intent()).setAction(item));
-						SharedPreferences settings = PreferenceManager
+						SharedPreferences preferences = PreferenceManager
 								.getDefaultSharedPreferences(SelectFileActivity.this);
-						Editor editor = settings.edit();
+						Editor editor = preferences.edit();
 						editor.putInt("lastPathDefaultItem", defaultItem);
 						editor.commit();
 						setStringStackPref(SelectFileActivity.this, "lastPath",
