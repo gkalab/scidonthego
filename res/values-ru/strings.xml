@@ -233,7 +233,7 @@ GNU GPL v2\n\
     <string name="engine_copy_msg">Копирование исполняемого файла \"%s\" во внутреннее хранилище.</string>
     <string name="engine_copy_failed">Произошла ошибка во время копирования исполняемого файла: %s</string>
     <string name="engine_copy_canceled">Добавление движка \"%s\" отменено.</string>
-    <string name="remove_unused_executable">Исполнимый файл \"%0$s\" не используется ни одним движком. Хотите удалить его из внутреннего хранилища?</string>
+    <string name="remove_unused_executable">Исполнимый файл \"%s\" не используется ни одним движком. Хотите удалить его из внутреннего хранилища?</string>
     <string name="add">Добавить</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
