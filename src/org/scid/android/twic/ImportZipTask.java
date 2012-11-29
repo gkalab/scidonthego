@@ -40,7 +40,9 @@ public class ImportZipTask extends AsyncTask {
 
 	@Override
 	protected void onPostExecute(Object result) {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		if (result != null) {
 			((IDownloadCallback) activity).downloadSuccess((File) result);
 		} else {

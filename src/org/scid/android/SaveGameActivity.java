@@ -129,7 +129,7 @@ public class SaveGameActivity extends Activity {
 
 		String pgn = getScidAppContext().getController().getPGN();
 		final String result = DataBase.saveGame(gameNo, pgn);
-		if (progressDlg != null) {
+		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
 		if (result.length() > 0) {
@@ -148,7 +148,7 @@ public class SaveGameActivity extends Activity {
 		super.onPause();
 		// need to destroy progress dialog in case user turns device
 		// TODO redisplay progress dialog on resume?!
-		if (progressDlg != null) {
+		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
 	}
