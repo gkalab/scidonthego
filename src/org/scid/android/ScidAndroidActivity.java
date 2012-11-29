@@ -1312,7 +1312,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
 
 		DataBaseView dbv = setDataBaseViewFromFile();
-		if (dbv.moveToId(gameId) || dbv.moveToFirst()) {
+		if (dbv != null && (dbv.moveToId(gameId) || dbv.moveToFirst())) {
 			setPgnFromDataBaseView();
 		} else {
 			newGame();
