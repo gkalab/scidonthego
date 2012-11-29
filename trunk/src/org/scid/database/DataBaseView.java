@@ -85,12 +85,17 @@ public class DataBaseView {
 	}
 
 	private static String getSanitizedString(byte[] value) {
-        try {
-            String s = Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
-            return s.equals("?") ? "" : s;
-        } catch (UnsupportedEncodingException e) {
-            return "";
-        }
+		if (value == null) {
+			return "";
+		} else {
+			try {
+				String s = Utf8Converter.convertToUTF8(new String(value,
+						DataBase.SCID_ENCODING));
+				return s.equals("?") ? "" : s;
+			} catch (UnsupportedEncodingException e) {
+				return "";
+			}
+		}
 	}
 
 	public boolean moveToPosition(int newPosition, boolean onlyHeaders) {
