@@ -36,7 +36,9 @@ public class ImportTwicActivity extends ListActivity implements
 				downloader = new TwicDownloader();
 				downloader.parseTwicSite();
 				if (downloader.getLinkList().isEmpty()) {
-					progressDlg.dismiss();
+					if (progressDlg != null && progressDlg.isShowing()) {
+						progressDlg.dismiss();
+					}
 					runOnUiThread(new Runnable() {
 						public void run() {
 							Toast.makeText(getApplicationContext(),
@@ -57,7 +59,9 @@ public class ImportTwicActivity extends ListActivity implements
 	}
 
 	protected void showList() {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		final ArrayAdapter<TwicItem> aa = new ArrayAdapter<TwicItem>(this,
 				android.R.layout.simple_list_item_1, downloader.getLinkList());
 		setListAdapter(aa);
@@ -81,7 +85,7 @@ public class ImportTwicActivity extends ListActivity implements
 	protected void onPause() {
 		super.onPause();
 		// need to destroy progress dialog in case user turns device
-		if (progressDlg != null) {
+		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
 	}

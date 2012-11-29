@@ -45,7 +45,9 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 	}
 
 	protected void showList(final List<Link> linkList) {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		final ArrayAdapter<Link> aa = new LinkListArrayAdapter(this,
 				R.id.item_title);
 		for (Link link : linkList) {
@@ -98,7 +100,7 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 	protected void onPause() {
 		super.onPause();
 		// need to destroy progress dialog in case user turns device
-		if (progressDlg != null) {
+		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
 	}
@@ -122,7 +124,9 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 
 	@Override
 	public void downloadSuccess(File pgnFile) {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		if (pgnFile != null) {
 			if (pgnFile.length() == 0) {
 				pgnFile.delete();
@@ -157,7 +161,9 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 
 	@Override
 	public void downloadFailure(String message) {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		Tools.showErrorMessage(this, this
 				.getText(R.string.download_error)
 				+ " (" + message + ")");

@@ -37,7 +37,9 @@ public class ImportChessOkActivity extends ListActivity {
 				final Map<String, Map<String, List<Link>>> linkMap = downloader
 						.parseChessOkSite();
 				if (linkMap.isEmpty()) {
-					progressDlg.dismiss();
+					if (progressDlg != null && progressDlg.isShowing()) {
+						progressDlg.dismiss();
+					}
 					runOnUiThread(new Runnable() {
 						public void run() {
 							Toast.makeText(getApplicationContext(),
@@ -58,7 +60,9 @@ public class ImportChessOkActivity extends ListActivity {
 	}
 
 	protected void showList(final Map<String, Map<String, List<Link>>> linkMap) {
-		progressDlg.dismiss();
+		if (progressDlg != null && progressDlg.isShowing()) {
+			progressDlg.dismiss();
+		}
 		final ArrayAdapter<String> aa = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1, new Vector<String>(linkMap
 						.keySet()));
@@ -83,7 +87,7 @@ public class ImportChessOkActivity extends ListActivity {
 	protected void onPause() {
 		super.onPause();
 		// need to destroy progress dialog in case user turns device
-		if (progressDlg != null) {
+		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
 	}
