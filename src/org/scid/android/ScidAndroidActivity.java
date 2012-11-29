@@ -256,10 +256,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			autoMoveTimer.cancel();
 		autoMoveTimer = null;
 	}
-	@Override
-	public void onUserInteraction() {
-		cancelAutoMove();
-	}
 	private class MoverTask extends TimerTask {
         public void run() {
             runOnUiThread(new Runnable() { public void run() {
@@ -391,6 +387,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onNextMoveClick(View view) {
+		cancelAutoMove();
 		if (ctrl.canRedoMove()) {
 			ctrl.redoMove();
 		} else {
@@ -410,6 +407,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousMoveClick(View view) {
+		cancelAutoMove();
 		ctrl.undoMove();
 		lastEndOfVariation = null;
 	}
