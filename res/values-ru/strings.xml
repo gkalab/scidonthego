@@ -200,6 +200,9 @@ GNU GPL v2\n\
     <string name="invalid_move">Недопустимый ход %1$s-%2$s</string>
     <string name="wrong_move">Неверный ход %1$s-%2$s</string>
     <string name="your_time">Вы думали %.2f секунд</string>
+    <string name="autoplay_started">Автоматическая игра начата,\n\
+коснитесь в любом месте для остановки.</string>
+    <string name="autoplay_stoped">Автоматическая игра остановлена.</string>
     <string name="add_favorites">Добавить в избранное</string>
     <string name="remove_favorites">Удалить из избранного</string>
     <string name="add_favorites_success">Партия добавлена в избранное.</string>

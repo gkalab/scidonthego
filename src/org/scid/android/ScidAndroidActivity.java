@@ -252,22 +252,35 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private Timer autoMoveTimer;
 	private void cancelAutoMove() {
-		if (autoMoveTimer != null)
+		if (autoMoveTimer != null) {
 			autoMoveTimer.cancel();
+			Toast.makeText(this, getText(R.string.autoplay_stoped), Toast.LENGTH_SHORT).show();
+		}
 		autoMoveTimer = null;
 	}
+	/** At least on VirtualBox, onUserInteraction() is called on
+		touch-up of the long click that started auto-play, so we keep
+		track of time when the auto-play was started to ignore that
+		spurious call. */
+	private long autoPlayStartNanoTime;
+	@Override
+	public void onUserInteraction() {
+		if (System.nanoTime() - autoPlayStartNanoTime > 5e8) { // 0.5 s
+			cancelAutoMove();
+		}
+	}
 	private class MoverTask extends TimerTask {
-        public void run() {
-            runOnUiThread(new Runnable() { public void run() {
-                if (ctrl.canRedoMove()) {
-                    ctrl.redoMove();
-                    resetHumanThinkingTimer();
-                } else { // no more moves
-                    cancelAutoMove();
-                }
-            }});
-        }
-    }
+		public void run() {
+			runOnUiThread(new Runnable() { public void run() {
+				if (ctrl.canRedoMove()) {
+					ctrl.redoMove();
+					resetHumanThinkingTimer();
+				} else { // no more moves
+					cancelAutoMove();
+				}
+			}});
+		}
+	}
 	private void scheduleAutoplay(long timeInMs, boolean isRepeated) {
 		cancelAutoMove();
 		autoMoveTimer = new Timer();
@@ -280,9 +293,15 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	/** If the NextMove button is long-clicked we either start auto play or go to the end of variation */
 	private void onNextMoveLongClick() {
+		if (!ctrl.canRedoMove()) {
+			Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
+			return;
+		}
 		int autoPlayInterval = Integer.valueOf(preferences.getString("autoPlayInterval", "0"));
 		if (autoPlayInterval != 0) {
 			scheduleAutoplay(autoPlayInterval * 1000, true);
+			autoPlayStartNanoTime = System.nanoTime();
+			Toast.makeText(this, getText(R.string.autoplay_started), Toast.LENGTH_LONG).show();
 		} else {
 			ctrl.gotoMove(9999);
 			lastEndOfVariation = null;
@@ -398,9 +417,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					nextOrRandomGame();
 				} else {
 					lastEndOfVariation = currentPosition;
-					Toast.makeText(getApplicationContext(),
-						getText(R.string.end_of_variation), Toast.LENGTH_SHORT)
-						.show();
+					Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
@@ -671,7 +688,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (!ctrl.canRedoMove()) {
 			Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 			return;
-        }
+		}
 
 		invalidMoveReported = false;
 		ctrl.makeHumanMove(m); // updates invalidMoveReported
@@ -978,7 +995,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		boolean newValue = !getScidAppContext().isDeleted();
 		Toast.makeText(this,
 				getString(newValue ? R.string.delete_game_success
-						           : R.string.undelete_game_success),
+								   : R.string.undelete_game_success),
 				Toast.LENGTH_SHORT).show();
 		getScidAppContext().setDeleted(newValue);
 		refreshMenu();
@@ -991,7 +1008,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		boolean newValue = !getScidAppContext().isFavorite();
 		Toast.makeText(this,
 				getString(newValue ? R.string.add_favorites_success
-						  		   : R.string.remove_favorites_success),
+								   : R.string.remove_favorites_success),
 				Toast.LENGTH_SHORT).show();
 		getScidAppContext().setFavorite(newValue);
 		setFavoriteRating();
@@ -1604,8 +1621,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
-				        if (hasNoDataBaseViewOpened())
-                            return;
+						if (hasNoDataBaseViewOpened())
+							return;
 						switch (finalActions.get(item)) {
 						case RESET_FILTER: {
 							resetFilter();
@@ -1913,7 +1930,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	/**
 	 * Set the database view from the current scid file
 	 * @param alwaysResetDbView if set to true always reset the dbv,
-	 *     if set to false only reset the dbv if the file name changes or the current dbv is null
+	 *	   if set to false only reset the dbv if the file name changes or the current dbv is null
 	 */
 	private DataBaseView setDataBaseViewFromFile(boolean alwaysResetDbView) {
 		final String currentScidFile = preferences.getString("currentScidFile", "");
@@ -1972,7 +1989,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			blackPlayer.setText(black);
 			this.gameNo.setText(gameNo);
 		} else {
-			setTitle(gameNo + "   " + white + " - " + black);
+			setTitle(gameNo + "	  " + white + " - " + black);
 		}
 	}
 
