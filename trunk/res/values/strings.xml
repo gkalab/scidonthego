@@ -201,7 +201,7 @@ Please try again later or contact the site hosting the link.</string>
     <string name="your_time">Your thought for %.2f seconds</string>
     <string name="autoplay_started">Autoplay started,\n\
 touch anything to stop it.</string>
-    <string name="autoplay_stoped">Autoplay stopped.</string>
+    <string name="autoplay_stopped">Autoplay stopped.</string>
     <string name="add_favorites">Add to favorites</string>
     <string name="remove_favorites">Remove from favorites</string>
     <string name="add_favorites_success">Game added to favorites.</string>

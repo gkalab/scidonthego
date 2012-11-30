@@ -254,7 +254,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void cancelAutoMove() {
 		if (autoMoveTimer != null) {
 			autoMoveTimer.cancel();
-			Toast.makeText(this, getText(R.string.autoplay_stoped), Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
 		}
 		autoMoveTimer = null;
 	}
