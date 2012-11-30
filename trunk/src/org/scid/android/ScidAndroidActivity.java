@@ -742,6 +742,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	protected void onPause() {
+		cancelAutoMove();
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
