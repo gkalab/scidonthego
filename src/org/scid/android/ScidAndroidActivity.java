@@ -258,17 +258,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		autoMoveTimer = null;
 	}
-	/** At least on VirtualBox, onUserInteraction() is called on
-		touch-up of the long click that started auto-play, so we keep
-		track of time when the auto-play was started to ignore that
-		spurious call. */
-	private long autoPlayStartNanoTime;
 	@Override
-	public void onUserInteraction() {
-		if (System.nanoTime() - autoPlayStartNanoTime > 5e8) { // 0.5 s
+	public boolean dispatchTouchEvent(MotionEvent event) {
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			cancelAutoMove();
 		}
+		return super.dispatchTouchEvent(event);
 	}
+
 	private class MoverTask extends TimerTask {
 		public void run() {
 			runOnUiThread(new Runnable() { public void run() {
@@ -300,7 +297,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		int autoPlayInterval = Integer.valueOf(preferences.getString("autoPlayInterval", "0"));
 		if (autoPlayInterval != 0) {
 			scheduleAutoplay(autoPlayInterval * 1000, true);
-			autoPlayStartNanoTime = System.nanoTime();
 			Toast.makeText(this, getText(R.string.autoplay_started), Toast.LENGTH_LONG).show();
 		} else {
 			ctrl.gotoMove(9999);
@@ -406,7 +402,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onNextMoveClick(View view) {
-		cancelAutoMove();
 		if (ctrl.canRedoMove()) {
 			ctrl.redoMove();
 		} else {
@@ -424,7 +419,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousMoveClick(View view) {
-		cancelAutoMove();
 		ctrl.undoMove();
 		lastEndOfVariation = null;
 	}
