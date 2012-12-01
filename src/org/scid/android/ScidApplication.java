@@ -8,7 +8,7 @@ import android.app.Application;
 
 public class ScidApplication extends Application {
 	private DataBaseView dbv = null;
-	private String currentFileName = "";
+	private String currentFileName = ""; // always non-null
 	private Position position = null;
 	private int currentGameNo = -1;
 	private int noGames = 0;
@@ -26,8 +26,9 @@ public class ScidApplication extends Application {
 		return currentFileName;
 	}
 
+	/** strip extension and set current file name */
 	public void setCurrentFileName(String currentFileName) {
-		this.currentFileName = currentFileName;
+		this.currentFileName = Tools.stripExtension(currentFileName);
 	}
 
 	public DataBaseView getDataBaseView() {
