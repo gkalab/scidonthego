@@ -16,6 +16,11 @@
         <item>С противоположной стороны</item>
         <item>Использовать мои имена</item>
     </string-array>
+    <string-array name="animation_speed_texts">
+        <item>Высокая</item>
+        <item>Средняя</item>
+        <item>Низкая</item>
+    </string-array>
     <string-array name="theme_texts">
         <item>Стандартная</item>
         <item>Коричневая</item>
@@ -57,6 +62,7 @@ GNU GPL v2\n\
 Исходный код: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>Что нового</b>\n\
+* Настраиваемая скорость анимации хода\n\
 \n\
 <b>Разрешения</b>\n\
 * Изменение/удаление данных с USB-накопителя или SD-карты — для доступа к локальным базам\n\
@@ -305,6 +311,8 @@ GNU GPL v2\n\
     <string name="pref_reportThinkingTime_summary">Показывать время которое вам потребовалось для того чтобы сделать верный ход в режиме тренировки.</string>
     <string name="pref_autoPlayInterval_title">Задержка при автоматической игре…</string>
     <string name="pref_autoPlayInterval_summary">Ненулевое значение приводит к тому, что долгое нажатие на кнопку \"следующий ход\" начинает автоматический просмотр партии с заданной задержкой.</string>
+    <string name="pref_animationSpeed_title">Скорость анимации…</string>
+    <string name="pref_animationSpeed_summary">Установить скорость анимации хода. Если вы нередко отменяете последний ход, чтобы узнать, что было взято, то эта настройка для вас.</string>
     <string name="pref_makeFavoriteOnWrongMove_title">Добавлять игру в избранные при неверном ходе</string>
     <string name="pref_makeFavoriteOnWrongMove_summary">Сделать так, что неверный ход в режиме тренировки добавляет игру в избранное.</string>
     <string name="pref_appearance">Внешний вид</string>

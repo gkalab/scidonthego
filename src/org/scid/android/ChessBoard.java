@@ -177,15 +177,17 @@ public class ChessBoard extends View {
 	/**
 	 * Set up move animation. The animation will start the next time setPosition
 	 * is called.
-	 * 
+	 *
 	 * @param sourcePos
 	 *            The source position for the animation.
 	 * @param move
 	 *            The move leading to the target position.
 	 * @param forward
 	 *            True if forward direction, false for undo move.
+	 * @param speed
+	 *            Animation speed in units per second (e.g., the distance from a1 to h8 is about 10 units)
 	 */
-	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
+	public void setAnimMove(Position sourcePos, Move move, boolean forward, double speed) {
 		anim.startTime = -1;
 		anim.paused = true; // Animation starts at next position update
 		if (forward) {
@@ -202,8 +204,8 @@ public class ChessBoard extends View {
 			int dx = Position.getX(move.to) - Position.getX(move.from);
 			int dy = Position.getY(move.to) - Position.getY(move.from);
 			double dist = Math.sqrt(dx * dx + dy * dy);
-			double t = Math.sqrt(dist) * 100;
-			animTime = (int) Math.round(t);
+			double t = Math.sqrt(dist) / speed;
+			animTime = (int) Math.round(t * 1000); // time in ms
 		}
 		if (animTime > 0) {
 			anim.startTime = System.currentTimeMillis();
@@ -266,7 +268,7 @@ public class ChessBoard extends View {
 
 	/**
 	 * Set the board to a given state.
-	 * 
+	 *
 	 * @param pos
 	 */
 	final public void setPosition(Position pos) {
@@ -286,7 +288,7 @@ public class ChessBoard extends View {
 
 	/**
 	 * Set/clear the board flipped status.
-	 * 
+	 *
 	 * @param flipped
 	 */
 	final public void setFlipped(boolean flipped) {
@@ -296,7 +298,7 @@ public class ChessBoard extends View {
 
 	/**
 	 * Set/clear the selected square.
-	 * 
+	 *
 	 * @param square
 	 *            The square to select, or -1 to clear selection.
 	 */
@@ -525,7 +527,7 @@ public class ChessBoard extends View {
 
 	/**
 	 * Compute the square corresponding to the coordinates of a mouse event.
-	 * 
+	 *
 	 * @param evt
 	 *            Details about the mouse event.
 	 * @return The square corresponding to the mouse event, or -1 if outside

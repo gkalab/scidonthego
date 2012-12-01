@@ -52,6 +52,13 @@
             android:title="@string/pref_autoPlayInterval_title"
             android:summary="@string/pref_autoPlayInterval_summary"
             android:defaultValue="0" />
+        <ListPreference
+            android:key="animationSpeed"
+            android:title="@string/pref_animationSpeed_title"
+            android:summary="@string/pref_animationSpeed_summary"
+            android:entryValues="@array/animation_speed_values"
+            android:entries="@array/animation_speed_texts"
+            android:defaultValue="10" />
         <CheckBoxPreference
             android:key="makeFavoriteOnWrongMove"
             android:title="@string/pref_makeFavoriteOnWrongMove_title"
