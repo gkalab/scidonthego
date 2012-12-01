@@ -238,7 +238,7 @@ public class Tools {
 	public static String stripExtension(String pathName) {
 		int pos = pathName.lastIndexOf(".");
 		if (pos > 0) {
-			pathName = pathName.substring(0, pathName.indexOf("."));
+			pathName = pathName.substring(0, pos);
 		}
 		return pathName;
 	}
