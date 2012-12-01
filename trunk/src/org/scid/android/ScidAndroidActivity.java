@@ -137,10 +137,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		readPrefs();
 		ctrl.newGame(gameMode);
 
-		int gameId = preferences.getInt("currentGameId", 0);
 		DataBaseView dbv = setDataBaseViewFromFile();
 		if (dbv != null)
-			dbv.moveToId(gameId);
+			restoreCurrentGameId();
 
 		byte[] data = null;
 		if (savedInstanceState != null) {
@@ -813,11 +812,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				.getDefaultEngine().getName());
 		engineManager.setCurrentEngineName(engineName);
 
-		final String currentScidFile = preferences
-				.getString("currentScidFile", "");
+		String currentScidFile = preferences.getString("currentScidFile", "");
 		if (currentScidFile.length() > 0) {
-			this.getScidAppContext().setCurrentFileName(
-					Tools.stripExtension(currentScidFile));
+			getScidAppContext().setCurrentFileName(currentScidFile);
 		}
 
 		gameTextListener.clear();
@@ -1130,15 +1127,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		case RESULT_LOAD_SCID_FILE:
 			if (resultCode == RESULT_OK && data != null) {
 				String fileName = data.getAction();
-				if (fileName != null) {
-					final String currentScidFile = preferences.getString(
-							"currentScidFile", "");
-					int gameId = 0;
-					if (fileName.equals(currentScidFile)) {
-						gameId = preferences.getInt("currentGameId", 0);
-					}
-					loadScidFile(fileName, gameId);
-				}
+				if (fileName != null)
+					loadScidFile(fileName);
 			}
 			break;
 		case RESULT_PREFERENCES:
@@ -1211,7 +1201,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					// open the successfully created scid database
 					String scidFileName = Tools.stripExtension(pgnFileName)
 							+ ".si4";
-					loadScidFile(scidFileName, 0);
+					loadScidFile(scidFileName);
 				}
 			}
 			break;
@@ -1238,7 +1228,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				}
 				String scidFileName = Tools.stripExtension(pgnFileName)
 						+ ".si4";
-				loadScidFile(scidFileName, 0);
+				loadScidFile(scidFileName);
 			}
 			break;
 		case RESULT_ADD_ENGINE:
@@ -1315,14 +1305,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
-	private void loadScidFile(String fileName, int gameId) {
+	private void loadScidFile(String fileName) {
 		Editor editor = preferences.edit();
 		editor.putString("currentScidFile", fileName);
 		editor.commit();
-		getScidAppContext().setCurrentFileName(Tools.stripExtension(fileName));
+		getScidAppContext().setCurrentFileName(fileName);
 
 		DataBaseView dbv = setDataBaseViewFromFile();
-		if (dbv != null && (dbv.moveToId(gameId) || dbv.moveToFirst())) {
+		if (dbv != null && restoreCurrentGameId()) {
 			setPgnFromDataBaseView();
 		} else {
 			newGame();
@@ -1839,8 +1829,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				Editor editor = preferences.edit();
 				editor.putString("currentScidFile", scidFileName);
 				editor.commit();
-				getScidAppContext().setCurrentFileName(
-						Tools.stripExtension(scidFileName));
+				getScidAppContext().setCurrentFileName(scidFileName);
 				setDataBaseViewFromFile();
 				newGame();
 			}
@@ -1859,9 +1848,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		setFavoriteRating();
 	}
 
+	/** Restores gameId for current file from preferences or go to the first game
+	 *	if the id in preferences is invalid. Assumes that dbv is not null. */
+	private boolean restoreCurrentGameId() {
+		DataBaseView dbv = getDataBaseView();
+		int gameId = preferences.getInt("currentGameId " + getScidAppContext().getCurrentFileName(), 0);
+		return dbv.moveToId(gameId) || dbv.moveToFirst();
+	}
+
 	private void saveCurrentGameId() {
+		int gameId = getScidAppContext().getGameId();
+		if (gameId < 0)
+			return;
 		Editor editor = preferences.edit();
-		editor.putInt("currentGameId", getScidAppContext().getGameId());
+		editor.putInt("currentGameId " + getScidAppContext().getCurrentFileName(), gameId);
 		editor.commit();
 	}
 

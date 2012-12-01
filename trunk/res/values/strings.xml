@@ -88,6 +88,7 @@ Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
 * Configurable move animation speed\n\
+* Preserve the current game id after opening another database\n\
 \n\
 <b>Permissions</b>\n\
 * Storage for accessing databases stored on the SD card\n\
