@@ -48,15 +48,18 @@
 <i>Scid on the go</i> is a viewer for <i>Scid</i> chess database files. \n\
 \n\
 <b>Features</b>\n\
-* Browse Scid (Shane\'s Chess Information Database) files\n\
+* Browse Scid (Shane\'s Chess Information Database) files, optimized for databases with millions of games\n\
 * Header search using player names, sites, events, dates, results, ECO, ELO ratings,…\n\
 * Search games by material and position\n\
 * Favorites\n\
 * Copy/paste games and positions to/from clipboard\n\
 * Edit board\n\
 * Support for variations\n\
+* Replay the game with a configurable delay between moves (autoplay)\n\
 * PGN import (also includes import from Internet)\n\
-* Add additional UCI engines for analysis\n\
+* Analysis with included chess engine: Critter 1.2 (ARM) or Stockfish 2.1.1 (x86); you can add additional UCI engines for analysis\n\
+* Study mode\n\
+* <b>Experimental</b> write support and marking of games for deletion (needs Scid for PC to compact database after marking games for deletion)\n\
 \n\
 <b>Hints</b>\n\
 * Put all three files (*.si4, *.sg4, *.sn4) of a Scid database into the scid folder on your SD Card.\n\
@@ -66,10 +69,18 @@
 * Long press chess board to activate copy/paste, edit board and favorites menu.\n\
 * In edit board mode, long press chess board to activate edit menu.\n\
 * If the game contains multiple variations, scroll up/down on the chess board to go to the previous/next variation.\n\
+* The small black/white square shows who makes the next move, the star near it shows whether the game is favorite — touch it to change this.\n\
 * Browse preferences for other hints\n\
 \n\
 <b>License</b>\n\
 GNU GPL v2\n\
+Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
+\n\
+<b>What is new</b>\n\
+\n\
+<b>Permissions</b>\n\
+* Storage for accessing databases stored on the SD card\n\
+* Internet access for downloading PGN files from <i>The Week in Chess</i> &lt;http://www.theweekinchess.com/twic/&gt; and <i>ChessOK</i> &lt;http://chessok.com/&gt;\n\
 \n\
 <b>Developers</b>\n\
 * Most of the GUI code was taken from Peter Österlunds DroidFish and re-released under GPL v2 by the authors permission.\n\
