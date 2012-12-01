@@ -7,41 +7,20 @@
         <item>Крупный</item>
         <item>Огромный</item>
     </string-array>
-    <string-array name="font_size_values">
-        <item>10</item>
-        <item>12</item>
-        <item>14</item>
-        <item>16</item>
-    </string-array>
     <string-array name="move_display_texts">
         <item>Показывать все ходы</item>
         <item>Показывать текущий ход</item>
-    </string-array>
-    <string-array name="move_display_values">
-        <item>0</item>
-        <item>1</item>
     </string-array>
     <string-array name="study_orientation_texts">
         <item>Со стороны того, кто ходит первым</item>
         <item>С противоположной стороны</item>
         <item>Использовать мои имена</item>
     </string-array>
-    <string-array name="study_orientation_values">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-    </string-array>
     <string-array name="theme_texts">
         <item>Стандартная</item>
         <item>Коричневая</item>
         <item>Голубая</item>
         <item>Зеленая</item>
-    </string-array>
-    <string-array name="theme_values">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
     </string-array>
     <string name="about_info">\
 <b>О программе</b>\n\
@@ -261,12 +240,6 @@ GNU GPL v2\n\
     <string name="save">Сохранить (заменить)</string>
     <string name="saving">Сохраняем</string>
     <string name="save_as_new">Сохранить как новую партию</string>
-    <string-array name="result_array">
-        <item>*</item>
-        <item>½–½</item>
-        <item>1–0</item>
-        <item>0–1</item>
-    </string-array>
     <string name="edit_game">Редактировать партию</string>
     <string name="truncate_gametree">Удалить ходы до конца</string>
     <string name="move_var_up">Передвинуть вариант вверх</string>
