@@ -121,7 +121,9 @@ public class ScidCursor extends AbstractCursor {
 				gameInfo.setSite("");
 			}
 			String date = DataBase.getDate();
-			if (date.endsWith(".??.??")) {
+			if (date == null) {
+				date = "";
+			} else if (date.endsWith(".??.??")) {
 				date = date.substring(0, date.length() - 6);
 			} else if (date.endsWith(".??")) {
 				date = date.substring(0, date.length() - 3);
@@ -138,8 +140,11 @@ public class ScidCursor extends AbstractCursor {
 			gameInfo.setBlack(getSanitizedString(DataBase.getBlack()));
 			String[] results = {"*","1-0","0-1","1/2"};
 			gameInfo.setResult(results[DataBase.getResult()]);
-			gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
-					DataBase.SCID_ENCODING) : null);
+			byte[] dbPgn = DataBase.getPGN();
+			if (dbPgn != null) {
+				gameInfo.setPgn(loadPGN ? new String(DataBase.getPGN(),
+						DataBase.SCID_ENCODING) : null);
+			}
 		} catch (UnsupportedEncodingException e) {
 			Log.e("SCID", "Error converting byte[] to String", e);
 		}
@@ -150,7 +155,15 @@ public class ScidCursor extends AbstractCursor {
 
 	private String getSanitizedString(byte[] value)
 			throws UnsupportedEncodingException {
-		return Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
+		if (value == null) {
+			return "";
+		} else {
+			try {
+				return Utf8Converter.convertToUTF8(new String(value, DataBase.SCID_ENCODING));
+			} catch (UnsupportedEncodingException e) {
+				return "";
+			}
+		}
 	}
 
 	/**
