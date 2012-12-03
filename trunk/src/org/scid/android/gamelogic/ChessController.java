@@ -184,7 +184,7 @@ public class ChessController {
 	private final void updateBookHints() {
 		if (computerPlayer != null && gameMode != null) {
 			boolean analysis = gameMode.analysisMode();
-			if (!analysis && humansTurn()) {
+			if (!analysis) {
 				ss = new SearchStatus();
 				Pair<String, ArrayList<Move>> bi = computerPlayer
 						.getBookHints(game.currPos());
@@ -247,8 +247,7 @@ public class ChessController {
 
 	private final void updateGameMode() {
 		if (game != null) {
-			boolean gamePaused = gameMode.analysisMode()
-					|| (humansTurn() && guiPaused);
+			boolean gamePaused = gameMode.analysisMode() || guiPaused;
 			game.setGamePaused(gamePaused);
 		}
 	}
@@ -308,12 +307,8 @@ public class ChessController {
 		boolean changed = false;
 		if (!gameMode.equals(newMode)) {
 			changed = true;
-			if (newMode.humansTurn(game.currPos().whiteMove))
-				ss.searchResultWanted = false;
+			ss.searchResultWanted = false;
 			gameMode = newMode;
-			if (!gameMode.playerWhite() || !gameMode.playerBlack())
-				setPlayerNames(game); // If computer player involved, set player
-			// names
 			updateGameMode();
 			updateComputeThreads(true);
 			updateGUI();
@@ -331,10 +326,6 @@ public class ChessController {
 		if (game != null) {
 			String white = "";
 			String black = "";
-			if (!gameMode.humansTurn(game.currPos().whiteMove)) {
-				white = gameMode.playerWhite() ? "Player" : "Engine";
-				black = gameMode.playerBlack() ? "Player" : "Engine";
-			}
 			game.tree.setPlayerNames(white, black);
 		}
 	}
@@ -405,16 +396,11 @@ public class ChessController {
 		}
 	}
 
-	/** True if human's turn to make a move. (True in analysis mode.) */
-	public final boolean humansTurn() {
-		return gameMode.humansTurn(game.currPos().whiteMove);
-	}
-
 	/** Return true if computer player is using CPU power. */
 	public final boolean computerBusy() {
 		if (game.getGameState() != GameState.ALIVE)
 			return false;
-		return gameMode.analysisMode() || !humansTurn();
+		return gameMode.analysisMode();
 	}
 
 	private final boolean undoMoveNoUpdate() {
@@ -422,22 +408,6 @@ public class ChessController {
 			return false;
 		ss.searchResultWanted = false;
 		game.undoMove();
-		if (!humansTurn()) {
-			if (game.getLastMove() != null) {
-				game.undoMove();
-				if (!humansTurn()) {
-					game.redoMove();
-				}
-			} else {
-				// Don't undo first white move if playing black vs computer,
-				// because that would cause computer to immediately make
-				// a new move and the whole redo history will be lost.
-				if (gameMode.playerWhite() || gameMode.playerBlack()) {
-					game.redoMove();
-					return false;
-				}
-			}
-		}
 		return true;
 	}
 
@@ -458,11 +428,6 @@ public class ChessController {
 		if (game.canRedoMove()) {
 			ss.searchResultWanted = false;
 			game.redoMove();
-			if (!humansTurn() && game.canRedoMove()) {
-				game.redoMove();
-				if (!humansTurn())
-					game.undoMove();
-			}
 		}
 	}
 
@@ -549,18 +514,16 @@ public class ChessController {
 	}
 
 	public final void makeHumanMove(Move m) {
-		if (humansTurn()) {
-			if (doMove(m)) {
-				ss.searchResultWanted = false;
-				stopAnalysis();
-				updateComputeThreads(true);
-				updateGUI();
-				if (gameMode.studyMode()) {
-					redoMove();
-				}
-			} else {
-				gui.setSelection(-1);
+		if (doMove(m)) {
+			ss.searchResultWanted = false;
+			stopAnalysis();
+			updateComputeThreads(true);
+			updateGUI();
+			if (gameMode.studyMode()) {
+				redoMove();
 			}
+		} else {
+			gui.setSelection(-1);
 		}
 	}
 

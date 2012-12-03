@@ -11,24 +11,12 @@ public class GameMode {
 		this.mode = mode;
 	}
 
-	public final boolean playerWhite() {
-		return true;
-	}
-
-	public final boolean playerBlack() {
-		return true;
-	}
-
 	public final boolean analysisMode() {
 		return mode == ANALYSIS_MODE;
 	}
 
 	public final boolean studyMode() {
 		return mode == STUDY_MODE;
-	}
-
-	public final boolean humansTurn(boolean whiteMove) {
-		return true;
 	}
 
 	@Override
