@@ -886,22 +886,27 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			showDialog(SEARCH_DIALOG);
 			return true;
 		}
-		case R.id.item_study_mode: {
-			setStudyMode();
-			refreshMenu();
+		case R.id.item_review_mode: {
+			setMode(GameMode.REVIEW_MODE);
 			return true;
 		}
 		case R.id.item_analysis_mode: {
-			setAnalysisMode();
-			refreshMenu();
+			setMode(GameMode.ANALYSIS_MODE);
+			return true;
+		}
+		case R.id.item_study_mode: {
+			setMode(GameMode.STUDY_MODE);
 			return true;
 		}
 		case R.id.item_mode: {
-			SubMenu submenu = item.getSubMenu();
-			submenu.findItem(R.id.item_analysis_mode).setChecked(
-					gameMode.analysisMode());
-			submenu.findItem(R.id.item_study_mode).setChecked(
-					gameMode.studyMode());
+			int id;
+			switch (gameMode.getMode()) {
+			default: Log.e("SAA", "Impossible game mode"); // no break
+			case GameMode.REVIEW_MODE: id = R.id.item_review_mode; break;
+			case GameMode.ANALYSIS_MODE: id = R.id.item_analysis_mode; break;
+			case GameMode.STUDY_MODE: id = R.id.item_study_mode; break;
+			}
+			item.getSubMenu().findItem(id).setChecked(true);
 			return true;
 		}
 		case R.id.item_new_game: {
@@ -1044,47 +1049,38 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		startActivityForResult(i, RESULT_SAVE_GAME);
 	}
 
-	private void setStudyMode() {
-		if (gameMode.studyMode()) {
-			gameMode = new GameMode(GameMode.REVIEW_MODE);
-		} else {
-			gameMode = new GameMode(GameMode.STUDY_MODE);
+	private void setMode(int mode) {
+		if (gameMode.getMode() == mode) {
+			Toast.makeText(this, R.string.mode_preserved, Toast.LENGTH_SHORT).show();
+			return;
 		}
-		updateThinkingInfo();
-		moveListUpdated();
-		setGameMode();
-		Toast.makeText(
-				getApplicationContext(),
-				gameMode.studyMode() ? R.string.study_mode_enabled
-						: R.string.study_mode_disabled, Toast.LENGTH_SHORT)
-				.show();
-	}
-
-	private void setAnalysisMode() {
-		if (gameMode.analysisMode()) {
+		if (gameMode.analysisMode()) { // clear analysis mode
 			ctrl.shutdownEngine();
 			gameMode = new GameMode(GameMode.REVIEW_MODE);
 			moveListUpdated();
 			setGameMode();
-			showAnalysisModeInfo();
 			Tools.setKeepScreenOn(this, false);
-		} else {
-			gameMode = new GameMode(GameMode.ANALYSIS_MODE);
-			startAnalysis();
+		}
+		gameMode = new GameMode(mode);
+		switch (mode) {
+		case GameMode.REVIEW_MODE:
+			postSetMode(getString(R.string.review_mode_enabled));
+			break;
+		case GameMode.ANALYSIS_MODE:
+			startAnalysis(); // eventually will also call postSetMode(...analysis...)
+			break;
+		case GameMode.STUDY_MODE:
+			postSetMode(getString(R.string.study_mode_enabled));
+			break;
 		}
 	}
 
-	private void showAnalysisModeInfo() {
-		if (gameMode.analysisMode()) {
-			String msg = getApplicationContext().getString(
-					R.string.analysis_mode_enabled,
-					engineManager.getCurrentEngineName());
-			Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT)
-					.show();
-		} else {
-			Toast.makeText(getApplicationContext(),
-					R.string.analysis_mode_disabled, Toast.LENGTH_SHORT).show();
-		}
+	private void postSetMode(String msg) {
+		refreshMenu();
+		updateThinkingInfo();
+		moveListUpdated();
+		setGameMode();
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
 
 	private void startAnalysis() {
@@ -1098,11 +1094,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	protected void onFinishStartAnalysis() {
-		showAnalysisModeInfo();
-		moveListUpdated();
-		setGameMode();
+		postSetMode(getString(R.string.analysis_mode_enabled, engineManager.getCurrentEngineName()));
 		ctrl.startGame();
-		updateThinkingInfo();
 		Tools.setKeepScreenOn(this, true);
 	}
 

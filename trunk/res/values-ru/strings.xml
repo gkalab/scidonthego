@@ -166,10 +166,10 @@ GNU GPL v2\n\
     <string name="search_half_moves_odd">Нечетное</string>
     <string name="search_annotated_only">Только с комментариями</string>
     <string name="error">Ошибка</string>
-    <string name="study_mode_enabled">Режим тренировки включён</string>
-    <string name="study_mode_disabled">Режим тренировки отключён</string>
-    <string name="analysis_mode_enabled">Включён анализ с помощью\n%s</string>
-    <string name="analysis_mode_disabled">Режим анализа отключён</string>
+    <string name="mode_preserved">Текущий режим не был изменён.</string>
+    <string name="review_mode_enabled">Режим просмотра включён.</string>
+    <string name="analysis_mode_enabled">Включён режим анализа с помощью\n%s.</string>
+    <string name="study_mode_enabled">Режим тренировки включён.</string>
     <string name="filter_no_games">Таких партий не найдено.</string>
     <string name="filter_no_favorites">Нет избранных партий.</string>
     <string name="filter_one_game_reset_filter">Только одна партия найдена.
@@ -285,6 +285,7 @@ GNU GPL v2\n\
     <string name="menu_game_deleted">Партия удалена</string>
     <string name="menu_game_isfavorite">Избранная партия</string>
     <string name="menu_mode">Режим</string>
+    <string name="menu_review_mode">Просмотр</string>
     <string name="menu_analysis_mode">Анализ</string>
     <string name="menu_study_mode">Тренировка</string>
     <string name="menu_edit">Редактировать</string>
