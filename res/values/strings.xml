@@ -190,10 +190,10 @@ Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
     <string name="search_half_moves_odd">Odd</string>
     <string name="search_annotated_only">Only annotated</string>
     <string name="error">Error</string>
-    <string name="study_mode_enabled">Study mode enabled</string>
-    <string name="study_mode_disabled">Study mode turned off</string>
-    <string name="analysis_mode_enabled">Analysis enabled using \n%s</string>
-    <string name="analysis_mode_disabled">Analysis turned off</string>
+    <string name="mode_preserved">The current mode was not changed.</string>
+    <string name="review_mode_enabled">Review mode is enabled.</string>
+    <string name="analysis_mode_enabled">Analysis mode is enabled using \n%s.</string>
+    <string name="study_mode_enabled">Study mode is enabled.</string>
     <string name="filter_no_games">No games found.</string>
     <string name="filter_no_favorites">There are no favorite games.</string>
     <string name="filter_one_game_reset_filter">Only one game is found.\n\
@@ -316,6 +316,7 @@ Please, open a database first.</string>
     <string name="menu_game_deleted">Game deleted</string>
     <string name="menu_game_isfavorite">Favorite game</string>
     <string name="menu_mode">Mode</string>
+    <string name="menu_review_mode">Review</string>
     <string name="menu_analysis_mode">Analysis</string>
     <string name="menu_study_mode">Study</string>
     <string name="menu_edit">Edit</string>

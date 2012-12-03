@@ -67,7 +67,11 @@
         android:id="@+id/item_mode"
         android:title="@string/menu_mode">
         <menu>
-            <group android:checkableBehavior="all" >
+            <group android:checkableBehavior="single" >
+                <item
+                    android:id="@+id/item_review_mode"
+                    android:title="@string/menu_review_mode">
+                </item>
                 <item
                     android:id="@+id/item_analysis_mode"
                     android:title="@string/menu_analysis_mode">
