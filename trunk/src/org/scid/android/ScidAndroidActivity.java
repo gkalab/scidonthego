@@ -69,7 +69,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private boolean mShowThinking;
 	private boolean mShowBookHints;
 	private int maxNumArrows;
-	private GameMode gameMode = new GameMode(GameMode.TWO_PLAYERS);
+	private GameMode gameMode = new GameMode(GameMode.REVIEW_MODE);
 
 	private RatingBar favoriteRating;
 	private TextView status;
@@ -133,7 +133,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		gameTextListener = new PgnScreenText(pgnOptions);
 		ctrl = new ChessController(this, gameTextListener, pgnOptions);
 		getScidAppContext().setController(ctrl);
-		ctrl.newGame(new GameMode(GameMode.TWO_PLAYERS));
+		ctrl.newGame(new GameMode(GameMode.REVIEW_MODE));
 		readPrefs();
 		ctrl.newGame(gameMode);
 
@@ -776,7 +776,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		maxNumArrows = Integer.parseInt(tmp);
 		mShowBookHints = preferences.getBoolean("bookHints", false);
 		gameMode = new GameMode(preferences.getInt("gameMode",
-				GameMode.TWO_PLAYERS));
+				GameMode.REVIEW_MODE));
 		ctrl.setTimeLimit(300000, 60, 0);
 
 		setFullScreenMode(true);
@@ -1050,7 +1050,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void setStudyMode() {
 		if (gameMode.studyMode()) {
-			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+			gameMode = new GameMode(GameMode.REVIEW_MODE);
 		} else {
 			gameMode = new GameMode(GameMode.STUDY_MODE);
 		}
@@ -1067,13 +1067,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void setAnalysisMode() {
 		if (gameMode.analysisMode()) {
 			ctrl.shutdownEngine();
-			gameMode = new GameMode(GameMode.TWO_PLAYERS);
+			gameMode = new GameMode(GameMode.REVIEW_MODE);
 			moveListUpdated();
 			setGameMode();
 			showAnalysisModeInfo();
 			Tools.setKeepScreenOn(this, false);
 		} else {
-			gameMode = new GameMode(GameMode.ANALYSIS);
+			gameMode = new GameMode(GameMode.ANALYSIS_MODE);
 			startAnalysis();
 		}
 	}
