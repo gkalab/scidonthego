@@ -249,14 +249,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		resetHumanThinkingTimer();
 	}
 
-	private Timer autoMoveTimer;
+	private Timer autoMoveTimer = new Timer();
+	private TimerTask autoMoveTask;
 	private void cancelAutoMove() {
-		if (autoMoveTimer != null) {
-			autoMoveTimer.cancel();
-			Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
+		if (autoMoveTask != null) {
+			autoMoveTask.cancel();
+			if (autoMoveTimer.purge() > 0)
+				Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
+			autoMoveTask = null;
 		}
-		autoMoveTimer = null;
 	}
+
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -265,8 +268,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		return super.dispatchTouchEvent(event);
 	}
 
-	private class MoverTask extends TimerTask {
-		public void run() {
+	private void scheduleAutoplay(long timeInMs, boolean isRepeated) {
+		cancelAutoMove();
+		autoMoveTask = new TimerTask() { public void run() {
 			runOnUiThread(new Runnable() { public void run() {
 				if (ctrl.canRedoMove()) {
 					ctrl.redoMove();
@@ -275,15 +279,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					cancelAutoMove();
 				}
 			}});
-		}
-	}
-	private void scheduleAutoplay(long timeInMs, boolean isRepeated) {
-		cancelAutoMove();
-		autoMoveTimer = new Timer();
+		}};
 		if (isRepeated) {
-			autoMoveTimer.scheduleAtFixedRate(new MoverTask(), 0, timeInMs);
+			autoMoveTimer.scheduleAtFixedRate(autoMoveTask, 0, timeInMs);
 		} else {
-			autoMoveTimer.schedule(new MoverTask(), timeInMs);
+			autoMoveTimer.schedule(autoMoveTask, timeInMs);
 		}
 	}
 
