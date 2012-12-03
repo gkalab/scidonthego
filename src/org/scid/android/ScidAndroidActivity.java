@@ -585,11 +585,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					}
 
 					private final void handleClick(MotionEvent e) {
-						if (ctrl.humansTurn()) {
-							int sq = cb.eventToSquare(e);
-							Move m = cb.mousePressed(sq);
-							makeHumanMove(m);
-						}
+						int sq = cb.eventToSquare(e);
+						Move m = cb.mousePressed(sq);
+						makeHumanMove(m);
 					}
 				});
 		cb.setOnTouchListener(new OnTouchListener() {
@@ -600,10 +598,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
 			@Override
 			public void onTrackballEvent(MotionEvent event) {
-				if (ctrl.humansTurn()) {
-					Move m = cb.handleTrackballEvent(event);
-					makeHumanMove(m);
-				}
+				Move m = cb.handleTrackballEvent(event);
+				makeHumanMove(m);
 			}
 		});
 		cb.setOnLongClickListener(new OnLongClickListener() {
