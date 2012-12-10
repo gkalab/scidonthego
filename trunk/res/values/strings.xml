@@ -7,7 +7,7 @@
     	<item>Large</item>
         <item>X-Large</item>
 	</string-array>
-	<string-array name="font_size_values">
+	<string-array name="font_size_values" translatable="false">
 	    <item>10</item>
     	<item>12</item>
         <item>14</item>
@@ -17,7 +17,7 @@
         <item>Display all moves</item>
         <item>Display current move</item>
     </string-array>
-    <string-array name="move_display_values">
+    <string-array name="move_display_values" translatable="false">
         <item>0</item>
         <item>1</item>
     </string-array>
@@ -26,7 +26,7 @@
         <item>The opposite side</item>
         <item>Use my player names</item>
     </string-array>
-    <string-array name="study_orientation_values">
+    <string-array name="study_orientation_values" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -36,7 +36,7 @@
         <item>Medium</item>
         <item>Slow</item>
     </string-array>
-    <string-array name="animation_speed_values">
+    <string-array name="animation_speed_values" translatable="false">
         <item>50</item>
         <item>10</item>
         <item>2</item>
@@ -47,7 +47,7 @@
         <item>Blue</item>
         <item>Green</item>
     </string-array>
-    <string-array name="theme_values">
+    <string-array name="theme_values" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -272,7 +272,7 @@ No more moves.</string>
     <string name="save">Save (replace)</string>
     <string name="saving">Saving</string>
     <string name="save_as_new">Save as new game</string>
-    <string-array name="result_array">
+    <string-array name="result_array" translatable="false">
         <item>*</item>
         <item>½–½</item>
         <item>1–0</item>
