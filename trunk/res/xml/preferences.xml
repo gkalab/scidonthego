@@ -71,6 +71,17 @@
             android:title="@string/pref_oneTouchModeChange_title"
             android:summary="@string/pref_oneTouchModeChange_summary"
             android:defaultValue="1" />
+        <EditTextPreference
+            android:key="humanThinkingAlarmInterval"
+            android:inputType="number"
+            android:title="@string/pref_humanThinkingAlarmInterval_title"
+            android:summary="@string/pref_humanThinkingAlarmInterval_summary"
+            android:defaultValue="0" />
+        <CheckBoxPreference
+            android:key="humanThinkingAlarmSound"
+            android:title="@string/pref_humanThinkingAlarmSound_title"
+            android:summary="@string/pref_humanThinkingAlarmSound_summary"
+            android:defaultValue="0" />
    	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_appearance">

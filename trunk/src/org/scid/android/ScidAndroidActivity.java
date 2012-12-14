@@ -33,6 +33,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -118,6 +119,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				setGameMode();
 			}
 		});
+
+		timeIsUp = MediaPlayer.create(this, R.raw.time_is_up);
 
 		// do not use custom titles on Honeycomb and above - don't work with
 		// the Holo Theme
@@ -240,41 +243,60 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		} else {
 			nextGame();
 		}
+	}
+
+	private void setupTimersForNewGame(){
 		if (gameMode.studyMode()) {
-			int studyAutoMoveDelay = Integer.valueOf(preferences.getString("studyAutoMoveDelay", "0"));
-			if (studyAutoMoveDelay != 0) {
-				scheduleAutoplay(studyAutoMoveDelay * 1000, false);
+			resetHumanThinkingTimer();
+			if (ctrl.canRedoMove()) {
+				int studyAutoMoveDelay = Integer.valueOf(preferences.getString("studyAutoMoveDelay", "0"));
+				if (studyAutoMoveDelay != 0) {
+					scheduleAutoplay(studyAutoMoveDelay * 1000, false);
+				}
+			} else { // notify the user that there is no moves to think about
+				Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 			}
 		}
-		resetHumanThinkingTimer();
 	}
 
 	private Timer autoMoveTimer = new Timer();
 	private TimerTask autoMoveTask;
-	private void cancelAutoMove() {
-		if (autoMoveTask != null) {
-			autoMoveTask.cancel();
-			if (autoMoveTimer.purge() > 0)
-				Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
-			autoMoveTask = null;
-		}
+	private boolean cancelAutoMove() {
+		if (autoMoveTask == null)
+			return false;
+		autoMoveTask.cancel();
+		boolean canceled = autoMoveTimer.purge() > 0;
+		if (canceled)
+			Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
+		autoMoveTask = null;
+		return canceled;
 	}
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			cancelAutoMove();
+		if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+			boolean canceled = cancelAutoMove();
+			if (canceled && gameMode.studyMode()) {
+				// human were waiting for a computer move, but canceled it
+				resetHumanThinkingTimer();
+			}
 		}
 		return super.dispatchTouchEvent(event);
 	}
 
-	private void scheduleAutoplay(long timeInMs, boolean isRepeated) {
+	private void scheduleAutoplay(long timeInMs, final boolean isRepeated) {
 		cancelAutoMove();
+		if (gameMode.studyMode()) {
+			cancelHumanThinkingTimer(); // human waits for the move instead of thinking
+		}
 		autoMoveTask = new TimerTask() { public void run() {
 			runOnUiThread(new Runnable() { public void run() {
 				if (ctrl.canRedoMove()) {
 					ctrl.redoMove();
-					resetHumanThinkingTimer();
+					if (!isRepeated) {
+						// computer auto-played a single move (due to studyAutoMoveDelay)
+						resetHumanThinkingTimer();
+					}
 				} else { // no more moves
 					cancelAutoMove();
 				}
@@ -362,6 +384,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		setFavoriteRating();
 		saveCurrentGameId();
+		setupTimersForNewGame();
 		refreshMenu();
 	}
 
@@ -403,6 +426,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	public void onNextMoveClick(View view) {
 		if (ctrl.canRedoMove()) {
 			ctrl.redoMove();
+			if (gameMode.studyMode())
+				resetHumanThinkingTimer();
 		} else {
 			String currentPosition = ctrl.getFEN();
 			if (lastEndOfVariation == null
@@ -418,8 +443,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	public void onPreviousMoveClick(View view) {
-		ctrl.undoMove();
-		lastEndOfVariation = null;
+		if (ctrl.canUndoMove()) {
+			ctrl.undoMove();
+			if (gameMode.studyMode())
+				resetHumanThinkingTimer();
+			lastEndOfVariation = null;
+		} else {
+			Toast.makeText(this, getText(R.string.start_of_game), Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	public void onFlipBoardClick(View view) {
@@ -670,8 +701,30 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	/** track time needed for human move */
 	private long humanStartThinkingNanoTime;
+	/** alarm if human thinks for too long */
+	private Timer humanThinkingTimer = new Timer();
+	private TimerTask humanThinkingTimerTask;
+	private MediaPlayer timeIsUp;
+	private void cancelHumanThinkingTimer() {
+		if (humanThinkingTimerTask != null) {
+			humanThinkingTimerTask.cancel();
+			humanThinkingTimerTask = null;
+		}
+	}
 	private void resetHumanThinkingTimer() {
 		humanStartThinkingNanoTime = System.nanoTime();
+		cancelHumanThinkingTimer();
+		int t = Integer.valueOf(preferences.getString("humanThinkingAlarmInterval", "0"));
+		if (t != 0) {
+			humanThinkingTimerTask = new TimerTask() { public void run() {
+				runOnUiThread(new Runnable() { public void run() {
+					Toast.makeText(ScidAndroidActivity.this, getText(R.string.time_is_up), Toast.LENGTH_LONG).show();
+					if (preferences.getBoolean("humanThinkingAlarmSound", false))
+						timeIsUp.start();
+				}});
+			}};
+			humanThinkingTimer.schedule(humanThinkingTimerTask, t*1000);
+		}
 	}
 	private double getHumanThinkingTime() {
 		return (double)(System.nanoTime() - humanStartThinkingNanoTime) / 1e9;
@@ -703,7 +756,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						Toast.LENGTH_LONG).show();
 			}
 			resetHumanThinkingTimer();
-			if (!ctrl.canRedoMove()) { // that was last move in variation
+			if (!ctrl.canRedoMove()) { // that was the last move in variation
 				switch(Integer.parseInt(preferences.getString("endOfVariationInStudy", "0"))) {
 				case 0: default:
 					Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
@@ -744,11 +797,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (ctrl != null) {
 			ctrl.setGuiPaused(false);
 		}
-		if (gameMode.analysisMode()) {
+		if (gameMode.analysisMode())
 			startAnalysis();
-		}
-
-		resetHumanThinkingTimer();
+		if (gameMode.studyMode())
+			resetHumanThinkingTimer();
 		super.onResume();
 	}
 
@@ -1078,6 +1130,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			setGameMode();
 			Tools.setKeepScreenOn(this, false);
 		}
+		if (gameMode.studyMode())
+			cancelHumanThinkingTimer();
+
 		gameMode = new GameMode(mode);
 		switch (mode) {
 		case GameMode.REVIEW_MODE:
@@ -1087,6 +1142,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			startAnalysis(); // eventually will also call postSetMode(...analysis...)
 			break;
 		case GameMode.STUDY_MODE:
+			resetHumanThinkingTimer();
 			postSetMode(getString(R.string.study_mode_enabled));
 			break;
 		}
