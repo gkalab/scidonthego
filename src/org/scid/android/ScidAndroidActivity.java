@@ -693,10 +693,16 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			}
 			resetHumanThinkingTimer();
 			if (!ctrl.canRedoMove()) { // that was last move in variation
-				if (preferences.getBoolean("cruiseModeInStudy", false)) {
-					nextOrRandomGame();
-				} else {
+				switch(Integer.parseInt(preferences.getString("endOfVariationInStudy", "0"))) {
+				case 0: default:
 					Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
+					break;
+				case 1:
+					nextOrRandomGame();
+					break;
+				case 2:
+					setMode(GameMode.REVIEW_MODE);
+					break;
 				}
 			}
 		}

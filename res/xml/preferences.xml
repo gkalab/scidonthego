@@ -25,10 +25,12 @@
             android:title="@string/pref_cruiseMode_title"
             android:summary="@string/pref_cruiseMode_summary"
             android:defaultValue="0" />
-        <CheckBoxPreference
-            android:key="cruiseModeInStudy"
-            android:title="@string/pref_cruiseModeInStudy_title"
-            android:summary="@string/pref_cruiseModeInStudy_summary"
+        <ListPreference
+            android:key="endOfVariationInStudy"
+            android:title="@string/pref_endOfVariationInStudy_title"
+            android:summary="@string/pref_endOfVariationInStudy_summary"
+            android:entryValues="@array/endOfVariationInStudy_values"
+            android:entries="@array/endOfVariationInStudy_texts"
             android:defaultValue="0" />
         <CheckBoxPreference
             android:key="nextGameIsRandom"
