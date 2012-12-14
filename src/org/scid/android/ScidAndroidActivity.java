@@ -501,9 +501,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			}
 		});
 		status = (TextView) findViewById(R.id.status);
+		status.setFocusable(false);
+		status.setOnTouchListener(new OnTouchListener() {
+			public boolean onTouch(View v, MotionEvent e) {
+				if ((e.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP
+						&& preferences.getBoolean("oneTouchModeChange", true)) {
+					float p = (e.getX() - v.getLeft()) / v.getWidth(); // p in [0,1]
+					int mode = (int)(3*p-0.01); // mode in {0,1,2}
+					setMode(mode);
+				}
+				return true;
+			}
+		});
 		moveListScroll = (ScrollView) findViewById(R.id.moveListScrollView);
 		moveList = (TextView) findViewById(R.id.moveList);
-		status.setFocusable(false);
 		moveListScroll.setFocusable(false);
 		moveList.setMovementMethod(LinkMovementMethod.getInstance());
 		moveList.setFocusable(false);

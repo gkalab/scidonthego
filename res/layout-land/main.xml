@@ -13,12 +13,12 @@
         android:layout_weight="1">
         <TextView
             android:id="@+id/status"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:includeFontPadding="true"
             android:typeface="monospace"
             android:textStyle="bold"
-            android:textSize="12dip" />
+            android:textSize="18dip" />
         <ScrollView
             android:id="@+id/moveListScrollView"
             android:layout_width="fill_parent"

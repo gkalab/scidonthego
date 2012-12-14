@@ -66,6 +66,11 @@
             android:title="@string/pref_makeFavoriteOnWrongMove_title"
             android:summary="@string/pref_makeFavoriteOnWrongMove_summary"
             android:defaultValue="0" />
+        <CheckBoxPreference
+            android:key="oneTouchModeChange"
+            android:title="@string/pref_oneTouchModeChange_title"
+            android:summary="@string/pref_oneTouchModeChange_summary"
+            android:defaultValue="1" />
    	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_appearance">
