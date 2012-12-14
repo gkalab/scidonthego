@@ -16,6 +16,11 @@
         <item>С противоположной стороны</item>
         <item>Использовать мои имена</item>
     </string-array>
+    <string-array name="endOfVariationInStudy_texts">
+        <item>Ничего</item>
+        <item>Перейти к следующей партии</item>
+        <item>Переключиться в режим просмотра</item>
+    </string-array>
     <string-array name="animation_speed_texts">
         <item>Высокая</item>
         <item>Средняя</item>
@@ -62,8 +67,7 @@ GNU GPL v2\n\
 Исходный код: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>Что нового</b>\n\
-* Настраиваемая скорость анимации хода\n\
-* Сохранения текущего номера партии после открытии других баз\n\
+* Возможность автоматического переключения в режим просмотра, вслед за последним ходом человека в режиме тренировки\n\
 \n\
 <b>Разрешения</b>\n\
 * Изменение/удаление данных с USB-накопителя или SD-карты — для доступа к локальным базам\n\
@@ -303,8 +307,8 @@ GNU GPL v2\n\
     <string name="pref_studyOrientation_summary">Выберите начальную ориентацию доски в режиме тренировки.</string>
     <string name="pref_cruiseMode_title">Крейсерский режим</string>
     <string name="pref_cruiseMode_summary">Сделать так, что кнопка следующего хода в конце варианта переходит к следующей партии.</string>
-    <string name="pref_cruiseModeInStudy_title">Крейсерский режим в режиме тренировки</string>
-    <string name="pref_cruiseModeInStudy_summary">Сделать так, что если в режиме тренировки вы сделали последний ход в задаче, то перейти к следующей задаче.</string>
+    <string name="pref_endOfVariationInStudy_title">Вслед за последним ходом в тренировке…</string>
+    <string name="pref_endOfVariationInStudy_summary">Что делать после последнего хода человека в режиме тренировки.</string>
     <string name="pref_nextGameIsRandom_title">Следующая партия выбирается случайно</string>
     <string name="pref_nextGameIsRandom_summary">Сделать так, что нажатие на кнопку \"следующая партия\" приводит к случайной партии.</string>
     <string name="pref_studyAutoMoveDelay_title">Задержка для первого хода в режиме тренировки…</string>

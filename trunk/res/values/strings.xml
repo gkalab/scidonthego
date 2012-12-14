@@ -31,6 +31,16 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+    <string-array name="endOfVariationInStudy_texts">
+        <item>Do nothing</item>
+        <item>Go to next game</item>
+        <item>Switch to review mode</item>
+    </string-array>
+    <string-array name="endOfVariationInStudy_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
     <string-array name="animation_speed_texts">
         <item>Fast</item>
         <item>Medium</item>
@@ -87,8 +97,7 @@ GNU GPL v2\n\
 Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
-* Configurable move animation speed\n\
-* Preserve the current game id after opening another database\n\
+* An option to switch to the review mode after the last human move in the study mode\n\
 \n\
 <b>Permissions</b>\n\
 * Storage for accessing databases stored on the SD card\n\
@@ -333,8 +342,8 @@ Please, open a database first.</string>
     <string name="pref_studyOrientation_summary">Select initial orientation of the board in the study mode.</string>
     <string name="pref_cruiseMode_title">Cruise mode</string>
     <string name="pref_cruiseMode_summary">If enabled, in the end of variation \"next\" acts as \"next game\".</string>
-    <string name="pref_cruiseModeInStudy_title">Cruise in study mode</string>
-    <string name="pref_cruiseModeInStudy_summary">If enabled, in the study mode making a move in the end of variation goes to the next game</string>
+    <string name="pref_endOfVariationInStudy_title">After the last human move in study mode…</string>
+    <string name="pref_endOfVariationInStudy_summary">What to do in the study mode once you have made the last move in variation.</string>
     <string name="pref_nextGameIsRandom_title">Next game is random</string>
     <string name="pref_nextGameIsRandom_summary">If enabled, the next game is chosen randomly</string>
     <string name="pref_studyAutoMoveDelay_title">Study first move delay…</string>
