@@ -98,6 +98,7 @@ Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
 * An option to switch to the review mode after the last human move in the study mode\n\
+* One-touch mode change (see preferences)\n\
 \n\
 <b>Permissions</b>\n\
 * Storage for accessing databases stored on the SD card\n\
@@ -312,15 +313,15 @@ No more moves.</string>
 Please, open a database first.</string>
     <string name="err_no_prev_game">Cannot go to the previous game.</string>
     <string name="err_no_next_game">Cannot go to the next game.</string>
-    <string name="goto_game_title">Goto game</string>
+    <string name="goto_game_title">Go to game</string>
     <string name="goto_game_number">Enter game position (among filtered):</string>
     <string name="menu_file">File</string>
     <string name="menu_open_db">Open database</string>
     <string name="menu_import_pgn">Import</string>
     <string name="menu_game_list">Game list</string>
     <string name="menu_game">Game</string>
-    <string name="menu_goto_game">Goto game…</string>
-    <string name="menu_random_game">Goto random Game</string>
+    <string name="menu_goto_game">Go to game…</string>
+    <string name="menu_random_game">Go to random game</string>
     <string name="menu_new_game">New game</string>
     <string name="menu_game_deleted">Game deleted</string>
     <string name="menu_game_isfavorite">Favorite game</string>
@@ -356,6 +357,8 @@ Please, open a database first.</string>
     <string name="pref_animationSpeed_summary">Set speed of the move animation. If you are often undo the last move to see what piece was just taken, this option is for you.</string>
     <string name="pref_makeFavoriteOnWrongMove_title">Make game favorite on wrong move</string>
     <string name="pref_makeFavoriteOnWrongMove_summary">If enabled, then once you guess a wrong move in study mode, the game is marked as favorite.</string>
+    <string name="pref_oneTouchModeChange_title">One-touch mode change</string>
+    <string name="pref_oneTouchModeChange_summary">If enabled, you can touch the game status (the line above the view with game notation) to change mode: review on the left, analysis in the middle, and study on the right.</string>
     <string name="pref_appearance">Appearance</string>
     <string name="pref_moveDisplay_title">Move list…</string>
     <string name="pref_moveDisplay_summary">Display all moves or current move only.</string>
