@@ -99,6 +99,7 @@ Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
 <b>What is new</b>\n\
 * An option to switch to the review mode after the last human move in the study mode\n\
 * One-touch mode change (see preferences)\n\
+* Allow to limit the thinking time in study mode\n\
 \n\
 <b>Permissions</b>\n\
 * Storage for accessing databases stored on the SD card\n\
@@ -235,6 +236,7 @@ Please try again later or contact the site hosting the link.</string>
     <string name="autoplay_started">Autoplay started,\n\
 touch anything to stop it.</string>
     <string name="autoplay_stopped">Autoplay stopped.</string>
+    <string name="time_is_up">Time is up!</string>
     <string name="add_favorites">Add to favorites</string>
     <string name="remove_favorites">Remove from favorites</string>
     <string name="add_favorites_success">Game added to favorites.</string>
@@ -250,6 +252,8 @@ touch anything to stop it.</string>
     <string name="delete_game_failure">Error: unable to set the delete flag.</string>
     <string name="undelete_game_success">Undelete successful.</string>
     <string name="undelete_game_failure">Error: unable to remove the delete flag.</string>
+    <string name="start_of_game">Start of game.\n\
+No more moves.</string>
     <string name="end_of_variation">End of variation.\n\
 No more moves.</string>
     <string name="initializing_engine">Initializing engine</string>
@@ -359,6 +363,10 @@ Please, open a database first.</string>
     <string name="pref_makeFavoriteOnWrongMove_summary">If enabled, then once you guess a wrong move in study mode, the game is marked as favorite.</string>
     <string name="pref_oneTouchModeChange_title">One-touch mode change</string>
     <string name="pref_oneTouchModeChange_summary">If enabled, you can touch the game status (the line above the view with game notation) to change mode: review on the left, analysis in the middle, and study on the right.</string>
+    <string name="pref_humanThinkingAlarmInterval_title">Thinking alarm interval…</string>
+    <string name="pref_humanThinkingAlarmInterval_summary">If non-zero, then notify you that you are thinking for too long after this many seconds.</string>
+    <string name="pref_humanThinkingAlarmSound_title">Audible thinking alarm</string>
+    <string name="pref_humanThinkingAlarmSound_summary">Play sound then your thinking time is up.</string>
     <string name="pref_appearance">Appearance</string>
     <string name="pref_moveDisplay_title">Move list…</string>
     <string name="pref_moveDisplay_summary">Display all moves or current move only.</string>

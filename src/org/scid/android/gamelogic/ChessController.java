@@ -411,6 +411,10 @@ public class ChessController {
 		return true;
 	}
 
+	public final boolean canUndoMove() {
+		return game.getLastMove() != null;
+	}
+
 	public final void undoMove() {
 		if (game.getLastMove() != null) {
 			ss.searchResultWanted = false;

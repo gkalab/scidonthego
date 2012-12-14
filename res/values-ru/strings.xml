@@ -69,6 +69,7 @@ GNU GPL v2\n\
 <b>Что нового</b>\n\
 * Возможность автоматического переключения в режим просмотра, вслед за последним ходом человека в режиме тренировки\n\
 * Смена режима в одно касание (смотрите настройки)\n\
+* Ограничение времени обдумывания в режиме тренировки\n\
 \n\
 <b>Разрешения</b>\n\
 * Изменение/удаление данных с USB-накопителя или SD-карты — для доступа к локальным базам\n\
@@ -205,6 +206,7 @@ GNU GPL v2\n\
     <string name="autoplay_started">Автоматическая игра начата,\n\
 коснитесь в любом месте для остановки.</string>
     <string name="autoplay_stopped">Автоматическая игра остановлена.</string>
+    <string name="time_is_up">Время вышло!</string>
     <string name="add_favorites">Добавить в избранное</string>
     <string name="remove_favorites">Удалить из избранного</string>
     <string name="add_favorites_success">Партия добавлена в избранное.</string>
@@ -220,6 +222,8 @@ GNU GPL v2\n\
     <string name="delete_game_failure">Не удалось пометить партию для удаления.</string>
     <string name="undelete_game_success">Партия восстановлена.</string>
     <string name="undelete_game_failure">Не удалось убрать пометку для удаления.</string>
+    <string name="start_of_game">Начало игры.\n\
+Больше ходов нет.</string>
     <string name="end_of_variation">Конец варианта.
 Больше ходов нет.</string>
     <string name="initializing_engine">Инициализируем движок</string>
@@ -324,6 +328,10 @@ GNU GPL v2\n\
     <string name="pref_makeFavoriteOnWrongMove_summary">Сделать так, что неверный ход в режиме тренировки добавляет игру в избранное.</string>
     <string name="pref_oneTouchModeChange_title">Мгновенная смена режима</string>
     <string name="pref_oneTouchModeChange_summary">Сделать так, что касание заголовка партии (строчка непосредственно над текстом партии) изменяет текущий режим: касание слева переходит к режиму просмотра, посередине — анализа, а справа — тренировки.</string>
+    <string name="pref_humanThinkingAlarmInterval_title">Максимальное время обдумывания в режиме тренировки…</string>
+    <string name="pref_humanThinkingAlarmInterval_summary">Ненулевое значение приводит к тому, что в режиме тренировки, по истечении заданного времени (в секундах), вы получите сообщение, что думаете слишком долго.</string>
+    <string name="pref_humanThinkingAlarmSound_title">Проигрывать звук при истечении времени обдумывания</string>
+    <string name="pref_humanThinkingAlarmSound_summary">Дополнять звуком сообщение об окончании заданного времени обдумывания.</string>
     <string name="pref_appearance">Внешний вид</string>
     <string name="pref_moveDisplay_title">Список ходов…</string>
     <string name="pref_moveDisplay_summary">Показывать все ходы в партии или только текущий</string>
