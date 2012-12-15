@@ -79,7 +79,7 @@ using namespace std;
         int percent = double(gameNum)*100/(noGames);                \
         env->CallVoidMethod(progress, midPublishProgress, percent); \
         if(env->CallBooleanMethod(progress, midIsCanceled)){        \
-            LOGI("cancelled");                                      \
+            LOGI("canceled");										\
             break;                                                  \
         }                                                           \
     }
@@ -564,7 +564,7 @@ static errorT readEntireIndexCallback(void* data, uint progress, uint total){
     pd->env->CallVoidMethod(pd->progress, pd->midPublishProgress,
                             jint(double(progress)*100 / total));
     if(pd->env->CallBooleanMethod(pd->progress, pd->midIsCanceled)){
-        LOGI("cancelled");
+        LOGI("canceled");
         return ERROR;
     }else{
         return OK;
