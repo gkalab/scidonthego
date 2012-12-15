@@ -73,7 +73,7 @@ public abstract class ProgressingTask<Result> extends
 
 	@Override
 	protected void onCancelled() {
-		Toast.makeText(activity, activity.getText(R.string.cancelled), Toast.LENGTH_SHORT).show();
+		Toast.makeText(activity, activity.getText(R.string.canceled), Toast.LENGTH_SHORT).show();
 		progressDialog.dismiss();
 		activity.setResult(Activity.RESULT_CANCELED);
 		activity.finish();

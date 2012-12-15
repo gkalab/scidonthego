@@ -1070,14 +1070,14 @@ Index::ReadEntireFile (int reportFrequency,
             gamesToRead = INDEX_ENTRY_CHUNKSIZE;
         }
         if ((err = ReadEntries(Entries[chunkCount], readCount, gamesToRead)) != OK)
-            goto cancelled;
+            goto canceled;
         readCount += gamesToRead;
         reportAfter -= INDEX_ENTRY_CHUNKSIZE;
 
         if (reportAfter <= 0) {
             if (progressFn and
                 (err = progressFn(progressData, readCount, GetNumGames())) != OK)
-                goto cancelled;
+                goto canceled;
             reportAfter = reportFrequency;
         }
     }
@@ -1085,7 +1085,7 @@ Index::ReadEntireFile (int reportFrequency,
         progressFn(progressData, GetNumGames(), GetNumGames());
     InMemory = true;
     return OK;
- cancelled:
+ canceled:
     for (uint i = 0; i <= chunkCount; i++)
       delete[] Entries[i];
     delete[] Entries;
