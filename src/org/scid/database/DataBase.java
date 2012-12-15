@@ -19,8 +19,10 @@ public class DataBase {
 	public static final int // nameType is one of
         NAME_PLAYER = 0, NAME_EVENT = 1, NAME_SITE = 2, NAME_ROUND = 3;
 	public static final native int getNamesCount(int nameType);
-	public static final native String getName(int nameType, int id);
+	public static final native byte[] getName(int nameType, int id);
 	public static final native int[] getMatchingNames(int nameType, String prefix);
+	// TODO: all Java->C++ calls should use byte[] recoded back to DB encoding, or
+	// we should switch DB to modified UTF-8
 
     /// Loading and operations with the loaded game
 	public static final native boolean loadGame(int gameId, boolean onlyHeaders);
