@@ -208,10 +208,14 @@ JCM(jint, getNamesCount, jint nameType){
     FILE_LOADED;
     return sourceNameBase.GetNumNames(nameType);
 }
-JCM(jstring, getName, jint nameType, jint id){
+JCM(jbyteArray, getName, jint nameType, jint id){
     PROPER_NAME_TYPE;
     FILE_LOADED;
-    return env->NewStringUTF(sourceNameBase.GetName(nameType, id));
+	char* name = sourceNameBase.GetName(nameType, id);
+	int length = strlen(name);
+	jbyteArray result = env->NewByteArray(length);
+	env->SetByteArrayRegion(result, 0, length, (const jbyte*) name);
+	return result;
 }
 // getMatchingNames must be reentrant and use case-insensitive
 // comparison (thus we cannot use the name tree)

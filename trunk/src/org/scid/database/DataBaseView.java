@@ -193,7 +193,7 @@ public class DataBaseView {
 		return DataBase.getNamesCount(nameType);
 	}
 	public String getName(int nameType, int id) {
-		return DataBase.getName(nameType, id);
+		return getSanitizedString(DataBase.getName(nameType, id));
 	}
 	public int[] getMatchingNames(int nameType, String prefix){
 		return DataBase.getMatchingNames(nameType, prefix);
