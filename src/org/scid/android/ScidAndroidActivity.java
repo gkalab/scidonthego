@@ -261,24 +261,25 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private Timer autoMoveTimer = new Timer();
 	private TimerTask autoMoveTask;
+	/** returns true if something was canceled */
 	private boolean cancelAutoMove() {
 		if (autoMoveTask == null)
 			return false;
 		autoMoveTask.cancel();
-		boolean canceled = autoMoveTimer.purge() > 0;
-		if (canceled)
-			Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
 		autoMoveTask = null;
-		return canceled;
+		return autoMoveTimer.purge() > 0;
 	}
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
 		if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
-			boolean canceled = cancelAutoMove();
-			if (canceled && gameMode.studyMode()) {
-				// human were waiting for a computer move, but canceled it
-				resetHumanThinkingTimer();
+			if (cancelAutoMove()) {
+				Toast.makeText(this, getText(R.string.autoplay_stopped), Toast.LENGTH_SHORT).show();
+				if (gameMode.studyMode()) {
+					// human were waiting for a computer move, but canceled it and start thinking
+					resetHumanThinkingTimer();
+				}
+				return true; // we already consumed the touch
 			}
 		}
 		return super.dispatchTouchEvent(event);
@@ -286,9 +287,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void scheduleAutoplay(long timeInMs, final boolean isRepeated) {
 		cancelAutoMove();
-		if (gameMode.studyMode()) {
-			cancelHumanThinkingTimer(); // human waits for the move instead of thinking
-		}
+		cancelHumanThinkingTimer(); // human waits for the move instead of thinking
 		autoMoveTask = new TimerTask() { public void run() {
 			runOnUiThread(new Runnable() { public void run() {
 				if (ctrl.canRedoMove()) {
@@ -298,6 +297,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						resetHumanThinkingTimer();
 					}
 				} else { // no more moves
+					Toast.makeText(ScidAndroidActivity.this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 					cancelAutoMove();
 				}
 			}});
@@ -737,8 +737,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			ctrl.makeHumanMove(m);
 			return;
 		}
-		// in study mode
-		if (!ctrl.canRedoMove()) {
+		// the rest only in study mode
+
+		if (!ctrl.canRedoMove()) { // human tried to guess a move while there is none
 			Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -807,6 +808,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	@Override
 	protected void onPause() {
 		cancelAutoMove();
+		cancelHumanThinkingTimer();
 		if (ctrl != null) {
 			ctrl.setGuiPaused(true);
 			saveGameState();
