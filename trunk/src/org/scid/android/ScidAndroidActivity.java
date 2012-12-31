@@ -170,7 +170,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void handleIncomingContent() {
 		Uri data = getIntent().getData();
 		if (data == null) {
-			String pgn = getPgnFromIntentText(getIntent());
+			String pgn = null;
+			if (Intent.ACTION_SEND.equals(getIntent().getAction())
+					&& "application/x-chess-pgn".equals(getIntent().getType())) {
+				pgn = getIntent().getStringExtra(Intent.EXTRA_TEXT);
+			}
 			if (pgn != null) {
 				// PGN content via share
 				try {
@@ -824,17 +828,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		super.onResume();
 	}
 
-	private String getPgnFromIntentText(Intent intent) {
-		String pgn = null;
-		String type = intent.getType();
-		String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-		if (Intent.ACTION_SEND.equals(intent.getAction()) && sharedText != null
-				&& type != null && type.equals("application/x-chess-pgn")) {
-			pgn = sharedText;
-		}
-		return pgn;
-	}
-	
 	@Override
 	protected void onPause() {
 		cancelAutoMove();
