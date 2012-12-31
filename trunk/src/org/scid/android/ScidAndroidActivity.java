@@ -27,18 +27,21 @@ import org.scid.database.DataBaseView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ShareCompat;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
@@ -161,6 +164,30 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ctrl.setGuiPaused(false);
 		ctrl.startGame();
 		setFavoriteRating();
+		handleIncomingContent();
+	}
+
+	private void handleIncomingContent() {
+		Uri data = getIntent().getData();
+		if (data == null) {
+			String pgn = getPgnFromIntentText(getIntent());
+			if (pgn != null) {
+				// PGN content via share
+				try {
+					getScidAppContext().setDataBaseView(null);
+					ctrl.setFENOrPGN(pgn);
+				} catch (ChessParseError e) {
+					Log.i("SCID", "ChessParseError", e);
+					Toast.makeText(getApplicationContext(), e.getMessage(),
+							Toast.LENGTH_SHORT).show();
+				}
+			}
+		} else {
+			// Support the registered *.pgn extension
+			Tools.processUri(this, data, RESULT_PGN_IMPORT);
+			// the data was handled, set it to null to not enter this again
+			getIntent().setData(null);
+		}
 	}
 
 	private void checkUciEngine() {
@@ -784,14 +811,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	@Override
 	protected void onResume() {
-		// Support the registered *.pgn extension
-		Uri data = getIntent().getData();
-		if (data != null) {
-			Tools.processUri(this, data, RESULT_PGN_IMPORT);
-			// the data was handled, set it to null to not enter this again
-			getIntent().setData(null);
-		}
-
 		// recover from preempted DataBase
 		setDataBaseViewFromFile();
 
@@ -805,6 +824,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		super.onResume();
 	}
 
+	private String getPgnFromIntentText(Intent intent) {
+		String pgn = null;
+		String type = intent.getType();
+		String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+		if (Intent.ACTION_SEND.equals(intent.getAction()) && sharedText != null
+				&& type != null && type.equals("application/x-chess-pgn")) {
+			pgn = sharedText;
+		}
+		return pgn;
+	}
+	
 	@Override
 	protected void onPause() {
 		cancelAutoMove();
@@ -1018,9 +1048,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			copyPositionToClipboard();
 			return true;
 		}
-		case R.id.item_share_game:
+		case R.id.item_share_game: {
 			shareGame();
 			return true;
+		}
 		case R.id.item_edit_board: {
 			editBoard();
 			return true;
@@ -1868,12 +1899,66 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void shareGame() {
 		String data = ctrl.getPGN();
 		if (data != null) {
-			Intent shareIntent = ShareCompat.IntentBuilder.from(this)
-					.setText(data).setType("text/plain").getIntent();
-			startActivity(shareIntent);
+			ComponentName caller = getComponentName();
+			// put all possible intents into one list
+			List<Intent> targets = getTargetIntentsForType(
+					"application/x-chess-pgn", data, caller);
+			if (!targets.isEmpty()) {
+				List<Intent> extraTargets = getTargetIntentsForType(
+						"text/plain", data, caller);
+				Intent firstIntent = targets.get(targets.size() - 1);
+				Intent chooser = Intent.createChooser(firstIntent,
+						getResources().getText(R.string.menu_share_game));
+				if (!extraTargets.isEmpty()) {
+					// add all extra targets if they are not already in the list
+					for (Intent extra : extraTargets) {
+						boolean found = false;
+						for (Intent target : targets) {
+							if (target.getPackage().equals(extra.getPackage())) {
+								found = true;
+								break;
+							}
+						}
+						if (!found) {
+							targets.add(extra);
+						}
+					}
+					targets.remove(firstIntent);
+					chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+							targets.toArray(new Parcelable[] {}));
+				}
+				startActivity(chooser);
+			} else {
+				Intent shareIntent = new Intent(
+						android.content.Intent.ACTION_SEND);
+				shareIntent.setType("text/plain");
+				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, data);
+				Intent chooser = Intent.createChooser(shareIntent,
+						getResources().getText(R.string.menu_share_game));
+				startActivity(chooser);
+			}
 		}
 	}
 
+	private List<Intent> getTargetIntentsForType(String type, String data,
+			ComponentName caller) {
+		PackageManager packageManager = getPackageManager();
+		Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+		shareIntent.setType(type);
+		List<Intent> targetedShareIntents = new ArrayList<Intent>();
+		List<ResolveInfo> resInfo = packageManager.queryIntentActivityOptions(
+				caller, null, shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
+		for (ResolveInfo resolveInfo : resInfo) {
+			Intent targetedShareIntent = new Intent(Intent.ACTION_SEND);
+			targetedShareIntent.setType(type);
+			targetedShareIntent.putExtra(android.content.Intent.EXTRA_TEXT,
+					data);
+			targetedShareIntent.setPackage(resolveInfo.activityInfo.packageName);
+			targetedShareIntents.add(targetedShareIntent);
+		}
+		return targetedShareIntents;
+	}
+	
 	private void createDatabase(String fileName) {
 		String scidFileName = Tools.getFullScidFileName(fileName);
 		if (new File(scidFileName + ".si4").exists()) {
