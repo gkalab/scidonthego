@@ -27,20 +27,16 @@ import org.scid.database.DataBaseView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
@@ -1045,6 +1041,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			shareGame();
 			return true;
 		}
+		case R.id.item_share_position: {
+			sharePosition();
+			return true;
+		}
 		case R.id.item_edit_board: {
 			editBoard();
 			return true;
@@ -1892,64 +1892,20 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void shareGame() {
 		String data = ctrl.getPGN();
 		if (data != null) {
-			ComponentName caller = getComponentName();
-			// put all possible intents into one list
-			List<Intent> targets = getTargetIntentsForType(
-					"application/x-chess-pgn", data, caller);
-			if (!targets.isEmpty()) {
-				List<Intent> extraTargets = getTargetIntentsForType(
-						"text/plain", data, caller);
-				Intent firstIntent = targets.get(targets.size() - 1);
-				Intent chooser = Intent.createChooser(firstIntent,
-						getResources().getText(R.string.menu_share_game));
-				if (!extraTargets.isEmpty()) {
-					// add all extra targets if they are not already in the list
-					for (Intent extra : extraTargets) {
-						boolean found = false;
-						for (Intent target : targets) {
-							if (target.getPackage().equals(extra.getPackage())) {
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							targets.add(extra);
-						}
-					}
-					targets.remove(firstIntent);
-					chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,
-							targets.toArray(new Parcelable[] {}));
-				}
-				startActivity(chooser);
-			} else {
-				Intent shareIntent = new Intent(
-						android.content.Intent.ACTION_SEND);
-				shareIntent.setType("text/plain");
-				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, data);
-				Intent chooser = Intent.createChooser(shareIntent,
-						getResources().getText(R.string.menu_share_game));
-				startActivity(chooser);
+			Sharer sharer = new Sharer(this, getComponentName());
+			sharer.createShareIntent(data);
+			if (sharer.getIntent() != null) {
+				startActivity(sharer.getIntent());
 			}
 		}
 	}
 
-	private List<Intent> getTargetIntentsForType(String type, String data,
-			ComponentName caller) {
-		PackageManager packageManager = getPackageManager();
-		Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
-		shareIntent.setType(type);
-		List<Intent> targetedShareIntents = new ArrayList<Intent>();
-		List<ResolveInfo> resInfo = packageManager.queryIntentActivityOptions(
-				caller, null, shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
-		for (ResolveInfo resolveInfo : resInfo) {
-			Intent targetedShareIntent = new Intent(Intent.ACTION_SEND);
-			targetedShareIntent.setType(type);
-			targetedShareIntent.putExtra(android.content.Intent.EXTRA_TEXT,
-					data);
-			targetedShareIntent.setPackage(resolveInfo.activityInfo.packageName);
-			targetedShareIntents.add(targetedShareIntent);
+	private void sharePosition() {
+		Sharer sharer = new Sharer(this, getComponentName());
+		sharer.createShareIntent(ctrl.getFEN());
+		if (sharer.getIntent() != null) {
+			startActivity(sharer.getIntent());
 		}
-		return targetedShareIntents;
 	}
 	
 	private void createDatabase(String fileName) {

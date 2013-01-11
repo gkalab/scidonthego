@@ -300,6 +300,7 @@ GNU GPL v2\n\
     <string name="menu_edit">Редактировать</string>
     <string name="menu_share">Поделиться</string>
     <string name="menu_share_game">Поделиться партией…</string>
+    <string name="menu_share_position">Поделиться позицию…</string>
     <string name="menu_preferences">Настройки</string>
     <string name="menu_about_help">Справка / О программе</string>
     <string name="pref_behavior">Поведение</string>
