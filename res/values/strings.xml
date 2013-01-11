@@ -336,6 +336,7 @@ Please, open a database first.</string>
     <string name="menu_edit">Edit</string>
     <string name="menu_share">Share</string>
     <string name="menu_share_game">Share game…</string>
+    <string name="menu_share_position">Share position…</string>
     <string name="menu_preferences">Preferences</string>
     <string name="menu_about_help">About / Help</string>
     <string name="pref_behavior">Behavior</string>

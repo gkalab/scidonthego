@@ -131,6 +131,10 @@
                 android:title="@string/menu_share_game">
             </item>
             <item
+                android:id="@+id/item_share_position"
+                android:title="@string/menu_share_position">
+            </item>
+            <item
                 android:id="@+id/item_copy_game_clipboard"
                 android:title="@string/copy_game">
             </item>
