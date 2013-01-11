@@ -10,8 +10,6 @@ public class ScidApplication extends Application {
 	private DataBaseView dbv = null;
 	private String currentFileName = ""; // always non-null
 	private Position position = null;
-	private int currentGameNo = -1;
-	private int noGames = 0;
 	private ChessController controller;
 
 	public Position getPosition() {
