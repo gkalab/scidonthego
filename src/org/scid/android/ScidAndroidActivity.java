@@ -168,11 +168,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (data == null) {
 			String pgn = null;
 			if (Intent.ACTION_SEND.equals(getIntent().getAction())
-					&& "application/x-chess-pgn".equals(getIntent().getType())) {
+					&& isXChessType()) {
 				pgn = getIntent().getStringExtra(Intent.EXTRA_TEXT);
 			}
 			if (pgn != null) {
-				// PGN content via share
+				// PGN or FEN content via share
 				try {
 					getScidAppContext().setDataBaseView(null);
 					ctrl.setFENOrPGN(pgn);
@@ -188,6 +188,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			// the data was handled, set it to null to not enter this again
 			getIntent().setData(null);
 		}
+	}
+
+	private boolean isXChessType() {
+		return "application/x-chess-pgn".equals(getIntent().getType())
+				|| "application/x-chess-fen".equals(getIntent().getType());
 	}
 
 	private void checkUciEngine() {
