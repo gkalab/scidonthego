@@ -177,9 +177,18 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					getScidAppContext().setDataBaseView(null);
 					ctrl.setFENOrPGN(pgn);
 				} catch (ChessParseError e) {
-					Log.i("SCID", "ChessParseError", e);
-					Toast.makeText(getApplicationContext(), e.getMessage(),
-							Toast.LENGTH_SHORT).show();
+	                // If FEN corresponds to illegal chess position, go into edit board mode.
+	                try {
+	                    TextIO.readFEN(pgn);
+	                } catch (ChessParseError e2) {
+	                    if (e2.pos != null) {
+	                    	editBoard(pgn);
+	                    } else {
+	    					Log.i("SCID", "ChessParseError", e);
+	    					Toast.makeText(getApplicationContext(), e.getMessage(),
+	    							Toast.LENGTH_SHORT).show();
+	                    }
+	                }
 				}
 			}
 		} else {
@@ -1051,7 +1060,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_edit_board: {
-			editBoard();
+			editBoard(ctrl.getFEN());
 			return true;
 		}
 		case R.id.item_strip_moves: {
@@ -1792,7 +1801,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 							saveGame();
 							break;
 						case EDIT_BOARD:
-							editBoard();
+							editBoard(ctrl.getFEN());
 							break;
 						case COPY_GAME:
 							copyGameToClipboard();
@@ -1854,9 +1863,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		return alert;
 	}
 
-	private void editBoard() {
+	private void editBoard(String fen) {
 		Intent i = new Intent(ScidAndroidActivity.this, EditBoard.class);
-		i.setAction(ctrl.getFEN());
+		i.setAction(fen);
 		startActivityForResult(i, RESULT_EDITBOARD);
 	}
 
