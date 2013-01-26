@@ -40,12 +40,14 @@ public class EditBoard extends Activity {
 		initUI();
 		
 		Intent i = getIntent();
-		Position pos;
+		Position pos = null;
 		try {
 			pos = TextIO.readFEN(i.getAction());
-			cb.setPosition(pos);
 		} catch (ChessParseError e) {
+			pos = e.pos;
 		}
+        if (pos != null)
+            cb.setPosition(pos);
 	}
 
 	@Override
