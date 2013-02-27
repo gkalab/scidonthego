@@ -4,6 +4,7 @@ import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.widget.Toast;
 
 public abstract class SearchTask extends ProgressingTask<GameFilter> {
@@ -34,23 +35,17 @@ public abstract class SearchTask extends ProgressingTask<GameFilter> {
 			} else { // only one game was found
 				int toastId;
 				int foundId = filter.getGameId(0);
-				if (foundId == dbv.getId()) { // it is the one already shown
+				int positionInOld = dbv.getPosition(foundId);
+				if (positionInOld >= 0) { // the found game can be shown in the previous filter
+					dbv.moveToPosition(positionInOld);
 					toastId = R.string.filter_one_game_preserved_filter;
-					// do not change the game view since it already shows the sole found game
-					activity.setResult(SearchActivityBase.RESULT_CANCELED);
-				} else { // the found game is not already shown
-					int positionInOld = dbv.getPosition(foundId);
-					if (positionInOld >= 0) { // but it *can* be shown in the previous filter
-						dbv.moveToPosition(positionInOld);
-						toastId = R.string.filter_one_game_preserved_filter;
-						activity.setResult(SearchActivityBase.RESULT_SHOW_SINGLE_NEW);
-					} else { // the found game is not in the previous filter
-						dbv.setFilter(null, false); // thus we need to reset filter
-						dbv.moveToPosition(foundId); // with null filter position is equal to id
-						toastId = R.string.filter_one_game_reset_filter;
-						activity.setResult(SearchActivityBase.RESULT_SHOW_SINGLE_NEW);
-					}
+				} else { // the found game is not in the previous filter
+					dbv.setFilter(null, false); // thus we need to reset filter
+					dbv.moveToPosition(foundId); // with null filter position is equal to id
+					toastId = R.string.filter_one_game_reset_filter;
 				}
+				activity.setResult(SearchActivityBase.RESULT_SHOW_SINGLE_NEW,
+						(new Intent()).putExtra("foundPly", filter.getGamePly(0)));
 				toast = activity.getString(toastId);
 			}
 			Toast.makeText(activity.getApplicationContext(), toast, Toast.LENGTH_LONG).show();
