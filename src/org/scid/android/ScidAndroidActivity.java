@@ -392,7 +392,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
-	private void setPgnFromDataBaseView() {
+	private void setPgnFromDataBaseView(int moveNo) {
 		DataBaseView dbv = getDataBaseView();
 		if (dbv == null)
 			return;
@@ -400,10 +400,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (pgn != null && pgn.length() > 0) {
 			try {
 				ctrl.setPGN(pgn);
-				int moveNo = dbv.getCurrentPly();
-				if (moveNo > 0) {
+				if (moveNo < 0)
+					moveNo = dbv.getCurrentPly();
+				if (moveNo > 0)
 					ctrl.gotoHalfMove(moveNo);
-				}
 				if (gameMode.studyMode()) {
 					switch(studyOrientation){
 					case SO_MOVING_SIDE:
@@ -427,6 +427,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		saveCurrentGameId();
 		setupTimersForNewGame();
 		refreshMenu();
+	}
+
+	private void setPgnFromDataBaseView() {
+		setPgnFromDataBaseView(-1);
 	}
 
 	private void setFavoriteRating() {
@@ -1253,7 +1257,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		case RESULT_SEARCH:
 			switch (resultCode) {
 			case SearchActivityBase.RESULT_CANCELED:
-				// search gives nothing or the same single game, keep the previous state
+				// search gives nothing, so keep the previous state
 				break;
 			case SearchActivityBase.RESULT_SHOW_LIST_AND_KEEP_OLD_GAME:
 				// many games found, the current is among them
@@ -1266,8 +1270,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				setPgnFromDataBaseView();
 				break;
 			case SearchActivityBase.RESULT_SHOW_SINGLE_NEW:
-				// single game was found, it is not the current one
-				setPgnFromDataBaseView();
+				// single game was found
+				int foundPly = data.getIntExtra("foundPly", -1);
+				setPgnFromDataBaseView(foundPly);
 				break;
 			}
 			break;
@@ -1921,7 +1926,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			startActivity(sharer.getIntent());
 		}
 	}
-	
+
 	private void createDatabase(String fileName) {
 		String scidFileName = Tools.getFullScidFileName(fileName);
 		if (new File(scidFileName + ".si4").exists()) {
