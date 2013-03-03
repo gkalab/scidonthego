@@ -2,12 +2,15 @@ package org.scid.android;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -25,6 +28,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
@@ -454,4 +459,31 @@ public class Tools {
 		return result;
 	}
 
+    /** Read all data from an input stream. Return null if IO error. */
+    public static String readFromStream(InputStream is) {
+        InputStreamReader isr;
+        try {
+            isr = new InputStreamReader(is, "UTF-8");
+            BufferedReader br = new BufferedReader(isr);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+                sb.append('\n');
+            }
+            br.close();
+            return sb.toString();
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    
+	public static boolean hasFenProvider(PackageManager manager) {
+		Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+		i.setType("application/x-chess-fen");
+		List<ResolveInfo> resolvers = manager.queryIntentActivities(i, 0);
+		return (resolvers != null) && (resolvers.size() > 0);
+	}
 }

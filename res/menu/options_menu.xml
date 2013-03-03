@@ -47,6 +47,10 @@
                 android:title="@string/menu_new_game">
             </item>
             <item
+                android:id="@+id/item_retrieve_position"
+                android:title="@string/get_fen">
+            </item>
+            <item
                 android:id="@+id/item_save_game"
                 android:title="@string/save_game">
             </item>
