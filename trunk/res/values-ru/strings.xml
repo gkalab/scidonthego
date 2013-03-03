@@ -344,4 +344,5 @@ GNU GPL v2\n\
     <string name="activity_search_board">Поиск позиции</string>
     <string name="activity_search_header">Поиск по заголовку</string>
     <string name="activity_select_file">Выбор файла</string>
+    <string name="get_fen">Retrieve position</string>  
 </resources>
