@@ -1,6 +1,8 @@
 package org.scid.android;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +29,14 @@ import org.scid.database.DataBaseView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -957,6 +962,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	static private final int RESULT_REMOVE_ENGINE = 9;
 	static private final int RESULT_SAVE_GAME = 10;
 	static private final int RESULT_PGN_FILE_IMPORT = 11;
+	static private final int RESULT_GET_FEN = 12;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -1020,6 +1026,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		case R.id.item_new_game: {
 			setDataBaseViewFromFile(true);
 			newGame();
+			return true;
+		}
+		case R.id.item_retrieve_position: {
+			getFen();
 			return true;
 		}
 		case R.id.item_save_game: {
@@ -1143,6 +1153,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		gameMenu.findItem(R.id.item_game_isfavorite).setEnabled(isRestOfGameMenuEnabled);
 		gameMenu.findItem(R.id.item_goto_game).setEnabled(isRestOfGameMenuEnabled);
 		gameMenu.findItem(R.id.item_random_game).setEnabled(isRestOfGameMenuEnabled);
+		gameMenu.findItem(R.id.item_retrieve_position).setVisible(Tools.hasFenProvider(getPackageManager()));
 		// adapt edit menu
 		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -1155,6 +1166,17 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				enableVariationMenuItems);
 
 		return super.onPrepareOptionsMenu(menu);
+	}
+
+	private final void getFen() {
+		Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+		i.setType("application/x-chess-fen");
+		try {
+			startActivityForResult(i, RESULT_GET_FEN);
+		} catch (ActivityNotFoundException e) {
+			Toast.makeText(getApplicationContext(), e.getMessage(),
+					Toast.LENGTH_LONG).show();
+		}
 	}
 
 	private void saveGame() {
@@ -1338,6 +1360,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				loadScidFile(scidFileName);
 			}
 			break;
+		case RESULT_GET_FEN:
+			// the result when getting FEN from other called chess program
+			if (resultCode == RESULT_OK) {
+				receivedFen(data);
+			}
+			break;
 		case RESULT_ADD_ENGINE:
 			if (resultCode == AddEngineActivity.RESULT_EXECUTABLE_EXISTS
 					&& data != null) {
@@ -1410,6 +1438,51 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			}
 			break;
 		}
+	}
+
+	private void receivedFen(Intent data) {
+		String fen = data.getStringExtra(Intent.EXTRA_TEXT);
+		if (fen == null) {
+			String pathName = getFilePathFromUri(data.getData());
+			if (pathName != null) {
+				InputStream is = null;
+				try {
+					is = new FileInputStream(pathName);
+					fen = Tools.readFromStream(is);
+				} catch (FileNotFoundException e) {
+					Toast.makeText(getApplicationContext(), e.getMessage(),
+							Toast.LENGTH_LONG).show();
+				} finally {
+					if (is != null)
+						try {
+							is.close();
+						} catch (IOException e) {
+						}
+				}
+			}
+		}
+		if (fen != null) {
+			try {
+				setDataBaseViewFromFile(true);
+				newGame();
+				ctrl.setFENOrPGN(fen);
+			} catch (ChessParseError e) {
+				// If FEN corresponds to illegal chess position, go into edit
+				// board mode.
+				try {
+					TextIO.readFEN(fen);
+				} catch (ChessParseError e2) {
+					if (e2.pos != null)
+						editBoard(fen);
+				}
+			}
+		}
+	}
+
+	private String getFilePathFromUri(Uri uri) {
+		if (uri == null)
+			return null;
+		return uri.getPath();
 	}
 
 	private void loadScidFile(String fileName) {
@@ -1756,6 +1829,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		final int SAVE_GAME = 6;
 		final int DELETE_GAME = 7;
 		final int UNDELETE_GAME = 8;
+		final int GET_FEN = 9;
 
 		List<CharSequence> lst = new ArrayList<CharSequence>();
 		List<Integer> actions = new ArrayList<Integer>();
@@ -1795,6 +1869,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				actions.add(UNDELETE_GAME);
 			}
 		}
+		if (Tools.hasFenProvider(getPackageManager())) {
+			lst.add(getString(R.string.get_fen));
+			actions.add(GET_FEN);
+		}
 		final List<Integer> finalActions = actions;
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.tools_menu);
@@ -1802,6 +1880,9 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
 						switch (finalActions.get(item)) {
+						case GET_FEN:
+							getFen();
+							break;
 						case SAVE_GAME:
 							saveGame();
 							break;

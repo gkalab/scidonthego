@@ -379,4 +379,5 @@ Please, open a database first.</string>
     <string name="activity_search_board">Position search</string>
     <string name="activity_search_header">Header search</string>
     <string name="activity_select_file">Select file</string>
+    <string name="get_fen">Retrieve position</string>    
 </resources>
