@@ -1463,8 +1463,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		if (fen != null) {
 			try {
-				setDataBaseViewFromFile(true);
-				newGame();
 				ctrl.setFENOrPGN(fen);
 			} catch (ChessParseError e) {
 				// If FEN corresponds to illegal chess position, go into edit
