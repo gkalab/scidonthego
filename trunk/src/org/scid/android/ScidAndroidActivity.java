@@ -1142,9 +1142,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		// dynamically change enabled state of some items in game menu
 		boolean isSaveEnabled = getScidAppContext().getCurrentFileName()
 				.length() > 0;
-		boolean isRestOfGameMenuEnabled = getScidAppContext()
-				.getGameId() >= 0
-				&& getScidAppContext().getNoGames() > 0;
+		boolean isRestOfGameMenuEnabled = currentGameIsValid();
 		SubMenu gameMenu = menu.findItem(R.id.item_game).getSubMenu();
 		gameMenu.findItem(R.id.item_save_game).setEnabled(isSaveEnabled);
 		gameMenu.findItem(R.id.item_game_deleted).setChecked(getScidAppContext().isDeleted());
@@ -1153,7 +1151,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		gameMenu.findItem(R.id.item_game_isfavorite).setEnabled(isRestOfGameMenuEnabled);
 		gameMenu.findItem(R.id.item_goto_game).setEnabled(isRestOfGameMenuEnabled);
 		gameMenu.findItem(R.id.item_random_game).setEnabled(isRestOfGameMenuEnabled);
-		gameMenu.findItem(R.id.item_retrieve_position).setVisible(Tools.hasFenProvider(getPackageManager()));
+		boolean hasFenProvider = Tools.hasFenProvider(getPackageManager());
+		gameMenu.findItem(R.id.item_retrieve_position).setVisible(hasFenProvider);
+		if (hasFenProvider) {
+			gameMenu.findItem(R.id.item_retrieve_position).setEnabled(isRestOfGameMenuEnabled);
+		}
 		// adapt edit menu
 		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
 		ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -1166,6 +1168,12 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				enableVariationMenuItems);
 
 		return super.onPrepareOptionsMenu(menu);
+	}
+
+	private boolean currentGameIsValid() {
+		return getScidAppContext()
+				.getGameId() >= 0
+				&& getScidAppContext().getNoGames() > 0;
 	}
 
 	private final void getFen() {
@@ -1832,8 +1840,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		List<CharSequence> lst = new ArrayList<CharSequence>();
 		List<Integer> actions = new ArrayList<Integer>();
 		// check if "add to favorites" or "remove from favorites" is needed
-		if (getScidAppContext().getGameId() >= 0
-				&& getScidAppContext().getNoGames() > 0) {
+		if (currentGameIsValid()) {
 			if (!getScidAppContext().isFavorite()) {
 				lst.add(getString(R.string.add_favorites));
 				actions.add(ADD_FAVORITES);
@@ -1857,8 +1864,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		actions.add(COPY_POSITION);
 		lst.add(getString(R.string.edit_board));
 		actions.add(EDIT_BOARD);
-		if (getScidAppContext().getGameId() >= 0
-				&& getScidAppContext().getNoGames() > 0) {
+		if (currentGameIsValid()) {
 			if (!getScidAppContext().isDeleted()) {
 				lst.add(getString(R.string.delete_game));
 				actions.add(DELETE_GAME);
@@ -1867,7 +1873,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				actions.add(UNDELETE_GAME);
 			}
 		}
-		if (Tools.hasFenProvider(getPackageManager())) {
+		if (Tools.hasFenProvider(getPackageManager()) && currentGameIsValid()) {
 			lst.add(getString(R.string.get_fen));
 			actions.add(GET_FEN);
 		}
