@@ -35,8 +35,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -361,7 +359,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			Toast.makeText(this, getText(R.string.end_of_variation), Toast.LENGTH_SHORT).show();
 			return;
 		}
-		int autoPlayInterval = Integer.valueOf(preferences.getString("autoPlayInterval", "0"));
+		int autoPlayInterval = 0;
+		try {
+			autoPlayInterval = Integer.valueOf(preferences.getString(
+					"autoPlayInterval", "0"));
+		} catch (NumberFormatException e) {
+			// ignore
+		}
 		if (autoPlayInterval != 0) {
 			scheduleAutoplay(autoPlayInterval * 1000, true);
 			Toast.makeText(this, getText(R.string.autoplay_started), Toast.LENGTH_LONG).show();
