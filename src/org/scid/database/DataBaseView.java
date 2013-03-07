@@ -144,7 +144,9 @@ public class DataBaseView {
     public String getRound() { return getSanitizedString(DataBase.getRound()); }
     public String getDate() {
         String date = DataBase.getDate();
-        if (date.endsWith(".??.??")) {
+		if (date == null) {
+			date = "";
+		} else if (date.endsWith(".??.??")) {
             date = date.substring(0, date.length() - 6);
         } else if (date.endsWith(".??")) {
             date = date.substring(0, date.length() - 3);
