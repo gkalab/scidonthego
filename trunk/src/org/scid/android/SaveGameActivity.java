@@ -132,7 +132,9 @@ public class SaveGameActivity extends Activity {
 		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
-		if (result.length() > 0) {
+		if (result == null) {
+			setResult(RESULT_CANCELED);
+		} else if (result.length() > 0) {
 			setResult(RESULT_OK);
 			Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG)
 					.show();
