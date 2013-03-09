@@ -80,7 +80,7 @@
 * Analysis with included chess engine: Critter 1.2 (ARM) or Stockfish 2.1.1 (x86); you can add additional UCI engines for analysis\n\
 * Study mode\n\
 * <b>Experimental</b> write support and marking of games for deletion (needs Scid for PC to compact database after marking games for deletion)\n\
-* Retrieve positions from external programs, such as <a href="http://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free),
+* Retrieve positions from external programs, such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free),
  which will let you use the camera to take a picture of a chess diagram and automatically set up the position in Scid on the go.\n\
 \n\
 <b>Hints</b>\n\
@@ -96,10 +96,10 @@
 \n\
 <b>License</b>\n\
 GNU GPL v2\n\
-Source: &lt;http://code.google.com/p/scidonthego/&gt;\n\
+Source: &lt;https://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
-* Retrieve position using external programs such as <a href="http://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
+* Retrieve position using external programs such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
 \n\
 <b>Permissions</b>\n\
 * Storage for accessing databases stored on the SD card\n\
@@ -379,5 +379,5 @@ Please, open a database first.</string>
     <string name="activity_search_board">Position search</string>
     <string name="activity_search_header">Header search</string>
     <string name="activity_select_file">Select file</string>
-    <string name="get_fen">Retrieve position</string>    
+    <string name="get_fen">Retrieve position</string>
 </resources>

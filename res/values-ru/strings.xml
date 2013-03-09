@@ -49,8 +49,7 @@
 * Анализ с помощью шахматных движков: Critter 1.2 (ARM) или Stockfish 2.1.1 (x86), вы можете добавить свой UCI движок для анализа\n\
 * Режим тренировки\n\
 * <b>Экспериментальная</b> поддержка изменения базы, партии можно помечать на удаление (для реального удаления помеченных партий нужно использовать Scid на ПК)\n\
-* Retrieve positions from external programs, such as <a href="http://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free),
- which will let you use the camera to take a picture of a chess diagram and automatically set up the position in Scid on the go.\n\
+* Получение позиции от другого приложения, например, <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (не свободное), которое позволяет вам автоматически расставлять позицию согласно сфотографированной шахматной диаграмме.\n\
 \n\
 <b>Подсказки</b>\n\
 * Каждая база данных Scid состоит из трех файлов с одинаковым именем и разными расширениями (.si4, .sg4, .sn4) — разместите их все в каталоге scid.\n\
@@ -66,10 +65,10 @@
 <b>Лицензия</b>\n\
 Открытое лицензионное соглашение GNU\n\
 GNU GPL v2\n\
-Исходный код: &lt;http://code.google.com/p/scidonthego/&gt;\n\
+Исходный код: &lt;https://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>Что нового</b>\n\
-* Retrieve position using external programs such as <a href="http://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
+* Получение позиции от другого приложения, например, <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (не свободное)\n\
 \n\
 <b>Разрешения</b>\n\
 * Изменение/удаление данных с USB-накопителя или SD-карты — для доступа к локальным базам\n\
