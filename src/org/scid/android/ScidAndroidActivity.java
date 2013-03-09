@@ -44,7 +44,9 @@ import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -1102,7 +1104,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return true;
 		}
 		case R.id.item_about: {
-			showDialog(ABOUT_DIALOG);
+			showAboutDialog();
 			return true;
 		}
 		}
@@ -1674,7 +1676,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	static final int PROMOTE_DIALOG = 0;
 	static final int CLIPBOARD_DIALOG = 1;
-	static final int ABOUT_DIALOG = 2;
 	static final int SELECT_GOTO_GAME_DIALOG = 3;
 	static final int SELECT_CREATE_DATABASE_DIALOG = 4;
 	static final int SEARCH_DIALOG = 5;
@@ -1694,8 +1695,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			return createSearchDialog();
 		case CLIPBOARD_DIALOG:
 			return createClipboardDialog();
-		case ABOUT_DIALOG:
-			return createAboutDialog();
 		case SELECT_GOTO_GAME_DIALOG:
 			return createGotoGameDialog();
 		case SELECT_CREATE_DATABASE_DIALOG:
@@ -1735,11 +1734,14 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		return alert;
 	}
 
-	private AlertDialog createAboutDialog() {
+	private void showAboutDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.app_name).setMessage(R.string.about_info);
-		AlertDialog alert = builder.create();
-		return alert;
+		AlertDialog dialog = builder.create();
+		dialog.show();
+		// Make the textview clickable. Must be called after show()
+		((TextView) dialog.findViewById(android.R.id.message))
+				.setMovementMethod(LinkMovementMethod.getInstance());
 	}
 
 	private AlertDialog createCreateDatabaseDialog() {
