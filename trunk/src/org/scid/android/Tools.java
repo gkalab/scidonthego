@@ -39,6 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Tools {
+	private static final String TAG = Tools.class.getSimpleName();
 	private static Matcher matcherTag;
 	private static Matcher matcherLink;
 	private static final String HTML_A_TAG_PATTERN = "(?i)<a([^>]+)>(.+?)</a>";
@@ -128,7 +129,7 @@ public class Tools {
 		URL url = null;
 		try {
 			url = new URL(path);
-			Log.d("SCID", "start downloading from: " + url.toString());
+			Log.d(TAG, "start downloading from: " + url.toString());
 			URLConnection uc;
 			uc = url.openConnection();
 			String contentType = uc.getContentType();
@@ -154,7 +155,7 @@ public class Tools {
 							+ File.separator + fileName);
 				}
 			}
-			Log.d("SCID", "fileName: " + result);
+			Log.d(TAG, "fileName: " + result);
 			if (contentType == null) {
 				throw new IOException("URL not available.");
 			}
@@ -181,7 +182,7 @@ public class Tools {
 			out.flush();
 			out.close();
 		} catch (MalformedURLException e) {
-			Log.e("SCID", e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
 		return result;
 	}
@@ -323,10 +324,10 @@ public class Tools {
 			copied = true;
 		} catch (IOException e) {
 			errorMsg = e.getLocalizedMessage();
-			Log.e("SCID", errorMsg, e);
+			Log.e(TAG, errorMsg, e);
 		} catch (SecurityException se) {
 			errorMsg = se.getLocalizedMessage();
-			Log.e("SCID", errorMsg, se);
+			Log.e(TAG, errorMsg, se);
 		} finally {
 			// Ensure streams are closed should an exception occur.
 			if (fout != null) {
@@ -347,7 +348,7 @@ public class Tools {
 
 	public static void processUri(Activity activity, Uri data,
 			final int resultCode) {
-		Log.i("SCID", "Intent data=" + data);
+		Log.i(TAG, "Intent data=" + data);
 		if (data.getScheme().startsWith("http")) {
 			String url = data.toString();
 			new DownloadTask().execute(activity, url);
@@ -368,7 +369,7 @@ public class Tools {
 				}
 			} else {
 				File pgnFile = new File(filePath);
-				Log.d("SCID", "copy file from " + pgnFile.getAbsolutePath()
+				Log.d(TAG, "copy file from " + pgnFile.getAbsolutePath()
 						+ " to " + Environment.getExternalStorageDirectory()
 						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
 						+ File.separator + pgnFile.getName());
@@ -404,7 +405,7 @@ public class Tools {
 					pgnFileName = pgnFileName.substring(0, pos - 1) + ".pgn";
 				}
 			}
-			Log.d("SCID",
+			Log.d(TAG,
 					"moving downloaded file from " + pgnFile.getAbsolutePath()
 							+ " to "
 							+ Environment.getExternalStorageDirectory()
@@ -433,7 +434,7 @@ public class Tools {
 			boolean extracted = false;
 			while ((!extracted && (entry = zis.getNextEntry()) != null)) {
 				if (entry.getName().toLowerCase().endsWith(".pgn")) {
-					Log.d("SCID", "Extracting: " + entry);
+					Log.d(TAG, "Extracting: " + entry);
 					int count;
 					byte data[] = new byte[BUFFER];
 					// write the files to the disk
@@ -450,7 +451,7 @@ public class Tools {
 			}
 			zis.close();
 		} catch (Exception e) {
-			Log.e("SCID", e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		} finally {
 			if (deleteAfterUnzip) {
 				f.delete();
