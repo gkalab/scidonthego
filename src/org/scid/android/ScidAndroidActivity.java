@@ -66,6 +66,7 @@ import android.widget.Toast;
 public class ScidAndroidActivity extends Activity implements GUIInterface,
 		IClipboardChangedListener, IDownloadCallback {
 
+	private static final String TAG = ScidAndroidActivity.class.getSimpleName();
 	private ChessBoard cb;
 	private EngineManager engineManager;
 	private ChessController ctrl = null;
@@ -187,7 +188,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	                    if (e2.pos != null) {
 	                    	editBoard(pgn);
 	                    } else {
-	    					Log.i("SCID", "ChessParseError", e);
+	    					Log.i(TAG, "ChessParseError", e);
 	    					Toast.makeText(getApplicationContext(), e.getMessage(),
 	    							Toast.LENGTH_SHORT).show();
 	                    }
@@ -217,16 +218,16 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				Process process = Runtime.getRuntime().exec(cmd);
 				try {
 					process.waitFor();
-					Log.d("SCID", "chmod 744 " + engine.getAbsolutePath());
+					Log.d(TAG, "chmod 744 " + engine.getAbsolutePath());
 				} catch (InterruptedException e) {
-					Log.e("SCID", e.getMessage(), e);
+					Log.e(TAG, e.getMessage(), e);
 				}
 			} catch (IOException e) {
-				Log.e("SCID", e.getMessage(), e);
+				Log.e(TAG, e.getMessage(), e);
 			}
 		} else {
 
-			Log.d("SCID", "Engine is missing from data. Intializing...");
+			Log.d(TAG, "Engine is missing from data. Intializing...");
 			try {
 				InputStream istream = getAssets().open(engine.getName());
 				FileOutputStream fout = new FileOutputStream(
@@ -238,22 +239,22 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				}
 				istream.close();
 				fout.close();
-				Log.d("SCID", engine.getName()
+				Log.d(TAG, engine.getName()
 						+ " copied to /data/data/org.scid.android/");
 				try {
 					String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
 					Process process = Runtime.getRuntime().exec(cmd);
 					try {
 						process.waitFor();
-						Log.d("SCID", "chmod 744 " + engine.getAbsolutePath());
+						Log.d(TAG, "chmod 744 " + engine.getAbsolutePath());
 					} catch (InterruptedException e) {
-						Log.e("SCID", e.getMessage(), e);
+						Log.e(TAG, e.getMessage(), e);
 					}
 				} catch (IOException e) {
-					Log.e("SCID", e.getMessage(), e);
+					Log.e(TAG, e.getMessage(), e);
 				}
 			} catch (IOException e) {
-				Log.e("SCID", e.getMessage(), e);
+				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 	}
@@ -426,7 +427,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				}
 				saveGameState();
 			} catch (ChessParseError e) {
-				Log.i("SCID", "ChessParseError", e);
+				Log.i(TAG, "ChessParseError", e);
 				Toast.makeText(getApplicationContext(),
 						"Parse error " + e.getMessage(), Toast.LENGTH_SHORT)
 						.show();
@@ -1315,7 +1316,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					String fen = data.getAction();
 					ctrl.setFENOrPGN(fen);
 				} catch (ChessParseError e) {
-					Log.d("SCID", "ChessParseError", e);
+					Log.d(TAG, "ChessParseError", e);
 				}
 			}
 			break;
@@ -2022,7 +2023,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			try {
 				ctrl.setFENOrPGN(fenPgn);
 			} catch (ChessParseError e) {
-				Log.i("SCID", "ChessParseError", e);
+				Log.i(TAG, "ChessParseError", e);
 				Toast.makeText(getApplicationContext(), e.getMessage(),
 						Toast.LENGTH_SHORT).show();
 			}
