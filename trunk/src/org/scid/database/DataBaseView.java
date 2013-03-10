@@ -67,6 +67,11 @@ public class DataBaseView {
 		return new GameFilter(filterArray);
 	}
 
+	public Boolean exportPgn(String pgnFileName, Progress progress) {
+		short[] filterArray = GameFilter.getFilterArray(filter, count);
+		return DataBase.exportFilter(pgnFileName, filterArray, progress);
+	}
+
 	public GameFilter getFavorites(Progress progress) {
 		int[] f = DataBase.getFavorites(progress);
 		return (f == null) ? null : new GameFilter(f);

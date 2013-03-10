@@ -131,7 +131,11 @@
             android:configChanges="orientation"
             android:label="@string/saving"
             android:name=".SaveGameActivity" />
-
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/saving"
+            android:name=".ExportPgnActivity" />
+        
         <provider
             android:authorities="org.scid.database.scidprovider"
             android:name="org.scid.database.ScidProvider" />

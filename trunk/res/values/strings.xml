@@ -99,6 +99,7 @@ GNU GPL v2\n\
 Source: &lt;https://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
+* Export filter to PGN file\n\
 * Retrieve position using external programs such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
 \n\
 <b>Permissions</b>\n\
@@ -226,6 +227,11 @@ Filter is preserved.</string>
     <string name="pgn_import_cancel">Import canceled.</string>
     <string name="pgn_import_db_exists">There is already a database with the same name (%s).\n\
 Do you want to continue to import and delete all the previous data in this database?</string>
+    <string name="menu_export_pgn">Export filter to PGN file</string>
+    <string name="export">Exporting</string>
+    <string name="export_pgn_filename">Specify the PGN file name to export the current filter to:</string>
+    <string name="pgn_export_success">Successfully exported %d games.</string>
+    <string name="pgn_export_failure">Error exporting to PGN file.</string>
     <string name="download_error">Error downloading file. Please check your internet connection.</string>
     <string name="download_error_file_empty">The file downloaded was empty.\n\
 Please try again later or contact the site hosting the link.</string>
