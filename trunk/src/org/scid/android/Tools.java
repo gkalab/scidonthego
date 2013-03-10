@@ -206,13 +206,13 @@ public class Tools {
 					scidFile.getName());
 			fileExistsDialog.setMessage(message);
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
-			fileExistsDialog.setButton(activity.getString(R.string.ok),
+			fileExistsDialog.setButton(activity.getString(android.R.string.ok),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							startPgnImport(activity, pgnFileName, resultId);
 						}
 					});
-			fileExistsDialog.setButton2(activity.getString(R.string.cancel),
+			fileExistsDialog.setButton2(activity.getString(android.R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							Toast.makeText(
@@ -280,7 +280,7 @@ public class Tools {
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
 				builder.setIcon(android.R.drawable.ic_dialog_alert);
-				builder.setPositiveButton(activity.getString(R.string.ok), null);
+				builder.setPositiveButton(activity.getString(android.R.string.ok), null);
 				builder.show();
 			}
 		});

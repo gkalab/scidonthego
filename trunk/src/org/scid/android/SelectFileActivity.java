@@ -76,7 +76,7 @@ public class SelectFileActivity extends ListActivity {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.app_name).setMessage(
 					R.string.no_scid_files);
-			builder.setPositiveButton(R.string.ok,
+			builder.setPositiveButton(android.R.string.ok,
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							setResult(Activity.RESULT_CANCELED);

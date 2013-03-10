@@ -152,8 +152,6 @@ Source: &lt;https://code.google.com/p/scidonthego/&gt;\n\
     <string name="search_any">Same material, pawns and pieces anywhere</string>
     <string name="ignore_colors">Ignore colors</string>
     <string name="search_header">Search header</string>
-    <string name="cancel">Cancel</string>
-    <string name="ok">OK</string>
     <string name="canceled">Canceled</string>
     <string name="search_previous_request">Previous request</string>
     <string name="search_next_request">Next request</string>

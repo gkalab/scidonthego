@@ -1793,7 +1793,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setTitle(getText(R.string.create_db_title));
 		builder.setMessage(getText(R.string.create_db_message));
 		builder.setView(input);
-		builder.setPositiveButton(R.string.ok,
+		builder.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String value = input.getText().toString().trim();
@@ -1801,7 +1801,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					}
 				});
 
-		builder.setNegativeButton(R.string.cancel,
+		builder.setNegativeButton(android.R.string.cancel,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						dialog.cancel();

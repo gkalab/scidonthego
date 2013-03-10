@@ -551,7 +551,7 @@ public class EngineManager {
 			progDlg.setMessage(context.getString(R.string.engine_copy_msg, engineName));
 			progDlg.setCancelable(true);
 			progDlg.setOnCancelListener(this);
-			progDlg.setButton(DialogInterface.BUTTON_NEGATIVE, context.getString(R.string.cancel), this);
+			progDlg.setButton(DialogInterface.BUTTON_NEGATIVE, context.getString(android.R.string.cancel), this);
 			progDlg.show();
 		}
 

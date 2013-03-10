@@ -121,8 +121,6 @@ GNU GPL v2\n\
     <string name="search_any">Тот же материал (без учета положения)</string>
     <string name="ignore_colors">Без учета цвета</string>
     <string name="search_header">Поиск по заголовку</string>
-    <string name="cancel">Отмена</string>
-    <string name="ok">OK</string>
     <string name="canceled">Отменено</string>
     <string name="search_previous_request">Предыдущий запрос</string>
     <string name="search_next_request">Следующий запрос</string>
