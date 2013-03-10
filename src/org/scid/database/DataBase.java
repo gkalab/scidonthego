@@ -89,4 +89,6 @@ public class DataBase {
 	public static final native boolean setDeleted(boolean isDeleted);
 	/** Save the game with the game number. */
 	public static final native String saveGame(int gameId, String pgn);
+	/** Export the current filter to a PGN file */
+	public static final native boolean exportFilter(String pgnFileName, short[] filter, Progress progress);
 }

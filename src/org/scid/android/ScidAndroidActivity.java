@@ -44,9 +44,7 @@ import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
-import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -969,6 +967,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	static private final int RESULT_SAVE_GAME = 10;
 	static private final int RESULT_PGN_FILE_IMPORT = 11;
 	static private final int RESULT_GET_FEN = 12;
+	static private final int RESULT_EXPORT_PGN = 13;
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -1055,6 +1054,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			refreshMenu();
 			return true;
 		}
+		case R.id.item_export_pgn: {
+			exportPgn();
+			return true;
+		}
 		case R.id.item_gamelist: {
 			showGameList();
 			return true;
@@ -1109,6 +1112,32 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 		}
 		return false;
+	}
+
+	private void exportPgn() {
+		final EditText input = new EditText(this);
+		input.setText(Environment.getExternalStorageDirectory()
+				+ File.separator + "pgn" + File.separator + "export.pgn");
+		new AlertDialog.Builder(this)
+				.setTitle(getText(R.string.menu_export_pgn))
+				.setMessage(getText(R.string.export_pgn_filename))
+				.setView(input)
+				.setPositiveButton(android.R.string.ok,
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,
+									int whichButton) {
+								String fileName = input.getText().toString()
+										.trim();
+								File file = new File(new File(fileName)
+										.getParent());
+								file.mkdirs();
+								Intent i = new Intent(ScidAndroidActivity.this,
+										ExportPgnActivity.class);
+								i.setAction(fileName);
+								startActivityForResult(i, RESULT_EXPORT_PGN);
+							}
+						}).setNegativeButton(android.R.string.cancel, null)
+				.create().show();
 	}
 
 	private void invertIsDeleted() {
@@ -1379,6 +1408,19 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			if (resultCode == RESULT_OK) {
 				receivedFen(data);
 			}
+			break;
+		case RESULT_EXPORT_PGN:
+			String message;
+			if (resultCode == RESULT_OK) {
+				message = getString(R.string.pgn_export_success,
+						getDataBaseView().getCount());
+			} else {
+				message = getString(R.string.pgn_export_failure);
+			}
+			new AlertDialog.Builder(this)
+					.setTitle(getString(R.string.menu_export_pgn))
+					.setPositiveButton(android.R.string.ok, null)
+					.setMessage(message).show();
 			break;
 		case RESULT_ADD_ENGINE:
 			if (resultCode == AddEngineActivity.RESULT_EXECUTABLE_EXISTS

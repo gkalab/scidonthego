@@ -79,7 +79,7 @@ using namespace std;
         int percent = double(gameNum)*100/(noGames);                \
         env->CallVoidMethod(progress, midPublishProgress, percent); \
         if(env->CallBooleanMethod(progress, midIsCanceled)){        \
-            LOGI("canceled");										\
+            LOGI("canceled");                                       \
             break;                                                  \
         }                                                           \
     }
@@ -211,11 +211,11 @@ JCM(jint, getNamesCount, jint nameType){
 JCM(jbyteArray, getName, jint nameType, jint id){
     PROPER_NAME_TYPE;
     FILE_LOADED;
-	char* name = sourceNameBase.GetName(nameType, id);
-	int length = strlen(name);
-	jbyteArray result = env->NewByteArray(length);
-	env->SetByteArrayRegion(result, 0, length, (const jbyte*) name);
-	return result;
+    char* name = sourceNameBase.GetName(nameType, id);
+    int length = strlen(name);
+    jbyteArray result = env->NewByteArray(length);
+    env->SetByteArrayRegion(result, 0, length, (const jbyte*) name);
+    return result;
 }
 // getMatchingNames must be reentrant and use case-insensitive
 // comparison (thus we cannot use the name tree)
@@ -962,6 +962,72 @@ JCM(jintArray, getFavorites, jobject progress){
     if(result.size() and jresult)
         env->SetIntArrayRegion(jresult, 0, result.size(), &result[0]);
     return jresult;
+}
+JCM(jboolean, exportFilter, jstring jpgnName, jshortArray jfilter, jobject progress){
+    FILE_LOADED;
+
+    AJS(pgnName);
+    if(not pgnName){
+        LOGE("exportFilter: pgnName is null");
+        return false;
+    }
+    AJA(filter);
+    if(not filter){
+        LOGE("exportFilter: filter is null");
+        return false;
+    }
+
+    FILE * exportFile = fopen(pgnName, "w");
+    if (exportFile == NULL) {
+        LOGE("exportFilter: error opening file for exporting games");
+        return false;
+    }
+
+    gameNumberT noGames = sourceIndex.GetNumGames();
+    if(noGames != env->GetArrayLength(jfilter)){
+        LOGE("exportFilter: filter has wrong length");
+        return false;
+    }
+
+    PREPARE_PROGRESS(noGames);
+    READ_INDEX_FILE;
+
+    TextBuffer tbuf;
+    tbuf.SetBufferSize(TBUF_SIZE);
+    /// the loop that goes thru each game
+    IndexEntry* ie;
+
+    for(gameNumberT id = 0; id < noGames; ++id){
+        DO_PROGRESS(id, noGames);
+        if(filter[id] == 1) {
+            FETCH_ENTRY;
+            // load the game
+            bbuf.Empty();
+            if(sourceGFile.ReadGame(&bbuf, ie->GetOffset(), ie->GetLength()) != OK){
+                LOGW("exportFilter: cannot read game %d", id);
+                continue; // to next game
+            }
+            // export to PGN
+            if(game.Decode(&bbuf, GAME_DECODE_ALL) != OK) {
+                LOGE("exportFilter: unable to decode game %d", id);
+                continue; // to next game
+            }
+            game.LoadStandardTags(ie, &sourceNameBase);
+            game.AddPgnStyle(PGN_STYLE_TAGS);
+            game.AddPgnStyle(PGN_STYLE_COMMENTS);
+            game.AddPgnStyle(PGN_STYLE_VARS);
+            game.SetPgnFormat(PGN_FORMAT_Plain);
+            tbuf.Empty();
+            tbuf.SetWrapColumn(99999);
+            game.WriteToPGN(&tbuf);
+            tbuf.NewLine();
+            tbuf.DumpToFile(exportFile);
+        }
+    really_no_match:
+        continue; // to next game
+    } // for each game
+    fclose(exportFile);
+    return true;
 }
 
 /// Modifications

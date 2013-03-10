@@ -20,6 +20,10 @@
                 android:id="@+id/item_import_pgn"
                 android:title="@string/menu_import_pgn">
             </item>
+            <item
+                android:id="@+id/item_export_pgn"
+                android:title="@string/menu_export_pgn">
+            </item>
         </menu>
     </item>
     <item
