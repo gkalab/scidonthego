@@ -76,7 +76,7 @@
 * Edit board\n\
 * Support for variations\n\
 * Replay the game with a configurable delay between moves (autoplay)\n\
-* PGN import (also includes import from Internet)\n\
+* PGN import and export (including import from Internet)\n\
 * Analysis with included chess engine: Critter 1.2 (ARM) or Stockfish 2.1.1 (x86); you can add additional UCI engines for analysis\n\
 * Study mode\n\
 * <b>Experimental</b> write support and marking of games for deletion (needs Scid for PC to compact database after marking games for deletion)\n\
@@ -99,7 +99,7 @@ GNU GPL v2\n\
 Source: &lt;https://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>What is new</b>\n\
-* Export filter to PGN file\n\
+* Export filtered games to PGN file\n\
 * Retrieve position using external programs such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
 \n\
 <b>Permissions</b>\n\
@@ -225,9 +225,8 @@ Filter is preserved.</string>
     <string name="pgn_import_cancel">Import canceled.</string>
     <string name="pgn_import_db_exists">There is already a database with the same name (%s).\n\
 Do you want to continue to import and delete all the previous data in this database?</string>
-    <string name="menu_export_pgn">Export filter to PGN file</string>
-    <string name="export">Exporting</string>
-    <string name="export_pgn_filename">Specify the PGN file name to export the current filter to:</string>
+    <string name="export_pgn_title">Export filtered games</string>
+    <string name="export_pgn_filename">PGN file:</string>
     <string name="pgn_export_success">Successfully exported %d games.</string>
     <string name="pgn_export_failure">Error exporting to PGN file.</string>
     <string name="download_error">Error downloading file. Please check your internet connection.</string>
@@ -326,6 +325,7 @@ Please, open a database first.</string>
     <string name="menu_file">File</string>
     <string name="menu_open_db">Open database</string>
     <string name="menu_import_pgn">Import</string>
+    <string name="menu_export_pgn">Export</string>
     <string name="menu_game_list">Game list</string>
     <string name="menu_game">Game</string>
     <string name="menu_goto_game">Go to game…</string>

@@ -46,6 +46,7 @@
 * Поддержка комментариев и вариантов\n\
 * Просмотр ходов с настраиваемой задержкой между ходами (автоматическая игра)\n\
 * Импорт из PGN файлов (локальных и из Сети)\n\
+* Экспорт отфильтрованных партий в PGN файл\n\
 * Анализ с помощью шахматных движков: Critter 1.2 (ARM) или Stockfish 2.1.1 (x86), вы можете добавить свой UCI движок для анализа\n\
 * Режим тренировки\n\
 * <b>Экспериментальная</b> поддержка изменения базы, партии можно помечать на удаление (для реального удаления помеченных партий нужно использовать Scid на ПК)\n\
@@ -68,7 +69,7 @@ GNU GPL v2\n\
 Исходный код: &lt;https://code.google.com/p/scidonthego/&gt;\n\
 \n\
 <b>Что нового</b>\n\
-* Export filter to PGN file\n\
+* Экспорт отфильтрованных партий в PGN файл\n\
 * Получение позиции от другого приложения, например, <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (не свободное)\n\
 \n\
 <b>Разрешения</b>\n\
@@ -195,11 +196,10 @@ GNU GPL v2\n\
     <string name="pgn_import_cancel">Импорт отменен.</string>
     <string name="pgn_import_db_exists">База данных с таким именем уже существует (%s).
 Вы уверены что хотите удалить все данные из этой базы и продолжить импорт?</string>
-    <string name="menu_export_pgn">Export filter to PGN file</string>
-    <string name="export">Exporting</string>
-    <string name="export_pgn_filename">Specify the PGN file name to export the current filter to:</string>
-    <string name="pgn_export_success">Successfully exported %d games.</string>
-    <string name="pgn_export_failure">Error exporting to PGN file.</string>
+    <string name="export_pgn_title">Экспорт отфильтрованных партий</string>
+    <string name="export_pgn_filename">PGN файл:</string>
+    <string name="pgn_export_success">Успешно экспортированно %d партий.</string>
+    <string name="pgn_export_failure">Ошибка при экспорте в PGN файл.</string>
     <string name="download_error">Ошибка при загрузке файла. Пожалуйста, проверьте ваше соединение с Сетью.</string>
     <string name="download_error_file_empty">Загруженный файл пуст. Пожалуйста, попробуйте позднее или свяжитесь с оператором ресурса.</string>
     <string name="gamelist">Список партий</string>
@@ -289,6 +289,7 @@ GNU GPL v2\n\
     <string name="menu_file">База</string>
     <string name="menu_open_db">Открыть базу данных</string>
     <string name="menu_import_pgn">Импортировать</string>
+    <string name="menu_export_pgn">Экспортировать</string>
     <string name="menu_game_list">Список партий</string>
     <string name="menu_game">Партия</string>
     <string name="menu_goto_game">Перейти к партии…</string>
