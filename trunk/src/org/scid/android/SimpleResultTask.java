@@ -4,7 +4,7 @@ import android.app.Activity;
 
 public abstract class SimpleResultTask extends ProgressingTask<Boolean> {
 	public SimpleResultTask(Activity activity) {
-		super(activity, R.string.export, R.string.please_wait);
+		super(activity, R.string.export_pgn_title, R.string.please_wait);
 	}
 
 	@Override

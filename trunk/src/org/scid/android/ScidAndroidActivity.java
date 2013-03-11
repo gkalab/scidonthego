@@ -1120,7 +1120,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		input.setText(Environment.getExternalStorageDirectory()
 				+ File.separator + "pgn" + File.separator + "export.pgn");
 		new AlertDialog.Builder(this)
-				.setTitle(getText(R.string.menu_export_pgn))
+				.setTitle(getText(R.string.export_pgn_title))
 				.setMessage(getText(R.string.export_pgn_filename))
 				.setView(input)
 				.setPositiveButton(android.R.string.ok,
@@ -1419,7 +1419,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				message = getString(R.string.pgn_export_failure);
 			}
 			new AlertDialog.Builder(this)
-					.setTitle(getString(R.string.menu_export_pgn))
+					.setTitle(getString(R.string.export_pgn_title))
 					.setPositiveButton(android.R.string.ok, null)
 					.setMessage(message).show();
 			break;
