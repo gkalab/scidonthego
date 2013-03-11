@@ -999,7 +999,7 @@ JCM(jboolean, exportFilter, jstring jpgnName, jshortArray jfilter, jobject progr
 
     for(gameNumberT id = 0; id < noGames; ++id){
         DO_PROGRESS(id, noGames);
-        if(filter[id] == 1) {
+        if(filter[id]) {
             FETCH_ENTRY;
             // load the game
             bbuf.Empty();
