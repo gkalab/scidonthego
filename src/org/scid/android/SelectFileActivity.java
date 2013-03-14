@@ -58,8 +58,7 @@ public class SelectFileActivity extends ListActivity {
 				.getDefaultSharedPreferences(this);
 		defaultItem = preferences.getInt("lastPathDefaultItem", 0);
 		final SelectFileActivity fileList = this;
-		File scidFileDir = new File(Environment.getExternalStorageDirectory()
-				+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
+		File scidFileDir = new File(Tools.getScidDirectory());
 		if (!scidFileDir.exists()) {
 			scidFileDir.mkdirs();
 		}
@@ -127,8 +126,7 @@ public class SelectFileActivity extends ListActivity {
 		if (path.size() > 0) {
 			pathName = path.lastElement();
 		} else {
-			pathName = Environment.getExternalStorageDirectory()
-					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
+			pathName = Tools.getScidDirectory()
 					+ File.separator;
 		}
 		return pathName;

@@ -50,9 +50,7 @@ public class AddEngineActivity extends Activity {
 		// useful.
 		SortedSet<String> engines = Tools.findEnginesInDirectory("/data/data/org.scid.android/", ignoreExtensions);
 		// Add any additional engines from the external directory.
-		engines.addAll(Tools.findEnginesInDirectory(
-				Environment.getExternalStorageDirectory().getAbsolutePath()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY, ignoreExtensions));
+		engines.addAll(Tools.findEnginesInDirectory(Tools.getScidDirectory(), ignoreExtensions));
 		executablesList = new ArrayList<String>(engines);
 
 		setContentView(R.layout.add_engine);

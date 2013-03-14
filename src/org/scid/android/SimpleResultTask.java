@@ -3,8 +3,8 @@ package org.scid.android;
 import android.app.Activity;
 
 public abstract class SimpleResultTask extends ProgressingTask<Boolean> {
-	public SimpleResultTask(Activity activity) {
-		super(activity, R.string.export_pgn_title, R.string.please_wait);
+	public SimpleResultTask(Activity activity, int titleResourceId) {
+		super(activity, titleResourceId, R.string.please_wait);
 	}
 
 	@Override

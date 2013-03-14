@@ -3,9 +3,9 @@ package org.scid.android.twic;
 import java.io.File;
 import java.io.IOException;
 
+import org.scid.android.Constants;
 import org.scid.android.IDownloadCallback;
 import org.scid.android.R;
-import org.scid.android.ScidAndroidActivity;
 import org.scid.android.Tools;
 
 import android.app.Activity;
@@ -26,9 +26,7 @@ public class ImportZipTask extends AsyncTask {
 		this.url = (String) params[2];
 		TwicDownloader downloader = new TwicDownloader();
 		try {
-			result = downloader.getPgnFromZipUrl(
-					Environment.getExternalStorageDirectory() + File.separator
-							+ ScidAndroidActivity.SCID_DIRECTORY, url);
+			result = downloader.getPgnFromZipUrl(Tools.getScidDirectory(), url);
 		} catch (IOException e) {
 			Tools.showErrorMessage(
 					activity,

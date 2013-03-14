@@ -371,7 +371,7 @@ Please, open a database first.</string>
     <string name="pref_humanThinkingAlarmInterval_title">Thinking alarm interval…</string>
     <string name="pref_humanThinkingAlarmInterval_summary">If non-zero, then notify you that you are thinking for too long after this many seconds.</string>
     <string name="pref_humanThinkingAlarmSound_title">Audible thinking alarm</string>
-    <string name="pref_humanThinkingAlarmSound_summary">Play sound then your thinking time is up.</string>
+    <string name="pref_humanThinkingAlarmSound_summary">Play sound when your thinking time is up.</string>
     <string name="pref_appearance">Appearance</string>
     <string name="pref_moveDisplay_title">Move list…</string>
     <string name="pref_moveDisplay_summary">Display all moves or current move only.</string>
