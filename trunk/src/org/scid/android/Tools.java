@@ -50,7 +50,7 @@ public class Tools {
 
 	/**
 	 * Extract links from html using regular expressions
-	 *
+	 * 
 	 * @param html
 	 *            html content for validation
 	 * @return List of links
@@ -76,7 +76,7 @@ public class Tools {
 	/**
 	 * Add names of engine files (files which not have an ignored extension) to
 	 * the specified set of already found engines.
-	 *
+	 * 
 	 * @param foundEngines
 	 *            Set of already found engines or null if a new set should be
 	 *            created.
@@ -117,7 +117,7 @@ public class Tools {
 	/**
 	 * Download file to scid directory with file name from HTTP header or create
 	 * temp file if the HTTP header does not provide enough information
-	 *
+	 * 
 	 * @param path
 	 *            the path to the URL
 	 * @return the downloaded file
@@ -140,19 +140,14 @@ public class Tools {
 					fileName = fileName.substring(
 							fileName.indexOf("filename=") + 9).trim();
 					if (fileName.length() > 0)
-						result = new File(
-								Environment.getExternalStorageDirectory()
-										+ File.separator
-										+ ScidAndroidActivity.SCID_DIRECTORY
-										+ File.separator + fileName);
+						result = new File(getScidDirectory() + File.separator
+								+ fileName);
 				}
 			} else {
 				fileName = getFileNameFromUrl(path);
 				if (fileName != null) {
-					result = new File(Environment.getExternalStorageDirectory()
-							+ File.separator
-							+ ScidAndroidActivity.SCID_DIRECTORY
-							+ File.separator + fileName);
+					result = new File(getScidDirectory() + File.separator
+							+ fileName);
 				}
 			}
 			Log.d(TAG, "fileName: " + result);
@@ -212,7 +207,8 @@ public class Tools {
 							startPgnImport(activity, pgnFileName, resultId);
 						}
 					});
-			fileExistsDialog.setButton2(activity.getString(android.R.string.cancel),
+			fileExistsDialog.setButton2(
+					activity.getString(android.R.string.cancel),
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							Toast.makeText(
@@ -250,9 +246,7 @@ public class Tools {
 	}
 
 	private static String getFullFileName(final String fileName) {
-		String sep = File.separator;
-		String pathName = Environment.getExternalStorageDirectory() + sep
-				+ ScidAndroidActivity.SCID_DIRECTORY + sep + fileName;
+		String pathName = getScidDirectory() + File.separator + fileName;
 		return pathName;
 	}
 
@@ -280,7 +274,8 @@ public class Tools {
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
 				builder.setIcon(android.R.drawable.ic_dialog_alert);
-				builder.setPositiveButton(activity.getString(android.R.string.ok), null);
+				builder.setPositiveButton(
+						activity.getString(android.R.string.ok), null);
 				builder.show();
 			}
 		});
@@ -360,9 +355,8 @@ public class Tools {
 			if (filePath.endsWith(".zip")) {
 				// do not delete zip file because it was not downloaded by scid
 				// itself
-				File pgnFile = unzip(Environment.getExternalStorageDirectory()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
-						new File(filePath), false);
+				File pgnFile = unzip(getScidDirectory(), new File(filePath),
+						false);
 				if (pgnFile != null) {
 					Tools.importPgn(activity, pgnFile.getAbsolutePath(),
 							resultCode);
@@ -370,13 +364,9 @@ public class Tools {
 			} else {
 				File pgnFile = new File(filePath);
 				Log.d(TAG, "copy file from " + pgnFile.getAbsolutePath()
-						+ " to " + Environment.getExternalStorageDirectory()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY
-						+ File.separator + pgnFile.getName());
-				File importFile = new File(
-						Environment.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY,
+						+ " to " + getScidDirectory() + File.separator
+						+ pgnFile.getName());
+				File importFile = new File(getScidDirectory(),
 						pgnFile.getName());
 				boolean fileOk = true;
 				if (pgnFile.getAbsolutePath().equals(
@@ -407,16 +397,11 @@ public class Tools {
 			}
 			Log.d(TAG,
 					"moving downloaded file from " + pgnFile.getAbsolutePath()
-							+ " to "
-							+ Environment.getExternalStorageDirectory()
-							+ File.separator
-							+ ScidAndroidActivity.SCID_DIRECTORY
+							+ " to " + Tools.getScidDirectory()
 							+ File.separator + pgnFileName);
 			// move to scid directory and rename to ... name +
 			// ".pgn"
-			pgnFile.renameTo(new File(Environment.getExternalStorageDirectory()
-					+ File.separator + ScidAndroidActivity.SCID_DIRECTORY,
-					pgnFileName));
+			pgnFile.renameTo(new File(getScidDirectory(), pgnFileName));
 			Tools.importPgn(activity, Tools.getFullScidFileName(pgnFileName),
 					resultCode);
 		}
@@ -460,31 +445,36 @@ public class Tools {
 		return result;
 	}
 
-    /** Read all data from an input stream. Return null if IO error. */
-    public static String readFromStream(InputStream is) {
-        InputStreamReader isr;
-        try {
-            isr = new InputStreamReader(is, "UTF-8");
-            BufferedReader br = new BufferedReader(isr);
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-                sb.append('\n');
-            }
-            br.close();
-            return sb.toString();
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        } catch (IOException e) {
-            return null;
-        }
-    }
-    
+	/** Read all data from an input stream. Return null if IO error. */
+	public static String readFromStream(InputStream is) {
+		InputStreamReader isr;
+		try {
+			isr = new InputStreamReader(is, "UTF-8");
+			BufferedReader br = new BufferedReader(isr);
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+				sb.append('\n');
+			}
+			br.close();
+			return sb.toString();
+		} catch (UnsupportedEncodingException e) {
+			return null;
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
 	public static boolean hasFenProvider(PackageManager manager) {
 		Intent i = new Intent(Intent.ACTION_GET_CONTENT);
 		i.setType("application/x-chess-fen");
 		List<ResolveInfo> resolvers = manager.queryIntentActivities(i, 0);
 		return (resolvers != null) && (resolvers.size() > 0);
+	}
+
+	public static String getScidDirectory() {
+		return Environment.getExternalStorageDirectory() + File.separator
+				+ Constants.SCID_DIRECTORY;
 	}
 }

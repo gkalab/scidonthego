@@ -14,8 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.scid.android.Constants;
 import org.scid.android.R;
-import org.scid.android.ScidAndroidActivity;
+import org.scid.android.Tools;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -223,8 +224,7 @@ public class EngineManager {
 			String engineAbsPath = engineFile.getAbsolutePath();
 			boolean engineExists = engineFile.exists();
 			if (!engineExists) {
-				File scidFileDir = new File(Environment.getExternalStorageDirectory()
-						+ File.separator + ScidAndroidActivity.SCID_DIRECTORY);
+				File scidFileDir = new File(Tools.getScidDirectory());
 				File externFile = new File(scidFileDir, executable);
 				if (externFile.exists()) {
 					// Copy the engine file and add when done.

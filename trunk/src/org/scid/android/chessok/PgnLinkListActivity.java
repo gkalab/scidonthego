@@ -12,14 +12,12 @@ import org.scid.android.DownloadTask;
 import org.scid.android.IDownloadCallback;
 import org.scid.android.Link;
 import org.scid.android.R;
-import org.scid.android.ScidAndroidActivity;
 import org.scid.android.Tools;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,7 +25,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class PgnLinkListActivity extends ListActivity implements IDownloadCallback {
+public class PgnLinkListActivity extends ListActivity implements
+		IDownloadCallback {
 	private static ProgressDialog progressDlg;
 	final static int PROGRESS_DIALOG = 0;
 	static private final int RESULT_PGN_IMPORT = 5;
@@ -60,7 +59,8 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
 				Link item = aa.getItem(pos);
-				PgnLinkListActivity.progressDlg = ProgressDialog.show(PgnLinkListActivity.this,
+				PgnLinkListActivity.progressDlg = ProgressDialog.show(
+						PgnLinkListActivity.this,
 						getString(R.string.please_wait),
 						getString(R.string.downloading), true, false);
 				new DownloadTask().execute(PgnLinkListActivity.this,
@@ -138,25 +138,17 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 				String pgnFileName = pgnFile.getName();
 				Log.d("SCID",
 						"moving downloaded file from "
-								+ pgnFile.getAbsolutePath()
-								+ " to "
-								+ Environment
-										.getExternalStorageDirectory()
-								+ File.separator
-								+ ScidAndroidActivity.SCID_DIRECTORY
-								+ File.separator + pgnFileName);
+								+ pgnFile.getAbsolutePath() + " to "
+								+ Tools.getScidDirectory() + File.separator
+								+ pgnFileName);
 				// move to scid directory and rename to ... name +
 				// ".pgn"
-				pgnFile.renameTo(new File(Environment
-						.getExternalStorageDirectory()
-						+ File.separator
-						+ ScidAndroidActivity.SCID_DIRECTORY,
-						pgnFileName));
+				pgnFile.renameTo(new File(Tools.getScidDirectory(), pgnFileName));
 				Tools.importPgn(PgnLinkListActivity.this,
 						Tools.getFullScidFileName(pgnFileName),
 						RESULT_PGN_IMPORT);
 			}
-		} 		
+		}
 	}
 
 	@Override
@@ -164,8 +156,7 @@ public class PgnLinkListActivity extends ListActivity implements IDownloadCallba
 		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
-		Tools.showErrorMessage(this, this
-				.getText(R.string.download_error)
+		Tools.showErrorMessage(this, this.getText(R.string.download_error)
 				+ " (" + message + ")");
 	}
 }

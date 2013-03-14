@@ -2,10 +2,11 @@ package org.scid.android;
 
 import org.scid.database.DataBaseView;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-public class ExportPgnActivity extends SearchActivityBase {
+public class ExportPgnActivity extends Activity {
 	private String pgnFileName;
 
 	@Override
@@ -17,7 +18,7 @@ public class ExportPgnActivity extends SearchActivityBase {
 		pgnFileName = i.getAction();
 		final DataBaseView dbv = ((ScidApplication) this
 				.getApplicationContext()).getDataBaseView();
-		(new SimpleResultTask(this) {
+		(new SimpleResultTask(this, R.string.export_pgn_title) {
 			@Override
 			protected Boolean doInBackground(Void... params) {
 				return dbv.exportPgn(pgnFileName, progress);

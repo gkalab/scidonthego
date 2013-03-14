@@ -88,7 +88,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private float scrollSensitivity = 3;
 	private boolean invertScrollDirection = false;
 
-	public static final String SCID_DIRECTORY = "scid";
 	private PGNOptions pgnOptions = new PGNOptions();
 
 	PgnScreenText gameTextListener;
@@ -105,8 +104,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		File scidFileDir = new File(Environment.getExternalStorageDirectory()
-				+ File.separator + SCID_DIRECTORY);
+		File scidFileDir = new File(Tools.getScidDirectory());
 		if (!scidFileDir.exists()) {
 			scidFileDir.mkdirs();
 		}
@@ -1117,8 +1115,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void exportPgn() {
 		final EditText input = new EditText(this);
-		input.setText(Environment.getExternalStorageDirectory()
-				+ File.separator + "pgn" + File.separator + "export.pgn");
+		input.setText(Tools.getScidDirectory() + File.separator + "export.pgn");
 		new AlertDialog.Builder(this)
 				.setTitle(getText(R.string.export_pgn_title))
 				.setMessage(getText(R.string.export_pgn_filename))
