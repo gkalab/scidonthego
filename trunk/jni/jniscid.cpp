@@ -897,7 +897,7 @@ JCM(jboolean, searchHeader,
             if(bothEloActive){
                 if(whiteElo and blackElo){
                     int minElo = min(whiteElo, blackElo); CIIR(minElo);
-                    int maxElo = min(whiteElo, blackElo); CIIR(maxElo);
+                    int maxElo = max(whiteElo, blackElo); CIIR(maxElo);
                     int diffElo = maxElo - minElo; CIIR(diffElo);
                 }else{ // there are unknown ELOs
                     CI(allowUnknownElo);
