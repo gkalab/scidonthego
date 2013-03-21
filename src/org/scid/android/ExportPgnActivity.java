@@ -21,7 +21,11 @@ public class ExportPgnActivity extends Activity {
 		(new SimpleResultTask(this, R.string.export_pgn_title) {
 			@Override
 			protected Boolean doInBackground(Void... params) {
-				return dbv.exportPgn(pgnFileName, progress);
+				if (dbv != null) {
+					return dbv.exportPgn(pgnFileName, progress);
+				} else {
+					return false;
+				}
 			}
 		}).execute();
 	}
