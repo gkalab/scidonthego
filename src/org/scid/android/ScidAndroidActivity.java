@@ -39,7 +39,6 @@ import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.Html;
@@ -1187,7 +1186,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		boolean hasFenProvider = Tools.hasFenProvider(getPackageManager());
 		gameMenu.findItem(R.id.item_retrieve_position).setVisible(hasFenProvider);
 		if (hasFenProvider) {
-			gameMenu.findItem(R.id.item_retrieve_position).setEnabled(isRestOfGameMenuEnabled);
+			gameMenu.findItem(R.id.item_retrieve_position).setEnabled(
+					getScidAppContext().getNoGames() > 0);
 		}
 		// adapt edit menu
 		SubMenu editMenu = menu.findItem(R.id.item_edit).getSubMenu();
@@ -1919,7 +1919,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				actions.add(UNDELETE_GAME);
 			}
 		}
-		if (Tools.hasFenProvider(getPackageManager()) && currentGameIsValid()) {
+		if (Tools.hasFenProvider(getPackageManager())) {
 			lst.add(getString(R.string.get_fen));
 			actions.add(GET_FEN);
 		}
