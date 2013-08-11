@@ -2043,7 +2043,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		String data = ctrl.getPGN();
 		if (data != null) {
 			Sharer sharer = new Sharer(this, getComponentName());
-			sharer.createShareIntent(data);
+			sharer.createShareIntent("application/x-chess-pgn", data);
 			if (sharer.getIntent() != null) {
 				startActivity(sharer.getIntent());
 			}
@@ -2052,7 +2052,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 	private void sharePosition() {
 		Sharer sharer = new Sharer(this, getComponentName());
-		sharer.createShareIntent(ctrl.getFEN());
+		sharer.createShareIntent("application/x-chess-fen", ctrl.getFEN());
 		if (sharer.getIntent() != null) {
 			startActivity(sharer.getIntent());
 		}
