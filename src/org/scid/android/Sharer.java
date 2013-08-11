@@ -21,10 +21,9 @@ public class Sharer {
 		this.caller = caller;
 	}
 
-	public void createShareIntent(String data) {
+	public void createShareIntent(String type, String data) {
 		// put all possible intents into one list
-		List<Intent> targets = getTargetIntentsForType(
-				"application/x-chess-pgn", data, caller);
+		List<Intent> targets = getTargetIntentsForType(type, data, caller);
 		if (!targets.isEmpty()) {
 			List<Intent> extraTargets = getTargetIntentsForType("text/plain",
 					data, caller);
