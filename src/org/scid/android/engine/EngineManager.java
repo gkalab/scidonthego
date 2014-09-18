@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.scid.android.Constants;
 import org.scid.android.R;
 import org.scid.android.Tools;
 import org.xmlpull.v1.XmlPullParser;
@@ -28,10 +27,12 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 import android.util.Xml;
 import android.widget.Toast;
+
+import com.kalab.chess.enginesupport.ChessEngine;
+import com.kalab.chess.enginesupport.ChessEngineResolver;
 
 /**
  * Class to manage UCI chess engines.
@@ -57,12 +58,13 @@ public class EngineManager {
 	public class EngineChangeEvent {
 		public static final int ADD_ENGINE = 1;
 		public static final int REMOVE_ENGINE = 2;
-		
+
 		private String engineName;
 		private int changeType;
 		private boolean success;
 
-		public EngineChangeEvent(String engineName, int changeType, boolean success) {
+		public EngineChangeEvent(String engineName, int changeType,
+				boolean success) {
 			this.engineName = engineName;
 			this.changeType = changeType;
 			this.success = success;
@@ -101,19 +103,20 @@ public class EngineManager {
 		String architecture = System.getProperty("os.arch");
 		Log.d("SCID", "architecture: " + architecture);
 		if (architecture.equals("i686")) {
-			defaultEngine = new EngineConfig(X86_ENGINE_NAME,
-					DATA_PATH + X86_ENGINE_EXECUTABLE);
+			defaultEngine = new EngineConfig(X86_ENGINE_NAME, DATA_PATH
+					+ X86_ENGINE_EXECUTABLE);
 		} else {
-			defaultEngine = new EngineConfig(ARM_ENGINE_NAME,
-					DATA_PATH + ARM_ENGINE_EXECUTABLE);
+			defaultEngine = new EngineConfig(ARM_ENGINE_NAME, DATA_PATH
+					+ ARM_ENGINE_EXECUTABLE);
 		}
 	}
 
 	/**
-	 * Sets the application context for the manager to use.  The application
+	 * Sets the application context for the manager to use. The application
 	 * context is needed for displaying dialogs and accessing resource strings.
 	 * 
-	 * @param context The application context.
+	 * @param context
+	 *            The application context.
 	 */
 	public void setContext(Context context) {
 		this.context = context;
@@ -146,8 +149,8 @@ public class EngineManager {
 	}
 
 	/**
-	 * Returns the EngineConfig for the currently selected engine.  This
-	 * is expected to stay in sync with the Analysis Engine preference.
+	 * Returns the EngineConfig for the currently selected engine. This is
+	 * expected to stay in sync with the Analysis Engine preference.
 	 * 
 	 * @return The current EngineConfig.
 	 */
@@ -173,47 +176,51 @@ public class EngineManager {
 	}
 
 	/**
-	 * Returns a list of the names in the current list of
-	 * Engines.  The name of the built-in engine can be optionally
-	 * included in the list.
-	 * @param includeBuiltIn If true, the name of the default engine
-	 *  will be included.
+	 * Returns a list of the names in the current list of Engines. The name of
+	 * the built-in engine can be optionally included in the list.
+	 * 
+	 * @param includeBuiltIn
+	 *            If true, the name of the default engine will be included.
 	 * @return Returns the list of engine names.
 	 */
-	public String [] getEngineNames(boolean includeBuiltIn) {
+	public String[] getEngineNames(boolean includeBuiltIn) {
 		ArrayList<String> engineNames = new ArrayList<String>();
 		if (includeBuiltIn) {
 			engineNames.add(defaultEngine.getName());
 		}
 		engineNames.addAll(getEnginesList().keySet());
 		Collections.sort(engineNames);
-		String [] names = new String[engineNames.size()];
+		String[] names = new String[engineNames.size()];
 		return engineNames.toArray(names);
 	}
 
 	/**
-	 * Sets the name of the current engine to use.  It is expected that
-	 * this name will stay in sync with the Analysis Engine preference.
-	 * The name will be ignored if it does not match the built-in engine
-	 * name of a name in the current list of engines.
+	 * Sets the name of the current engine to use. It is expected that this name
+	 * will stay in sync with the Analysis Engine preference. The name will be
+	 * ignored if it does not match the built-in engine name of a name in the
+	 * current list of engines.
 	 * 
-	 * @param engineName Engine name to be set.
+	 * @param engineName
+	 *            Engine name to be set.
 	 */
 	public void setCurrentEngineName(String engineName) {
-		if (defaultEngine.getName().equals(engineName) || getEnginesList().get(engineName) != null) {
+		if (defaultEngine.getName().equals(engineName)
+				|| getEnginesList().get(engineName) != null) {
 			currentEngineName = engineName;
 		}
 	}
 
 	/**
-	 * Adds a new engine to the list of engines.  This method is also responsible
-	 * for copying the executable to internal storage and setting its permissions.
-	 * The copying is done using an async CopyExecutableTask.  The engine will not
-	 * be added until after the copy succeeds.  If the executable is already present
-	 * in internal storage, the addition occurs immediately.
+	 * Adds a new engine to the list of engines. This method is also responsible
+	 * for copying the executable to internal storage and setting its
+	 * permissions. The copying is done using an async CopyExecutableTask. The
+	 * engine will not be added until after the copy succeeds. If the executable
+	 * is already present in internal storage, the addition occurs immediately.
 	 * 
-	 * @param engineName The name of the engine.
-	 * @param executable The name of the executable file for the engine.
+	 * @param engineName
+	 *            The name of the engine.
+	 * @param executable
+	 *            The name of the executable file for the engine.
 	 * @return Returns true if an engine by the same name doesn't already exist.
 	 */
 	public boolean addEngine(String engineName, String executable) {
@@ -228,42 +235,86 @@ public class EngineManager {
 				File externFile = new File(scidFileDir, executable);
 				if (externFile.exists()) {
 					// Copy the engine file and add when done.
-					new CopyExecutableTask(engineName).execute(externFile, engineFile);
-				}
-				else {
-					// Shouldn't occur
-					Log.e("SCID", "Executable not found: " + engineAbsPath);
+					new CopyExecutableTask(engineName).execute(externFile,
+							engineFile);
+				} else {
+					addOpenExchangeEngine(executable, engineAbsPath, engineName);
 				}
 				return true;
-			}
-			else {
-				Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(getEnginesList());
-				enginesList.put(engineName, new EngineConfig(engineName, engineAbsPath));
-				synchronized (managerLock) {
-					engines = enginesList;
-				}
-				saveEngineData(enginesList);
-				notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.ADD_ENGINE, true));
-				Toast.makeText(context, context.getString(R.string.engine_added, engineName), Toast.LENGTH_SHORT).show();
+			} else {
+				saveToConfiguration(engineName, engineAbsPath);
+				Toast.makeText(context,
+						context.getString(R.string.engine_added, engineName),
+						Toast.LENGTH_SHORT).show();
 				return true;
 			}
-		}
-		else {
-			notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.ADD_ENGINE, true));
-			Toast.makeText(context, context.getString(R.string.add_engine_exists, engineName), Toast.LENGTH_LONG).show();
+		} else {
+			notifyListeners(new EngineChangeEvent(engineName,
+					EngineChangeEvent.ADD_ENGINE, true));
+			Toast.makeText(context,
+					context.getString(R.string.add_engine_exists, engineName),
+					Toast.LENGTH_LONG).show();
 		}
 		return false;
+	}
+
+	private void saveToConfiguration(String engineName, String engineAbsPath) {
+		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+				getEnginesList());
+		enginesList
+				.put(engineName, new EngineConfig(engineName, engineAbsPath));
+		synchronized (managerLock) {
+			engines = enginesList;
+		}
+		saveEngineData(enginesList);
+		notifyListeners(new EngineChangeEvent(engineName,
+				EngineChangeEvent.ADD_ENGINE, true));
+	}
+
+	private void addOpenExchangeEngine(String executable, String engineAbsPath,
+			String engineName) {
+		ChessEngineResolver resolver = new ChessEngineResolver(context);
+		List<ChessEngine> openEngines = resolver.resolveEngines();
+		boolean found = false;
+		for (ChessEngine openEngine : openEngines) {
+			if (openEngine.getFileName().equals(executable)) {
+				found = true;
+				try {
+					openEngine.copyToFiles(context.getContentResolver(),
+							new File(DATA_PATH));
+					Toast.makeText(
+							context,
+							context.getString(R.string.engine_added_copied,
+									engineName), Toast.LENGTH_LONG).show();
+					saveToConfiguration(engineName, engineAbsPath);
+				} catch (IOException e) {
+					notifyListeners(new EngineChangeEvent(engineName,
+							EngineChangeEvent.ADD_ENGINE, false));
+					Toast.makeText(
+							context,
+							context.getString(R.string.engine_copy_failed,
+									e.getMessage()), Toast.LENGTH_LONG).show();
+				}
+				break;
+			}
+		}
+		if (!found) {
+			// Shouldn't occur
+			Log.e("SCID", "Executable not found: " + executable);
+		}
 	}
 
 	/**
 	 * Removes the specified engine from the engine list, if it exists.
 	 * 
-	 * @param engineName Name of the engine to remove.
-	 * @return Returns the EngineConfig for the removed engine or null if
-	 *  it was not found.
+	 * @param engineName
+	 *            Name of the engine to remove.
+	 * @return Returns the EngineConfig for the removed engine or null if it was
+	 *         not found.
 	 */
 	public EngineConfig removeEngine(String engineName) {
-		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(getEnginesList());
+		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+				getEnginesList());
 		EngineConfig removedConf = enginesList.remove(engineName);
 		if (removedConf != null) {
 			// If removing the current engine, clear the current engine name
@@ -282,14 +333,21 @@ public class EngineManager {
 				engines = enginesList;
 			}
 			saveEngineData(enginesList);
-			notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.REMOVE_ENGINE, true));
-			Toast.makeText(context, context.getString(R.string.engine_removed, engineName), Toast.LENGTH_SHORT).show();
+			notifyListeners(new EngineChangeEvent(engineName,
+					EngineChangeEvent.REMOVE_ENGINE, true));
+			Toast.makeText(context,
+					context.getString(R.string.engine_removed, engineName),
+					Toast.LENGTH_SHORT).show();
 
-			// If executable is no longer used, ask if it should be deleted from internal storage
+			// If executable is no longer used, ask if it should be deleted from
+			// internal storage
 			if (!stillUsed) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(context);
-				final File _executable = new File(removedConf.getExecutablePath());
-				builder.setMessage(context.getString(R.string.remove_unused_executable, _executable.getName()));
+				final File _executable = new File(
+						removedConf.getExecutablePath());
+				builder.setMessage(context.getString(
+						R.string.remove_unused_executable,
+						_executable.getName()));
 				DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
@@ -302,13 +360,13 @@ public class EngineManager {
 				builder.setPositiveButton(R.string.yes, listener);
 				builder.setNegativeButton(R.string.no, listener);
 				builder.show();
-				
+
 			}
 			if (Log.isLoggable("SCID", Log.INFO))
 				Log.i("SCID", "Removed engine " + engineName);
-		}
-		else {
-			notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.REMOVE_ENGINE, false));
+		} else {
+			notifyListeners(new EngineChangeEvent(engineName,
+					EngineChangeEvent.REMOVE_ENGINE, false));
 		}
 		return removedConf;
 	}
@@ -316,7 +374,8 @@ public class EngineManager {
 	/**
 	 * Detects if an engine name is already in use in the engine list.
 	 * 
-	 * @param name Engine name to check.
+	 * @param name
+	 *            Engine name to check.
 	 * @return Returns true if an engine by that name is found.
 	 */
 	public boolean isNameUsed(String name) {
@@ -324,12 +383,13 @@ public class EngineManager {
 	}
 
 	/**
-	 * Detects if the executable path is in use by any engines in the
-	 * current list.
+	 * Detects if the executable path is in use by any engines in the current
+	 * list.
 	 * 
-	 * @param executablePath Executable path to check.
-	 * @return Returns true if at least one engine uses the specified
-	 *  executable path.
+	 * @param executablePath
+	 *            Executable path to check.
+	 * @return Returns true if at least one engine uses the specified executable
+	 *         path.
 	 */
 	public boolean isExecutableUsed(String executablePath) {
 		for (EngineConfig engineConf : engines.values()) {
@@ -343,7 +403,8 @@ public class EngineManager {
 	/**
 	 * Writes the specified engine list to the data file.
 	 * 
-	 * @param enginesList List of engines to persist.
+	 * @param enginesList
+	 *            List of engines to persist.
 	 */
 	private void saveEngineData(Map<String, EngineConfig> enginesList) {
 		XmlSerializer serializer = Xml.newSerializer();
@@ -370,8 +431,7 @@ public class EngineManager {
 			fw.close();
 		} catch (Exception e) {
 			Log.e("SCID", e.getMessage(), e);
-		}
-		finally {
+		} finally {
 			if (fw != null) {
 				try {
 					fw.close();
@@ -383,8 +443,9 @@ public class EngineManager {
 	}
 
 	/**
-	 * Returns the current list of engines, loading them from the data
-	 * file if necessary.
+	 * Returns the current list of engines, loading them from the data file if
+	 * necessary.
+	 * 
 	 * @return Returns the current list of engines.
 	 */
 	private Map<String, EngineConfig> getEnginesList() {
@@ -411,13 +472,21 @@ public class EngineManager {
 					switch (eventType) {
 					case XmlPullParser.START_TAG:
 						if (parser.getName().equalsIgnoreCase("engine")) {
-							String engineName = parser.getAttributeValue(null, "name");
-							String enginePath = parser.getAttributeValue(null, "path");
-							if (engineName != null && engineName.length() > 0 && list.get(engineName) == null
-									&& enginePath != null && enginePath.length() > 0) {
+							String engineName = parser.getAttributeValue(null,
+									"name");
+							String enginePath = parser.getAttributeValue(null,
+									"path");
+							if (engineName != null && engineName.length() > 0
+									&& list.get(engineName) == null
+									&& enginePath != null
+									&& enginePath.length() > 0) {
 								File engineFile = new File(enginePath);
 								if (engineFile.exists()) {
-									list.put(engineName, new EngineConfig(engineName, engineFile.getAbsolutePath()));
+									list.put(
+											engineName,
+											new EngineConfig(engineName,
+													engineFile
+															.getAbsolutePath()));
 								}
 							}
 						}
@@ -432,11 +501,13 @@ public class EngineManager {
 				Log.e("SCID", e.getMessage(), e);
 			} catch (XmlPullParserException e) {
 				Log.e("SCID", e.getMessage(), e);
-			}
-			finally {
+			} finally {
 				// Ensure file reader is closed.
-				if (fr != null) { 
-					try { fr.close(); } catch (IOException e) { /* Ignore */ }
+				if (fr != null) {
+					try {
+						fr.close();
+					} catch (IOException e) { /* Ignore */
+					}
 				}
 			}
 		}
@@ -458,24 +529,23 @@ public class EngineManager {
 		}
 	}
 
-
 	/**
-	 * Task to copy an chess engine executable file to internal storage and set its
-	 * permissions.  It is also responsible for displaying a progress dialog and
-	 * updating the engine list if the copy succeeds.
+	 * Task to copy an chess engine executable file to internal storage and set
+	 * its permissions. It is also responsible for displaying a progress dialog
+	 * and updating the engine list if the copy succeeds.
 	 *
 	 */
-	private class CopyExecutableTask extends AsyncTask<File , Integer, Boolean> 
+	private class CopyExecutableTask extends AsyncTask<File, Integer, Boolean>
 			implements OnCancelListener, OnClickListener {
 		private String engineName;
 		private ProgressDialog progDlg;
 		private File destFile;
 		private String errorMsg;
-		
+
 		public CopyExecutableTask(String engineName) {
 			this.engineName = engineName;
 		}
-		
+
 		@Override
 		protected Boolean doInBackground(File... params) {
 			File srcFile = params[0];
@@ -483,7 +553,7 @@ public class EngineManager {
 			Boolean result = Boolean.FALSE;
 
 			InputStream istream = null;
-			FileOutputStream fout =  null;
+			FileOutputStream fout = null;
 			boolean canceled = false;
 			try {
 				istream = new FileInputStream(srcFile);
@@ -498,7 +568,8 @@ public class EngineManager {
 				fout.close();
 				if (!canceled) {
 					if (Log.isLoggable("SCID", Log.INFO))
-						Log.i("SCID", srcFile.getName() + " copied to " + DATA_PATH);
+						Log.i("SCID", srcFile.getName() + " copied to "
+								+ DATA_PATH);
 					result = Boolean.TRUE;
 				}
 			} catch (IOException e) {
@@ -507,14 +578,19 @@ public class EngineManager {
 			} catch (SecurityException se) {
 				errorMsg = se.getLocalizedMessage();
 				Log.e("SCID", errorMsg, se);
-			}
-			finally {
+			} finally {
 				// Ensure streams are closed should an exception occur.
 				if (fout != null) {
-					try { fout.close(); } catch (IOException e) { /* Ignore */ }
+					try {
+						fout.close();
+					} catch (IOException e) { /* Ignore */
+					}
 				}
 				if (istream != null) {
-					try { istream.close(); } catch (IOException e) { /* Ignore */ }
+					try {
+						istream.close();
+					} catch (IOException e) { /* Ignore */
+					}
 				}
 			}
 			if (!canceled && result) {
@@ -534,8 +610,10 @@ public class EngineManager {
 					Log.e("SCID", errorMsg, e);
 					result = Boolean.FALSE;
 				}
-				Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(getEnginesList());
-				enginesList.put(engineName, new EngineConfig(engineName, absPath));
+				Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+						getEnginesList());
+				enginesList.put(engineName, new EngineConfig(engineName,
+						absPath));
 				synchronized (managerLock) {
 					engines = enginesList;
 				}
@@ -548,10 +626,12 @@ public class EngineManager {
 		protected void onPreExecute() {
 			progDlg = new ProgressDialog(context);
 			progDlg.setTitle(context.getString(R.string.engine_copy_title));
-			progDlg.setMessage(context.getString(R.string.engine_copy_msg, engineName));
+			progDlg.setMessage(context.getString(R.string.engine_copy_msg,
+					engineName));
 			progDlg.setCancelable(true);
 			progDlg.setOnCancelListener(this);
-			progDlg.setButton(DialogInterface.BUTTON_NEGATIVE, context.getString(android.R.string.cancel), this);
+			progDlg.setButton(DialogInterface.BUTTON_NEGATIVE,
+					context.getString(android.R.string.cancel), this);
 			progDlg.show();
 		}
 
@@ -561,8 +641,11 @@ public class EngineManager {
 				destFile.delete();
 			}
 			progDlg.dismiss();
-			notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.ADD_ENGINE, false));
-			Toast.makeText(context, context.getString(R.string.engine_copy_canceled, engineName),
+			notifyListeners(new EngineChangeEvent(engineName,
+					EngineChangeEvent.ADD_ENGINE, false));
+			Toast.makeText(
+					context,
+					context.getString(R.string.engine_copy_canceled, engineName),
 					Toast.LENGTH_LONG).show();
 		}
 
@@ -570,13 +653,19 @@ public class EngineManager {
 		protected void onPostExecute(Boolean result) {
 			progDlg.dismiss();
 			if (result) {
-				notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.ADD_ENGINE, true));
-				Toast.makeText(context, context.getString(R.string.engine_added_copied, engineName),
-						Toast.LENGTH_LONG).show();
-			}
-			else {
-				notifyListeners(new EngineChangeEvent(engineName, EngineChangeEvent.ADD_ENGINE, false));
-				Toast.makeText(context, context.getString(R.string.engine_copy_failed, (errorMsg != null ? errorMsg : "")),
+				notifyListeners(new EngineChangeEvent(engineName,
+						EngineChangeEvent.ADD_ENGINE, true));
+				Toast.makeText(
+						context,
+						context.getString(R.string.engine_added_copied,
+								engineName), Toast.LENGTH_LONG).show();
+			} else {
+				notifyListeners(new EngineChangeEvent(engineName,
+						EngineChangeEvent.ADD_ENGINE, false));
+				Toast.makeText(
+						context,
+						context.getString(R.string.engine_copy_failed,
+								(errorMsg != null ? errorMsg : "")),
 						Toast.LENGTH_LONG).show();
 			}
 		}
@@ -592,4 +681,3 @@ public class EngineManager {
 		}
 	}
 }
-

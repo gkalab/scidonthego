@@ -1,6 +1,5 @@
 package org.scid.android;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -12,7 +11,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.Editable;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +21,9 @@ import android.widget.Checkable;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.kalab.chess.enginesupport.ChessEngine;
+import com.kalab.chess.enginesupport.ChessEngineResolver;
 
 public class AddEngineActivity extends Activity {
 	public static final String DATA_ENGINE_MANAGER = "org.scid.android.engine.manager";
@@ -36,29 +37,47 @@ public class AddEngineActivity extends Activity {
 
 	private List<String> executablesList;
 	private volatile String currentExecutable;
+	private List<ChessEngine> openEngines = new ArrayList<ChessEngine>();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Set<String> ignoreExtensions = new HashSet<String>(Arrays.asList(
-				new String [] { ".sg4", ".sn4", ".si4", ".pgn", ".zip", ".xml" }));
+		Set<String> ignoreExtensions = new HashSet<String>(
+				Arrays.asList(new String[] { ".sg4", ".sn4", ".si4", ".pgn",
+						".zip", ".xml" }));
 
 		// Build set of engines starting with engines already added.
 		// Once per engine configuration preferences are possible,
 		// multiple engine configurations using the same engine may be
 		// useful.
-		SortedSet<String> engines = Tools.findEnginesInDirectory("/data/data/org.scid.android/", ignoreExtensions);
+		SortedSet<String> engines = Tools.findEnginesInDirectory(
+				"/data/data/org.scid.android/", ignoreExtensions);
 		// Add any additional engines from the external directory.
-		engines.addAll(Tools.findEnginesInDirectory(Tools.getScidDirectory(), ignoreExtensions));
+		engines.addAll(Tools.findEnginesInDirectory(Tools.getScidDirectory(),
+				ignoreExtensions));
+
 		executablesList = new ArrayList<String>(engines);
+		addOpenExchangeFormatEngines();
 
 		setContentView(R.layout.add_engine);
 
-		ListView executablesListView = (ListView)findViewById(R.id.engine_list);
-		executablesListView.setOnItemClickListener(new ExecutableClickListener());
+		ListView executablesListView = (ListView) findViewById(R.id.engine_list);
+		executablesListView
+				.setOnItemClickListener(new ExecutableClickListener());
 		executablesListView.setAdapter(new CheckableArrayAdapter<String>(this,
-				android.R.layout.simple_list_item_single_choice, executablesList));
+				android.R.layout.simple_list_item_single_choice,
+				executablesList));
+	}
+
+	private void addOpenExchangeFormatEngines() {
+		ChessEngineResolver resolver = new ChessEngineResolver(this);
+		this.openEngines = resolver.resolveEngines();
+		for (ChessEngine engine : openEngines) {
+			if (!executablesList.contains(engine.getFileName())) {
+				executablesList.add(engine.getFileName());
+			}
+		}
 	}
 
 	@Override
@@ -90,12 +109,11 @@ public class AddEngineActivity extends Activity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view = super.getView(position, convertView, parent);
 			if (currentExecutable != null) {
-				String text = ((TextView)view).getText().toString();
+				String text = ((TextView) view).getText().toString();
 				if (text.equals(currentExecutable)) {
-					((Checkable)view).setChecked(true);
-				}
-				else {
-					((Checkable)view).setChecked(false);
+					((Checkable) view).setChecked(true);
+				} else {
+					((Checkable) view).setChecked(false);
 				}
 			}
 			return view;
@@ -108,17 +126,26 @@ public class AddEngineActivity extends Activity {
 		public void onItemClick(AdapterView<?> parent, View view, int position,
 				long id) {
 			if (position != ListView.INVALID_POSITION) {
-				currentExecutable = (String)parent.getItemAtPosition(position);
-				EditText nameField = (EditText)findViewById(R.id.engine_name);
+				currentExecutable = (String) parent.getItemAtPosition(position);
+				EditText nameField = (EditText) findViewById(R.id.engine_name);
 				Editable nameEditable = nameField.getText();
 				if (nameEditable.length() == 0) {
-					// If a name is not yet specified, set it to the selected engine.
-					nameField.setText(currentExecutable);
-				}
-				else {
+					// If a name is not yet specified, set it to the selected
+					// engine.
+					String name = currentExecutable;
+					for (ChessEngine openEngine : openEngines) {
+						if (openEngine.getFileName().equals(currentExecutable)) {
+							name = openEngine.getName();
+							break;
+						}
+					}
+					nameField.setText(name);
+				} else {
 					String currentName = nameEditable.toString();
-					// If the current name matches a different engine, update the name.
-					if (!currentExecutable.equals(currentName) && executablesList.contains(currentName)) {
+					// If the current name matches a different engine, update
+					// the name.
+					if (!currentExecutable.equals(currentName)
+							&& executablesList.contains(currentName)) {
 						nameField.setText(currentExecutable);
 					}
 				}
@@ -127,18 +154,16 @@ public class AddEngineActivity extends Activity {
 				for (int i = 0; i < parent.getChildCount(); i++) {
 					View child = parent.getChildAt(i);
 					if (i == selectedIndex) {
-						((Checkable)child).setChecked(true);
-					}
-					else {
-						((Checkable)child).setChecked(false);
+						((Checkable) child).setChecked(true);
+					} else {
+						((Checkable) child).setChecked(false);
 					}
 				}
-			}
-			else {
+			} else {
 				currentExecutable = null;
 				for (int i = 0; i < parent.getChildCount(); i++) {
 					View child = parent.getChildAt(i);
-					((Checkable)child).setChecked(false);
+					((Checkable) child).setChecked(false);
 				}
 			}
 		}
@@ -152,10 +177,11 @@ public class AddEngineActivity extends Activity {
 	public void onOkClick(View view) {
 		Intent data = getIntent();
 
-		EditText nameField = (EditText)findViewById(R.id.engine_name);
+		EditText nameField = (EditText) findViewById(R.id.engine_name);
 		String name = nameField.getText().toString();
 
-		boolean makeCurrentEngine = ((Checkable)findViewById(R.id.make_current)).isChecked();
+		boolean makeCurrentEngine = ((Checkable) findViewById(R.id.make_current))
+				.isChecked();
 
 		data.putExtra(DATA_ENGINE_NAME, name);
 		data.putExtra(DATA_ENGINE_EXECUTABLE, currentExecutable);
