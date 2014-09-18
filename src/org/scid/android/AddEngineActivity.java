@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import org.scid.android.engine.Engine;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -35,7 +37,7 @@ public class AddEngineActivity extends Activity {
 	public static final int RESULT_EXECUTABLE_COPYING = 3;
 	public static final int RESULT_EXECUTABLE_COPYFAILED = 3;
 
-	private List<String> executablesList;
+	private List<Engine> executablesList;
 	private volatile String currentExecutable;
 	private List<ChessEngine> openEngines = new ArrayList<ChessEngine>();
 
@@ -51,13 +53,13 @@ public class AddEngineActivity extends Activity {
 		// Once per engine configuration preferences are possible,
 		// multiple engine configurations using the same engine may be
 		// useful.
-		SortedSet<String> engines = Tools.findEnginesInDirectory(
+		SortedSet<Engine> engines = Tools.findEnginesInDirectory(
 				"/data/data/org.scid.android/", ignoreExtensions);
 		// Add any additional engines from the external directory.
 		engines.addAll(Tools.findEnginesInDirectory(Tools.getScidDirectory(),
 				ignoreExtensions));
 
-		executablesList = new ArrayList<String>(engines);
+		executablesList = new ArrayList<Engine>(engines);
 		addOpenExchangeFormatEngines();
 
 		setContentView(R.layout.add_engine);
@@ -65,7 +67,7 @@ public class AddEngineActivity extends Activity {
 		ListView executablesListView = (ListView) findViewById(R.id.engine_list);
 		executablesListView
 				.setOnItemClickListener(new ExecutableClickListener());
-		executablesListView.setAdapter(new CheckableArrayAdapter<String>(this,
+		executablesListView.setAdapter(new CheckableArrayAdapter<Engine>(this,
 				android.R.layout.simple_list_item_single_choice,
 				executablesList));
 	}
@@ -75,7 +77,8 @@ public class AddEngineActivity extends Activity {
 		this.openEngines = resolver.resolveEngines();
 		for (ChessEngine engine : openEngines) {
 			if (!executablesList.contains(engine.getFileName())) {
-				executablesList.add(engine.getFileName());
+				executablesList.add(new Engine(engine.getName(), engine
+						.getFileName()));
 			}
 		}
 	}
@@ -108,12 +111,20 @@ public class AddEngineActivity extends Activity {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view = super.getView(position, convertView, parent);
-			if (currentExecutable != null) {
-				String text = ((TextView) view).getText().toString();
-				if (text.equals(currentExecutable)) {
-					((Checkable) view).setChecked(true);
-				} else {
-					((Checkable) view).setChecked(false);
+			Engine item = (Engine) this.getItem(position);
+			if (item != null) {
+				TextView textView = (TextView) view
+						.findViewById(android.R.id.text1);
+				if (textView != null) {
+					textView.setText(item.getName() != null ? item.getName()
+							: item.getFileName());
+					if (currentExecutable != null) {
+						if (item.getFileName().equals(currentExecutable)) {
+							((Checkable) view).setChecked(true);
+						} else {
+							((Checkable) view).setChecked(false);
+						}
+					}
 				}
 			}
 			return view;
@@ -126,19 +137,15 @@ public class AddEngineActivity extends Activity {
 		public void onItemClick(AdapterView<?> parent, View view, int position,
 				long id) {
 			if (position != ListView.INVALID_POSITION) {
-				currentExecutable = (String) parent.getItemAtPosition(position);
+				Engine engine = (Engine) parent.getItemAtPosition(position);
+				currentExecutable = engine.getFileName();
 				EditText nameField = (EditText) findViewById(R.id.engine_name);
 				Editable nameEditable = nameField.getText();
 				if (nameEditable.length() == 0) {
 					// If a name is not yet specified, set it to the selected
 					// engine.
-					String name = currentExecutable;
-					for (ChessEngine openEngine : openEngines) {
-						if (openEngine.getFileName().equals(currentExecutable)) {
-							name = openEngine.getName();
-							break;
-						}
-					}
+					String name = engine.getName() != null ? engine.getName()
+							: currentExecutable;
 					nameField.setText(name);
 				} else {
 					String currentName = nameEditable.toString();
