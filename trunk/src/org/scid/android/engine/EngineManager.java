@@ -339,28 +339,14 @@ public class EngineManager {
 					context.getString(R.string.engine_removed, engineName),
 					Toast.LENGTH_SHORT).show();
 
-			// If executable is no longer used, ask if it should be deleted from
+			// If executable is no longer used, deleted it from
 			// internal storage
 			if (!stillUsed) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(context);
 				final File _executable = new File(
 						removedConf.getExecutablePath());
-				builder.setMessage(context.getString(
-						R.string.remove_unused_executable,
-						_executable.getName()));
-				DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						if (which == DialogInterface.BUTTON_POSITIVE) {
-							// Delete the executable
-							_executable.delete();
-						}
-						dialog.dismiss();
-					}
-				};
-				builder.setPositiveButton(R.string.yes, listener);
-				builder.setNegativeButton(R.string.no, listener);
-				builder.show();
-
+				// Delete the executable
+				_executable.delete();
 			}
 			if (Log.isLoggable("SCID", Log.INFO))
 				Log.i("SCID", "Removed engine " + engineName);

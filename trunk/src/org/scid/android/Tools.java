@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.scid.android.engine.Engine;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -86,7 +88,7 @@ public class Tools {
 	 *            Extensions (including the period) of non-engine files.
 	 * @return Updated or created set of engine file names.
 	 */
-	public static final SortedSet<String> findEnginesInDirectory(
+	public static final SortedSet<Engine> findEnginesInDirectory(
 			String dirPath, Set<String> ignoreExtensions) {
 		File dir = new File(dirPath);
 		final Set<String> _ignore = ignoreExtensions;
@@ -105,10 +107,10 @@ public class Tools {
 				return false;
 			}
 		});
-		SortedSet<String> engines = new TreeSet<String>();
+		SortedSet<Engine> engines = new TreeSet<Engine>();
 		if (files != null) {
 			for (int i = 0; i < files.length; i++) {
-				engines.add(files[i].getName());
+				engines.add(new Engine(files[i].getName()));
 			}
 		}
 		return engines;
