@@ -49,15 +49,10 @@ public class AddEngineActivity extends Activity {
 				Arrays.asList(new String[] { ".sg4", ".sn4", ".si4", ".pgn",
 						".zip", ".xml" }));
 
-		// Build set of engines starting with engines already added.
-		// Once per engine configuration preferences are possible,
-		// multiple engine configurations using the same engine may be
-		// useful.
+		// Build set of engines. Add any additional engines from the external
+		// directory.
 		SortedSet<Engine> engines = Tools.findEnginesInDirectory(
-				"/data/data/org.scid.android/", ignoreExtensions);
-		// Add any additional engines from the external directory.
-		engines.addAll(Tools.findEnginesInDirectory(Tools.getScidDirectory(),
-				ignoreExtensions));
+				Tools.getScidDirectory(), ignoreExtensions);
 
 		executablesList = new ArrayList<Engine>(engines);
 		addOpenExchangeFormatEngines();
