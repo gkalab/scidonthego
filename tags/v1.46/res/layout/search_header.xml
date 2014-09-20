@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/search_header_layout"
+        android:descendantFocusability="beforeDescendants"
+        android:focusableInTouchMode="true"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+<!-- Names -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <AutoCompleteTextView
+                android:id="@+id/search_white"
+                android:hint="@string/white"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:completionThreshold="1"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_white_exact"
+                android:text="@string/search_exact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dip" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <AutoCompleteTextView
+                android:id="@+id/search_black"
+                android:hint="@string/black"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:completionThreshold="1"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_black_exact"
+                android:text="@string/search_exact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dip" />
+        </LinearLayout>
+        <CheckBox
+            android:id="@+id/ignore_colors"
+            android:text="@string/ignore_colors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <AutoCompleteTextView
+                android:id="@+id/search_event"
+                android:hint="@string/event"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:completionThreshold="1"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_event_exact"
+                android:text="@string/search_exact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dip" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <AutoCompleteTextView
+                android:id="@+id/search_site"
+                android:hint="@string/site"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:completionThreshold="1"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_site_exact"
+                android:text="@string/search_exact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dip" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <AutoCompleteTextView
+                android:id="@+id/search_round"
+                android:hint="@string/round"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:completionThreshold="1"
+                android:layout_weight="1"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_round_exact"
+                android:text="@string/search_exact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dip" />
+        </LinearLayout>
+<!-- Result -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/result_white_wins"
+                android:text="@string/result_white_wins"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+            <CheckBox
+                android:id="@+id/result_draw"
+                android:text="@string/result_draw"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+            <CheckBox
+                android:id="@+id/result_black_wins"
+                android:text="@string/result_black_wins"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+            <CheckBox
+                android:id="@+id/result_unspecified"
+                android:text="@string/result_none"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+        </LinearLayout>
+<!-- Date -->
+        <TextView
+            android:text="@string/search_date_range"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/search_year_from"
+                android:hint="@string/search_year_hint"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLength="4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_month_from"
+                android:hint="@string/search_month_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="2"
+                android:inputType="numberDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_day_from"
+                android:hint="@string/search_day_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="2"
+                android:inputType="numberDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/search_year_to"
+                android:hint="@string/search_year_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_month_to"
+                android:hint="@string/search_month_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="2"
+                android:inputType="numberDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_day_to"
+                android:hint="@string/search_day_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="2"
+                android:inputType="numberDecimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+<!-- ELO -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_white_elo"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_white_elo_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_white_elo_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_black_elo"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_black_elo_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_black_elo_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_diff_elo"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_diff_elo_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_diff_elo_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_min_elo"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_min_elo_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_min_elo_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_max_elo"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_max_elo_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_max_elo_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <CheckBox
+            android:id="@+id/search_allow_unknown_elo"
+            android:text="@string/search_allow_unknown_elo"
+            android:checked="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+<!-- ECO -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/eco_code_text"
+                android:text="@string/eco_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_eco_from"
+                android:hint="@string/search_eco_from_default"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/eco_code_fromto"
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_eco_to"
+                android:hint="@string/search_eco_to_default"
+                android:singleLine="true"
+                android:imeOptions="actionNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/eco_none"
+                android:text="@string/eco_none"
+                android:checked="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+<!-- Half moves -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_half_moves"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_half_moves_min"
+                android:hint="@string/search_min_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_half_moves_max"
+                android:hint="@string/search_max_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="4"
+                android:inputType="numberDecimal"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/search_half_moves"
+                android:layout_weight="3"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/search_half_moves_even"
+                android:text="@string/search_half_moves_even"
+                android:checked="true"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+            <CheckBox
+                android:id="@+id/search_half_moves_odd"
+                android:text="@string/search_half_moves_odd"
+                android:checked="true"
+                android:layout_weight="2"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp" />
+        </LinearLayout>
+<!-- Flags -->
+        <CheckBox
+            android:id="@+id/search_annotated_only"
+            android:text="@string/search_annotated_only"
+            android:checked="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+<!-- Game ID -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/search_game_id_min"
+                android:hint="@string/search_game_id_hint"
+                android:imeOptions="actionNext"
+                android:maxLength="8"
+                android:inputType="numberDecimal"
+                android:layout_weight="1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="@string/en_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/search_game_id_max"
+                android:hint="@string/search_max_hint"
+                android:maxLength="8"
+                android:inputType="numberDecimal"
+                android:imeOptions="actionDone"
+                android:layout_weight="1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dip"
+            android:text="@string/search_filter_prompt" />
+        <Spinner
+            android:id="@+id/search_filter_spinner"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:prompt="@string/search_filter_prompt" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/search_header_previous"
+                android:onClick="onPreviousClick"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:src="@drawable/previous"
+                android:contentDescription="@string/search_previous_request" />
+            <ImageButton
+                android:id="@+id/search_header_next"
+                android:onClick="onNextClick"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:src="@drawable/next"
+                android:contentDescription="@string/search_next_request" />
+            <Button
+                android:id="@+id/search_header_ok"
+                android:onClick="onOkClick"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@android:string/ok" />
+            <Button
+                android:id="@+id/search_header_cancel"
+                android:onClick="onCancelClick"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@android:string/cancel" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

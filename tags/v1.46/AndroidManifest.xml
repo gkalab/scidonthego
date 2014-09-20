@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:installLocation="auto"
+    package="org.scid.android"
+    android:versionCode="46"
+    android:versionName="1.46" >
+
+    <uses-sdk
+        android:minSdkVersion="4"
+        android:targetSdkVersion="11" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:name=".ScidApplication" >
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/app_name"
+            android:name=".ScidAndroidActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/x-chess-pgn" />
+                <data android:scheme="http" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="https" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="content" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+                <data android:scheme="file" android:host="*"
+                    android:pathPattern=".*\\.pgn" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-chess-pgn" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-chess-pgn" />
+            </intent-filter>
+			<intent-filter>
+				<action android:name="android.intent.action.SEND" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:mimeType="application/x-chess-fen" />
+			</intent-filter>
+            </activity>
+        <activity
+            android:label="@string/menu_preferences"
+            android:name=".Preferences" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/activity_edit"
+            android:name=".EditBoard" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/activity_search_board"
+            android:name=".SearchBoardActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:windowSoftInputMode="stateUnchanged"
+            android:label="@string/activity_search_header"
+            android:name="SearchHeaderActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/favorites"
+            android:name=".SearchFavoritesActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/import_pgn_title"
+            android:name=".ImportPgnActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/import_twic"
+            android:name=".twic.ImportTwicActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/import_chessok"
+            android:name=".chessok.ImportChessOkActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/import_chessok"
+            android:name=".chessok.PgnLinkListActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/import_chessok"
+            android:name=".chessok.ChessOkLinkMapActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/activity_select_file"
+            android:name=".SelectFileActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/gamelist"
+            android:name=".GameListActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/add_engine"
+            android:name=".AddEngineActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/remove_engine"
+            android:name=".RemoveEngineActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/saving"
+            android:name=".SaveGameActivity" />
+        <activity
+            android:configChanges="orientation"
+            android:label="@string/saving"
+            android:name=".ExportPgnActivity" />
+        
+        <provider
+            android:authorities="org.scid.database.scidprovider"
+            android:name="org.scid.database.ScidProvider" />
+    </application>
+
+</manifest>
