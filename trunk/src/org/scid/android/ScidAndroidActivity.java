@@ -226,7 +226,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 			Log.d(TAG, "Engine is missing from data. Intializing...");
 			try {
-				InputStream istream = getAssets().open(engine.getName());
+				InputStream istream = new FileInputStream(getApplicationInfo().dataDir
+								+ File.separator
+								+ "lib"
+								+ File.separator
+								+ EngineManager.getInstance().getInternalEngineFileName());
 				FileOutputStream fout = new FileOutputStream(
 						engine.getAbsolutePath());
 				byte[] b = new byte[1024];
@@ -330,8 +334,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void scheduleAutoplay(long timeInMs, final boolean isRepeated) {
 		cancelAutoMove();
 		cancelHumanThinkingTimer(); // human waits for the move instead of thinking
-		autoMoveTask = new TimerTask() { public void run() {
-			runOnUiThread(new Runnable() { public void run() {
+		autoMoveTask = new TimerTask() { @Override
+		public void run() {
+			runOnUiThread(new Runnable() { @Override
+			public void run() {
 				if (ctrl.canRedoMove()) {
 					ctrl.redoMove();
 					if (!isRepeated) {
@@ -586,6 +592,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		status = (TextView) findViewById(R.id.status);
 		status.setFocusable(false);
 		status.setOnTouchListener(new OnTouchListener() {
+			@Override
 			public boolean onTouch(View v, MotionEvent e) {
 				if ((e.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP
 						&& preferences.getBoolean("oneTouchModeChange", true)) {
@@ -605,6 +612,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		moveList.setTextColor(moveList.getTextColors().getDefaultColor());
 		moveList.setLinkTextColor(moveList.getTextColors().getDefaultColor());
 		moveList.setOnLongClickListener(new OnLongClickListener() {
+			@Override
 			public boolean onLongClick(View v) {
 				if (!gameMode.studyMode() && !gameMode.analysisMode()) {
 					removeDialog(MOVELIST_MENU_DIALOG);
@@ -685,6 +693,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					}
 				});
 		cb.setOnTouchListener(new OnTouchListener() {
+			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				return gd.onTouchEvent(event);
 			}
@@ -697,6 +706,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			}
 		});
 		cb.setOnLongClickListener(new OnLongClickListener() {
+			@Override
 			public boolean onLongClick(View v) {
 				removeDialog(CLIPBOARD_DIALOG);
 				showDialog(CLIPBOARD_DIALOG);
@@ -768,8 +778,10 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		cancelHumanThinkingTimer();
 		int t = Integer.valueOf(preferences.getString("humanThinkingAlarmInterval", "0"));
 		if (t != 0) {
-			humanThinkingTimerTask = new TimerTask() { public void run() {
-				runOnUiThread(new Runnable() { public void run() {
+			humanThinkingTimerTask = new TimerTask() { @Override
+			public void run() {
+				runOnUiThread(new Runnable() { @Override
+				public void run() {
 					Toast.makeText(ScidAndroidActivity.this, getText(R.string.time_is_up), Toast.LENGTH_LONG).show();
 					if (preferences.getBoolean("humanThinkingAlarmSound", false))
 						timeIsUp.start();
@@ -779,7 +791,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 	private double getHumanThinkingTime() {
-		return (double)(System.nanoTime() - humanStartThinkingNanoTime) / 1e9;
+		return (System.nanoTime() - humanStartThinkingNanoTime) / 1e9;
 	}
 
 	private void makeHumanMove(Move m) {
@@ -1121,6 +1133,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				.setView(input)
 				.setPositiveButton(android.R.string.ok,
 						new DialogInterface.OnClickListener() {
+							@Override
 							public void onClick(DialogInterface dialog,
 									int whichButton) {
 								String fileName = input.getText().toString()
@@ -1754,6 +1767,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setView(input);
 		builder.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int whichButton) {
 						try {
 							int gameNo = Integer.parseInt(input.getText()
@@ -1792,6 +1806,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setView(input);
 		builder.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String value = input.getText().toString().trim();
 						createDatabase(value);
@@ -1800,6 +1815,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 
 		builder.setNegativeButton(android.R.string.cancel,
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int whichButton) {
 						dialog.cancel();
 					}
@@ -1837,6 +1853,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setTitle(R.string.search);
 		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int item) {
 						if (hasNoDataBaseViewOpened())
 							return;
@@ -1928,6 +1945,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setTitle(R.string.tools_menu);
 		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int item) {
 						switch (finalActions.get(item)) {
 						case GET_FEN:
@@ -1981,6 +1999,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		builder.setTitle(R.string.import_pgn_title);
 		builder.setItems(lst.toArray(new CharSequence[lst.size()]),
 				new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int item) {
 						switch (finalActions.get(item)) {
 						case IMPORT_PGN_FILE:
@@ -2196,6 +2215,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	@Override
 	public void requestPromotePiece() {
 		runOnUiThread(new Runnable() {
+			@Override
 			public void run() {
 				showDialog(PROMOTE_DIALOG);
 			}
@@ -2236,6 +2256,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
+	@Override
 	public ScidApplication getScidAppContext() {
 		return (ScidApplication) getApplicationContext();
 	}
@@ -2247,6 +2268,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	/** Report a move made that is a candidate for GUI animation. */
+	@Override
 	public void setAnimMove(Position sourcePos, Move move, boolean forward) {
 		if (move != null) {
 			cb.setAnimMove(sourcePos, move, forward,
