@@ -27,6 +27,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 import android.util.Xml;
 import android.widget.Toast;
@@ -40,10 +41,7 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
 public class EngineManager {
 	private static final String DATA_PATH = "/data/data/org.scid.android/";
 	private static final String ENGINE_DATA_FILE = "engines.xml";
-	private static final String ARM_ENGINE_NAME = "Critter 1.2";
-	private static final String ARM_ENGINE_EXECUTABLE = "critter-12-arm";
-	private static final String X86_ENGINE_NAME = "Stockfish 2.11";
-	private static final String X86_ENGINE_EXECUTABLE = "stockfish-211-32-ja";
+	private static final String INTERNAL_ENGINE_NAME = "Stockfish 5";
 	private static EngineConfig defaultEngine;
 
 	private Context context;
@@ -91,7 +89,7 @@ public class EngineManager {
 
 	/**
 	 * Gets the singleton instance of the manager.
-	 * 
+	 *
 	 * @return The manager singleton.
 	 */
 	public static EngineManager getInstance() {
@@ -100,21 +98,14 @@ public class EngineManager {
 
 	public EngineManager() {
 		// Establish the default engine
-		String architecture = System.getProperty("os.arch");
-		Log.d("SCID", "architecture: " + architecture);
-		if (architecture.equals("i686")) {
-			defaultEngine = new EngineConfig(X86_ENGINE_NAME, DATA_PATH
-					+ X86_ENGINE_EXECUTABLE);
-		} else {
-			defaultEngine = new EngineConfig(ARM_ENGINE_NAME, DATA_PATH
-					+ ARM_ENGINE_EXECUTABLE);
-		}
+		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME, DATA_PATH
+				+ getInternalEngineFileName());
 	}
 
 	/**
 	 * Sets the application context for the manager to use. The application
 	 * context is needed for displaying dialogs and accessing resource strings.
-	 * 
+	 *
 	 * @param context
 	 *            The application context.
 	 */
@@ -141,7 +132,7 @@ public class EngineManager {
 
 	/**
 	 * Returns the EngineConfig for the default built-in engine.
-	 * 
+	 *
 	 * @return The default EngineConfig.
 	 */
 	public static EngineConfig getDefaultEngine() {
@@ -151,7 +142,7 @@ public class EngineManager {
 	/**
 	 * Returns the EngineConfig for the currently selected engine. This is
 	 * expected to stay in sync with the Analysis Engine preference.
-	 * 
+	 *
 	 * @return The current EngineConfig.
 	 */
 	public EngineConfig getCurrentEngine() {
@@ -165,9 +156,20 @@ public class EngineManager {
 		return getDefaultEngine();
 	}
 
+	public static String getInternalEngineFileName() {
+		final String engineFileName;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			// use the position independent executable (PIE)
+			engineFileName = "libstockfish.so";
+		} else {
+			engineFileName = "libstockfish-nopie.so";
+		}
+		return engineFileName;
+	}
+
 	/**
 	 * Convenience method to get the name of the current engine.
-	 * 
+	 *
 	 * @return The current engine's name.
 	 */
 	public String getCurrentEngineName() {
@@ -178,7 +180,7 @@ public class EngineManager {
 	/**
 	 * Returns a list of the names in the current list of Engines. The name of
 	 * the built-in engine can be optionally included in the list.
-	 * 
+	 *
 	 * @param includeBuiltIn
 	 *            If true, the name of the default engine will be included.
 	 * @return Returns the list of engine names.
@@ -199,7 +201,7 @@ public class EngineManager {
 	 * will stay in sync with the Analysis Engine preference. The name will be
 	 * ignored if it does not match the built-in engine name of a name in the
 	 * current list of engines.
-	 * 
+	 *
 	 * @param engineName
 	 *            Engine name to be set.
 	 */
@@ -216,7 +218,7 @@ public class EngineManager {
 	 * permissions. The copying is done using an async CopyExecutableTask. The
 	 * engine will not be added until after the copy succeeds. If the executable
 	 * is already present in internal storage, the addition occurs immediately.
-	 * 
+	 *
 	 * @param engineName
 	 *            The name of the engine.
 	 * @param executable
@@ -306,7 +308,7 @@ public class EngineManager {
 
 	/**
 	 * Removes the specified engine from the engine list, if it exists.
-	 * 
+	 *
 	 * @param engineName
 	 *            Name of the engine to remove.
 	 * @return Returns the EngineConfig for the removed engine or null if it was
@@ -359,7 +361,7 @@ public class EngineManager {
 
 	/**
 	 * Detects if an engine name is already in use in the engine list.
-	 * 
+	 *
 	 * @param name
 	 *            Engine name to check.
 	 * @return Returns true if an engine by that name is found.
@@ -371,7 +373,7 @@ public class EngineManager {
 	/**
 	 * Detects if the executable path is in use by any engines in the current
 	 * list.
-	 * 
+	 *
 	 * @param executablePath
 	 *            Executable path to check.
 	 * @return Returns true if at least one engine uses the specified executable
@@ -388,7 +390,7 @@ public class EngineManager {
 
 	/**
 	 * Writes the specified engine list to the data file.
-	 * 
+	 *
 	 * @param enginesList
 	 *            List of engines to persist.
 	 */
@@ -431,7 +433,7 @@ public class EngineManager {
 	/**
 	 * Returns the current list of engines, loading them from the data file if
 	 * necessary.
-	 * 
+	 *
 	 * @return Returns the current list of engines.
 	 */
 	private Map<String, EngineConfig> getEnginesList() {
