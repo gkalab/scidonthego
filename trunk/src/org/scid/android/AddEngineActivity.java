@@ -31,6 +31,8 @@ public class AddEngineActivity extends Activity {
 	public static final String DATA_ENGINE_MANAGER = "org.scid.android.engine.manager";
 	public static final String DATA_ENGINE_NAME = "org.scid.android.engine.name";
 	public static final String DATA_ENGINE_EXECUTABLE = "org.scid.android.engine.executable";
+	public static final String DATA_ENGINE_PACKAGE = "org.scid.android.engine.package";
+	public static final String DATA_ENGINE_VERSION = "org.scid.android.engine.version";
 	public static final String DATA_MAKE_CURRENT_ENGINE = "org.scid.android.make.current.engine";
 
 	public static final int RESULT_EXECUTABLE_EXISTS = 2;
@@ -39,6 +41,8 @@ public class AddEngineActivity extends Activity {
 
 	private List<Engine> executablesList;
 	private volatile String currentExecutable;
+	private volatile String currentPackage;
+	private volatile int currentVersion = 0;
 	private List<ChessEngine> openEngines = new ArrayList<ChessEngine>();
 
 	@Override
@@ -73,7 +77,8 @@ public class AddEngineActivity extends Activity {
 		for (ChessEngine engine : openEngines) {
 			if (!executablesList.contains(engine.getFileName())) {
 				executablesList.add(new Engine(engine.getName(), engine
-						.getFileName()));
+						.getFileName(), engine.getPackageName(), engine
+						.getVersionCode()));
 			}
 		}
 	}
@@ -84,12 +89,20 @@ public class AddEngineActivity extends Activity {
 		if (currentExecutable != null) {
 			outState.putString("engine.executable", currentExecutable);
 		}
+		if (currentPackage != null) {
+			outState.putString("engine.package", currentPackage);
+		}
+		if (currentVersion > 0) {
+			outState.putInt("engine.version", currentVersion);
+		}
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		currentExecutable = savedInstanceState.getString("engine.executable");
+		currentPackage = savedInstanceState.getString("engine.package");
+		currentVersion = savedInstanceState.getInt("engine.version", 0);
 	}
 
 	/**
@@ -134,6 +147,8 @@ public class AddEngineActivity extends Activity {
 			if (position != ListView.INVALID_POSITION) {
 				Engine engine = (Engine) parent.getItemAtPosition(position);
 				currentExecutable = engine.getFileName();
+				currentPackage = engine.getPackageName();
+				currentVersion = engine.getVersionCode();
 				EditText nameField = (EditText) findViewById(R.id.engine_name);
 				Editable nameEditable = nameField.getText();
 				if (nameEditable.length() == 0) {
@@ -187,6 +202,8 @@ public class AddEngineActivity extends Activity {
 
 		data.putExtra(DATA_ENGINE_NAME, name);
 		data.putExtra(DATA_ENGINE_EXECUTABLE, currentExecutable);
+		data.putExtra(DATA_ENGINE_PACKAGE, currentPackage);
+		data.putExtra(DATA_ENGINE_VERSION, currentVersion);
 		data.putExtra(DATA_MAKE_CURRENT_ENGINE, makeCurrentEngine);
 		setResult(RESULT_EXECUTABLE_EXISTS, data);
 		finish();

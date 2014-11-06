@@ -65,6 +65,7 @@ import android.widget.Toast;
 public class ScidAndroidActivity extends Activity implements GUIInterface,
 		IClipboardChangedListener, IDownloadCallback {
 
+	private static final String ANALYSIS_ENGINE = "analysisEngine";
 	private static final String TAG = ScidAndroidActivity.class.getSimpleName();
 	private ChessBoard cb;
 	private EngineManager engineManager;
@@ -931,7 +932,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ColorTheme.instance().readColors(preferences);
 		cb.setColors();
 
-		String engineName = preferences.getString("analysisEngine", EngineManager
+		String engineName = preferences.getString(ANALYSIS_ENGINE, EngineManager
 				.getDefaultEngine().getName());
 		engineManager.setCurrentEngineName(engineName);
 
@@ -1440,6 +1441,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						.getStringExtra(AddEngineActivity.DATA_ENGINE_NAME);
 				String executable = data
 						.getStringExtra(AddEngineActivity.DATA_ENGINE_EXECUTABLE);
+				String enginePackage = data.getStringExtra(AddEngineActivity.DATA_ENGINE_PACKAGE);
+				int engineVersion = data.getIntExtra(AddEngineActivity.DATA_ENGINE_VERSION, 0);
 				boolean makeCurrentEngine = data.getBooleanExtra(
 						AddEngineActivity.DATA_MAKE_CURRENT_ENGINE, false);
 				if (executable == null) {
@@ -1447,8 +1450,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 							getText(R.string.no_engine_selected),
 							Toast.LENGTH_LONG).show();
 				} else {
-					addNewEngine(engineName, executable, makeCurrentEngine,
-							false);
+					addNewEngine(engineName, executable, enginePackage, engineVersion,
+							makeCurrentEngine, false);
 				}
 			}
 			break;
@@ -1459,7 +1462,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				if (_engineName != null && _engineName.length() > 0) {
 					// Update preferences if removing current analysis engine
 					String analysisEngine = preferences.getString(
-							"analysisEngine", null);
+							ANALYSIS_ENGINE, null);
 					if (analysisEngine != null
 							&& analysisEngine.equals(_engineName)) {
 						final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
@@ -1470,7 +1473,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 										&& event.getChangeType() == EngineChangeEvent.REMOVE_ENGINE
 										&& event.getSuccess()) {
 									Editor editor = preferences.edit();
-									editor.putString("analysisEngine",
+									editor.putString(ANALYSIS_ENGINE,
 											EngineManager.getDefaultEngine()
 													.getName());
 									editor.commit();
@@ -1564,28 +1567,29 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		}
 	}
 
-	public void addNewEngine(String engineName, String executable,
-			boolean makeCurrentEngine, boolean copied) {
+	private void addNewEngine(final String engineName, String executable,
+			final String enginePackage, final int engineVersion, boolean makeCurrentEngine, boolean copied) {
 		if (makeCurrentEngine) {
-			final String _engineName = engineName;
 			final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
 
 				@Override
 				public void engineChanged(EngineChangeEvent event) {
-					if (_engineName.equals(event.getEngineName())
+					if (engineName.equals(event.getEngineName())
 							&& event.getChangeType() == EngineChangeEvent.ADD_ENGINE
 							&& event.getSuccess()) {
 						Editor editor = preferences.edit();
-						editor.putString("analysisEngine", _engineName);
+						editor.putString(ANALYSIS_ENGINE, engineName);
+						editor.putString("analysisEnginePackage", enginePackage);
+						editor.putInt("analysisEngineVersion", engineVersion);
 						editor.commit();
-						engineManager.setCurrentEngineName(_engineName);
+						engineManager.setCurrentEngineName(engineName);
 					}
 					engineManager.removeEngineChangeListener(this);
 				}
 			};
 			engineManager.addEngineChangeListener(_listener);
 		}
-		engineManager.addEngine(engineName, executable);
+		engineManager.addEngine(engineName, executable, enginePackage, engineVersion);
 	}
 
 	private final void setFlipped(boolean flipped) {

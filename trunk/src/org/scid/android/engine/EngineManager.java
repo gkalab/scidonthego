@@ -39,7 +39,7 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
  * Class to manage UCI chess engines.
  */
 public class EngineManager {
-	private static final String DATA_PATH = "/data/data/org.scid.android/";
+	public static final String DATA_PATH = "/data/data/org.scid.android/";
 	private static final String ENGINE_DATA_FILE = "engines.xml";
 	private static final String INTERNAL_ENGINE_NAME = "Stockfish 5";
 	private static EngineConfig defaultEngine;
@@ -99,7 +99,7 @@ public class EngineManager {
 	public EngineManager() {
 		// Establish the default engine
 		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME, DATA_PATH
-				+ getInternalEngineFileName());
+				+ getInternalEngineFileName(), null, 0);
 	}
 
 	/**
@@ -223,12 +223,17 @@ public class EngineManager {
 	 *            The name of the engine.
 	 * @param executable
 	 *            The name of the executable file for the engine.
+	 * @param enginePackage
+	 *            The name of the package of the engine. Can be null.
+	 * @param engineVersion
+	 *            The version of the engine. Can be 0 if there is no version
+	 *            information.
 	 * @return Returns true if an engine by the same name doesn't already exist.
 	 */
-	public boolean addEngine(String engineName, String executable) {
+	public boolean addEngine(String engineName, String executable,
+			String enginePackage, int engineVersion) {
 		EngineConfig engine = getEnginesList().get(engineName);
 		if (engine == null) {
-
 			File engineFile = new File(DATA_PATH + executable);
 			String engineAbsPath = engineFile.getAbsolutePath();
 			boolean engineExists = engineFile.exists();
@@ -237,14 +242,15 @@ public class EngineManager {
 				File externFile = new File(scidFileDir, executable);
 				if (externFile.exists()) {
 					// Copy the engine file and add when done.
-					new CopyExecutableTask(engineName).execute(externFile,
-							engineFile);
+					new CopyExecutableTask(engineName, enginePackage,
+							engineVersion).execute(externFile, engineFile);
 				} else {
 					addOpenExchangeEngine(executable, engineAbsPath, engineName);
 				}
 				return true;
 			} else {
-				saveToConfiguration(engineName, engineAbsPath);
+				saveToConfiguration(engineName, engineAbsPath, enginePackage,
+						engineVersion);
 				Toast.makeText(context,
 						context.getString(R.string.engine_added, engineName),
 						Toast.LENGTH_SHORT).show();
@@ -260,11 +266,12 @@ public class EngineManager {
 		return false;
 	}
 
-	private void saveToConfiguration(String engineName, String engineAbsPath) {
+	public void saveToConfiguration(String engineName, String engineAbsPath,
+			String packageName, int versionCode) {
 		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
 				getEnginesList());
-		enginesList
-				.put(engineName, new EngineConfig(engineName, engineAbsPath));
+		enginesList.put(engineName, new EngineConfig(engineName, engineAbsPath,
+				packageName, versionCode));
 		synchronized (managerLock) {
 			engines = enginesList;
 		}
@@ -288,7 +295,9 @@ public class EngineManager {
 							context,
 							context.getString(R.string.engine_added_copied,
 									engineName), Toast.LENGTH_LONG).show();
-					saveToConfiguration(engineName, engineAbsPath);
+					saveToConfiguration(engineName, engineAbsPath,
+							openEngine.getPackageName(),
+							openEngine.getVersionCode());
 				} catch (IOException e) {
 					notifyListeners(new EngineChangeEvent(engineName,
 							EngineChangeEvent.ADD_ENGINE, false));
@@ -406,6 +415,13 @@ public class EngineManager {
 				serializer.startTag(null, "engine");
 				serializer.attribute(null, "name", engine.getName());
 				serializer.attribute(null, "path", engine.getExecutablePath());
+				serializer.attribute(
+						null,
+						"package",
+						engine.getPackageName() == null ? "" : engine
+								.getPackageName());
+				serializer.attribute(null, "version",
+						"" + engine.getVersionCode());
 				serializer.endTag(null, "engine");
 			}
 			serializer.endTag(null, "engines");
@@ -459,27 +475,8 @@ public class EngineManager {
 				while (eventType != XmlPullParser.END_DOCUMENT) {
 					switch (eventType) {
 					case XmlPullParser.START_TAG:
-						if (parser.getName().equalsIgnoreCase("engine")) {
-							String engineName = parser.getAttributeValue(null,
-									"name");
-							String enginePath = parser.getAttributeValue(null,
-									"path");
-							if (engineName != null && engineName.length() > 0
-									&& list.get(engineName) == null
-									&& enginePath != null
-									&& enginePath.length() > 0) {
-								File engineFile = new File(enginePath);
-								if (engineFile.exists()) {
-									list.put(
-											engineName,
-											new EngineConfig(engineName,
-													engineFile
-															.getAbsolutePath()));
-								}
-							}
-						}
+						readEngine(parser, list);
 						break;
-
 					default:
 						break;
 					}
@@ -504,6 +501,32 @@ public class EngineManager {
 		}
 	}
 
+	private void readEngine(XmlPullParser parser,
+			TreeMap<String, EngineConfig> list) {
+		if (parser.getName().equalsIgnoreCase("engine")) {
+			String engineName = parser.getAttributeValue(null, "name");
+			String enginePath = parser.getAttributeValue(null, "path");
+			if (engineName != null && engineName.length() > 0
+					&& list.get(engineName) == null && enginePath != null
+					&& enginePath.length() > 0) {
+				String enginePackage = parser
+						.getAttributeValue(null, "package");
+				String engineVersion = parser
+						.getAttributeValue(null, "version");
+				int version = 0;
+				if (engineVersion != null && engineVersion.length() > 0) {
+					version = Integer.parseInt(engineVersion);
+				}
+				File engineFile = new File(enginePath);
+				if (engineFile.exists()) {
+					list.put(engineName, new EngineConfig(engineName,
+							engineFile.getAbsolutePath(), enginePackage,
+							version));
+				}
+			}
+		}
+	}
+
 	private void notifyListeners(EngineChangeEvent event) {
 		List<EngineChangeListener> listeners;
 		synchronized (managerLock) {
@@ -518,10 +541,9 @@ public class EngineManager {
 	}
 
 	/**
-	 * Task to copy an chess engine executable file to internal storage and set
+	 * Task to copy a chess engine executable file to internal storage and set
 	 * its permissions. It is also responsible for displaying a progress dialog
 	 * and updating the engine list if the copy succeeds.
-	 *
 	 */
 	private class CopyExecutableTask extends AsyncTask<File, Integer, Boolean>
 			implements OnCancelListener, OnClickListener {
@@ -529,9 +551,14 @@ public class EngineManager {
 		private ProgressDialog progDlg;
 		private File destFile;
 		private String errorMsg;
+		private String enginePackage;
+		private int engineVersion;
 
-		public CopyExecutableTask(String engineName) {
+		public CopyExecutableTask(String engineName, String enginePackage,
+				int engineVersion) {
 			this.engineName = engineName;
+			this.enginePackage = enginePackage;
+			this.engineVersion = engineVersion;
 		}
 
 		@Override
@@ -601,7 +628,7 @@ public class EngineManager {
 				Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
 						getEnginesList());
 				enginesList.put(engineName, new EngineConfig(engineName,
-						absPath));
+						absPath, enginePackage, engineVersion));
 				synchronized (managerLock) {
 					engines = enginesList;
 				}
