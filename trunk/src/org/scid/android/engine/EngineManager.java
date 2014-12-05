@@ -39,7 +39,6 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
  * Class to manage UCI chess engines.
  */
 public class EngineManager {
-	public static final String DATA_PATH = "/data/data/org.scid.android/";
 	private static final String ENGINE_DATA_FILE = "engines.xml";
 	private static final String INTERNAL_ENGINE_NAME = "Stockfish 5";
 	private static EngineConfig defaultEngine;
@@ -85,32 +84,15 @@ public class EngineManager {
 		public void engineChanged(EngineChangeEvent event);
 	}
 
-	private static EngineManager instance = new EngineManager();
-
-	/**
-	 * Gets the singleton instance of the manager.
-	 *
-	 * @return The manager singleton.
-	 */
-	public static EngineManager getInstance() {
-		return instance;
-	}
-
-	public EngineManager() {
-		// Establish the default engine
-		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME, DATA_PATH
-				+ getInternalEngineFileName(), null, 0);
-	}
-
-	/**
-	 * Sets the application context for the manager to use. The application
-	 * context is needed for displaying dialogs and accessing resource strings.
-	 *
-	 * @param context
-	 *            The application context.
-	 */
-	public void setContext(Context context) {
+	public EngineManager(Context context) {
 		this.context = context;
+		// Establish the default engine
+		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME, context
+				.getFilesDir().getPath() + getInternalEngineFileName(), null, 0);
+	}
+
+	public String getFilesDir() {
+		return context.getFilesDir().getPath();
 	}
 
 	public void addEngineChangeListener(EngineChangeListener listener) {
@@ -135,7 +117,7 @@ public class EngineManager {
 	 *
 	 * @return The default EngineConfig.
 	 */
-	public static EngineConfig getDefaultEngine() {
+	public EngineConfig getDefaultEngine() {
 		return defaultEngine;
 	}
 
@@ -234,7 +216,7 @@ public class EngineManager {
 			String enginePackage, int engineVersion) {
 		EngineConfig engine = getEnginesList().get(engineName);
 		if (engine == null) {
-			File engineFile = new File(DATA_PATH + executable);
+			File engineFile = new File(context.getFilesDir(), executable);
 			String engineAbsPath = engineFile.getAbsolutePath();
 			boolean engineExists = engineFile.exists();
 			if (!engineExists) {
@@ -290,7 +272,7 @@ public class EngineManager {
 				found = true;
 				try {
 					openEngine.copyToFiles(context.getContentResolver(),
-							new File(DATA_PATH));
+							context.getFilesDir());
 					Toast.makeText(
 							context,
 							context.getString(R.string.engine_added_copied,
@@ -429,7 +411,8 @@ public class EngineManager {
 			if (Log.isLoggable("SCID", Log.DEBUG))
 				Log.d("SCID", "Engine XML: " + writer.toString());
 
-			File engineDataFile = new File(DATA_PATH + ENGINE_DATA_FILE);
+			File engineDataFile = new File(context.getFilesDir(),
+					ENGINE_DATA_FILE);
 			fw = new FileWriter(engineDataFile);
 			fw.write(writer.toString());
 			fw.close();
@@ -464,7 +447,7 @@ public class EngineManager {
 	 */
 	private void loadEngineData() {
 		TreeMap<String, EngineConfig> list = new TreeMap<String, EngineConfig>();
-		File engineDataFile = new File(DATA_PATH + ENGINE_DATA_FILE);
+		File engineDataFile = new File(context.getFilesDir(), ENGINE_DATA_FILE);
 		if (engineDataFile.exists()) {
 			FileReader fr = null;
 			try {
@@ -584,7 +567,7 @@ public class EngineManager {
 				if (!canceled) {
 					if (Log.isLoggable("SCID", Log.INFO))
 						Log.i("SCID", srcFile.getName() + " copied to "
-								+ DATA_PATH);
+								+ context.getFilesDir().getPath());
 					result = Boolean.TRUE;
 				}
 			} catch (IOException e) {

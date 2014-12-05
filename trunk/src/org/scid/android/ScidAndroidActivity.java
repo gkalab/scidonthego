@@ -108,9 +108,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		if (!scidFileDir.exists()) {
 			scidFileDir.mkdirs();
 		}
+		engineManager = new EngineManager(this);
 		checkUciEngine();
-		engineManager = EngineManager.getInstance();
-		engineManager.setContext(this);
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		preferences.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
 			@Override
@@ -207,8 +206,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	}
 
 	private void checkUciEngine() {
-		// check if engine exists in /data/data/org.scid.android
-		File engine = new File(EngineManager.getDefaultEngine()
+		// check if engine exists in the files directory
+		File engine = new File(engineManager.getDefaultEngine()
 				.getExecutablePath());
 		if (engine.exists()) {
 			try {
@@ -224,14 +223,13 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				Log.e(TAG, e.getMessage(), e);
 			}
 		} else {
-
 			Log.d(TAG, "Engine is missing from data. Intializing...");
 			try {
 				InputStream istream = new FileInputStream(getApplicationInfo().dataDir
 								+ File.separator
 								+ "lib"
 								+ File.separator
-								+ EngineManager.getInstance().getInternalEngineFileName());
+								+ EngineManager.getInternalEngineFileName());
 				FileOutputStream fout = new FileOutputStream(
 						engine.getAbsolutePath());
 				byte[] b = new byte[1024];
@@ -242,7 +240,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				istream.close();
 				fout.close();
 				Log.d(TAG, engine.getName()
-						+ " copied to /data/data/org.scid.android/");
+						+ " copied to files directory");
 				try {
 					String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
 					Process process = Runtime.getRuntime().exec(cmd);
@@ -932,7 +930,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ColorTheme.instance().readColors(preferences);
 		cb.setColors();
 
-		String engineName = preferences.getString(ANALYSIS_ENGINE, EngineManager
+		String engineName = preferences.getString(ANALYSIS_ENGINE, engineManager
 				.getDefaultEngine().getName());
 		engineManager.setCurrentEngineName(engineName);
 
@@ -1474,7 +1472,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 										&& event.getSuccess()) {
 									Editor editor = preferences.edit();
 									editor.putString(ANALYSIS_ENGINE,
-											EngineManager.getDefaultEngine()
+											engineManager.getDefaultEngine()
 													.getName());
 									editor.commit();
 								}

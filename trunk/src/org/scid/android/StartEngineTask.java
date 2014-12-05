@@ -42,11 +42,10 @@ public class StartEngineTask extends AsyncTask {
 		}
 		if (pkg != null && pkg.length() > 0) {
 			int newVersion = resolver.ensureEngineVersion(engineFileName, pkg,
-					engineVersion, new File(EngineManager.DATA_PATH));
-			File engineFile = new File(EngineManager.DATA_PATH + File.separator
-					+ engineFileName);
+					engineVersion, activity.getFilesDir());
+			File engineFile = new File(activity.getFilesDir(),engineFileName);
 			if (newVersion > engineVersion && engineFile.exists()) {
-				new EngineManager()
+				new EngineManager(activity)
 						.saveToConfiguration(engineName,
 								engineFile.getAbsolutePath(), pkg,
 								newVersion);
