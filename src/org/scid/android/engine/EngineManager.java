@@ -27,7 +27,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.util.Log;
 import android.util.Xml;
 import android.widget.Toast;
@@ -39,6 +38,7 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
  * Class to manage UCI chess engines.
  */
 public class EngineManager {
+	public static final String INTERNAL_ENGINE_FILE_NAME = "libstockfish.so";
 	private static final String ENGINE_DATA_FILE = "engines.xml";
 	private static final String INTERNAL_ENGINE_NAME = "Stockfish 5";
 	private static EngineConfig defaultEngine;
@@ -87,8 +87,9 @@ public class EngineManager {
 	public EngineManager(Context context) {
 		this.context = context;
 		// Establish the default engine
-		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME, context
-				.getFilesDir().getPath() + getInternalEngineFileName(), null, 0);
+		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME,
+				new File(context.getFilesDir(), INTERNAL_ENGINE_FILE_NAME)
+						.getAbsolutePath(), null, 0);
 	}
 
 	public String getFilesDir() {
@@ -136,17 +137,6 @@ public class EngineManager {
 			}
 		}
 		return getDefaultEngine();
-	}
-
-	public static String getInternalEngineFileName() {
-		final String engineFileName;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-			// use the position independent executable (PIE)
-			engineFileName = "libstockfish.so";
-		} else {
-			engineFileName = "libstockfish-nopie.so";
-		}
-		return engineFileName;
 	}
 
 	/**
