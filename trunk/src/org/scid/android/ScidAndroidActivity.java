@@ -229,7 +229,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 								+ File.separator
 								+ "lib"
 								+ File.separator
-								+ EngineManager.getInternalEngineFileName());
+								+ EngineManager.INTERNAL_ENGINE_FILE_NAME);
 				FileOutputStream fout = new FileOutputStream(
 						engine.getAbsolutePath());
 				byte[] b = new byte[1024];
