@@ -39,7 +39,7 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
  */
 public class EngineManager {
 	public static final String INTERNAL_ENGINE_FILE_NAME = "libstockfish.so";
-	private static final String ENGINE_DATA_FILE = "engines.xml";
+	private static final String ENGINE_DATA_FILE = "chessengines.xml";
 	private static final String INTERNAL_ENGINE_NAME = "Stockfish 5";
 	private static EngineConfig defaultEngine;
 

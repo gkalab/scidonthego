@@ -682,17 +682,13 @@ public class ChessController {
 					timeIncrement);
 	}
 
-	private Object shutdownEngineLock = new Object();
-
-	public final void shutdownEngine() {
-		synchronized (shutdownEngineLock) {
+	public final synchronized void shutdownEngine() {
 			ss.searchResultWanted = false;
 			stopAnalysis();
 			if (computerPlayer != null) {
 				computerPlayer.shutdownEngine();
 				computerPlayer = null;
 			}
-		}
 	}
 
 	/**
