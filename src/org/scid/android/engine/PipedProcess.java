@@ -17,6 +17,7 @@ public class PipedProcess {
 	private BufferedReader reader = null;
 	private BufferedWriter writer = null;
 	private Process process;
+	private String nextAnalyzeCommand;
 
 	/** Start process. */
 	public final void initialize(EngineConfig engineConfig) {
@@ -29,6 +30,27 @@ public class PipedProcess {
 
 	public EngineConfig getEngineConfig() {
 		return engineConfig;
+	}
+
+	private void writeAnalyzeCommands(String cmd) {
+		writeLineToProcess("stop");
+		writeLineToProcess("isready");
+		writeLineToProcess(cmd);
+		writeLineToProcess("go infinite");
+	}
+
+	public synchronized void analyzeNext() {
+		if (this.nextAnalyzeCommand != null) {
+			writeAnalyzeCommands(nextAnalyzeCommand);
+			this.nextAnalyzeCommand = null;
+		}
+	}
+
+	/**
+	 * TODO: use a delayed queue instead (e.g. DelayQueue) or FutureTask?
+	 */
+	public synchronized void setNextAnalyzeCommand(String nextAnalyzeCommand) {
+		this.nextAnalyzeCommand = nextAnalyzeCommand;
 	}
 
 	public boolean isAlive() {
@@ -83,9 +105,9 @@ public class PipedProcess {
 		} catch (IOException e) {
 			Log.e(TAG, "Error reading from process");
 		}
-//		if (ret != null && ret.length() > 0) {
-//			Log.d("SCID", "Engine -> GUI: " + ret);
-//		}
+		// if (ret != null && ret.length() > 0) {
+		// Log.d("SCID", "Engine -> GUI: " + ret);
+		// }
 		return ret;
 	}
 
@@ -95,7 +117,7 @@ public class PipedProcess {
 	 * @throws IOException
 	 */
 	public final synchronized void writeLineToProcess(String data) {
-//		Log.d("SCID", "GUI -> Engine: " + data);
+		// Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
 		} catch (IOException e) {
@@ -106,7 +128,8 @@ public class PipedProcess {
 
 	/** Start the child process. */
 	private final void startProcess(EngineConfig engineConfig) {
-		ProcessBuilder builder = new ProcessBuilder(engineConfig.getExecutablePath());
+		ProcessBuilder builder = new ProcessBuilder(
+				engineConfig.getExecutablePath());
 		builder.redirectErrorStream(true);
 		try {
 			Log.d(TAG, "starting process");
