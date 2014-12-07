@@ -56,17 +56,17 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 			} catch (InterruptedException e) {
 				// ignore
 			}
-			if (line == null || line.length() == 0 || listener == null) {
-				continue;
-			}
-			String[] tokens = tokenize(line);
-			if (tokens[0].equals("info")) {
-				parseInfoCmd(tokens);
+			if (line != null && line.length() > 0 && listener != null) {
+				String[] tokens = tokenize(line);
+				if (tokens[0].equals("info")) {
+					parseInfoCmd(tokens);
+				}
 			}
 			if (!this.isCancelled()
-					&& System.currentTimeMillis() > (lastPublishedTime + 300)) {
+					&& System.currentTimeMillis() > (lastPublishedTime + 500)) {
 				publishProgress();
 				lastPublishedTime = System.currentTimeMillis();
+				engineProcess.analyzeNext();
 			}
 		}
 		engineProcess.writeLineToProcess("quit");
@@ -188,11 +188,8 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 		return cmdLine.trim().split("\\s+");
 	}
 
-	public void setCurrentPosition(Position currentPosition) {
-		this.currentPosition = currentPosition;
-	}
-
-	public void setCurrentGame(Game game) {
+	public void setCurrentPosition(Game game, Position currentPosition) {
 		this.game = game;
+		this.currentPosition = currentPosition;
 	}
 }

@@ -324,12 +324,8 @@ public class ChessController {
 						}
 					}
 					PipedProcess process = computerPlayer.getEngine();
-					process.writeLineToProcess("stop");
-					process.writeLineToProcess("isready");
-					process.writeLineToProcess(posStr.toString());
-					process.writeLineToProcess("go infinite");
-					readTask.setCurrentPosition(currentPosition);
-					readTask.setCurrentGame(game);
+					process.setNextAnalyzeCommand(posStr.toString());
+					readTask.setCurrentPosition(game, currentPosition);
 				}
 				updateGUI();
 			}
