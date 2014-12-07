@@ -8,13 +8,8 @@ package org.scid.android.engine;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import org.scid.android.gamelogic.Move;
-import org.scid.android.gamelogic.Pair;
-import org.scid.android.gamelogic.Position;
-import org.scid.android.gamelogic.SearchListener;
-
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 /**
@@ -25,36 +20,33 @@ import android.util.Log;
 public class ComputerPlayer {
 	public static String engineName = "";
 
-	static PipedProcess npp = null;
-	SearchListener listener;
+	static PipedProcess process = null;
 	int timeLimit;
-	Book book;
 
+	@SuppressLint("NewApi")
 	public ComputerPlayer(EngineConfig engineConfig) {
-		if (npp == null) {
-			npp = new PipedProcess();
-			Log.d("SCID", "engine: initialize");
-			npp.initialize(engineConfig);
-			Log.d("SCID", "engine: write uci");
-			npp.writeLineToProcess("uci");
-			Log.d("SCID", "engine: read uci options");
-			readUCIOptions();
-			Log.d("SCID", "engine: finish read uci options");
-			int nThreads = getNumCPUs();
-			if (nThreads > 8)
-				nThreads = 8;
-			Log.d("SCID", "engine: setting options");
-			npp.writeLineToProcess("setoption name Hash value 16");
-			npp.writeLineToProcess("setoption name Ponder value false");
-			npp.writeLineToProcess(String.format(
-					"setoption name Threads value %d", nThreads));
-			Log.d("SCID", "engine: writing ucinewgame");
-			npp.writeLineToProcess("ucinewgame");
-			syncReady();
-		}
-		listener = null;
+		process = new PipedProcess();
+		Log.d("SCID", "engine: initialize");
+		process.initialize(engineConfig);
+		Log.d("SCID", "engine: write uci");
+		process.writeLineToProcess("uci");
+		Log.d("SCID", "engine: read uci options");
+		readUCIOptions();
+		Log.d("SCID", "engine: finish read uci options");
+		Log.d("SCID", "engine: setting options");
+		//process.writeLineToProcess("setoption name Hash value 16");
+		process.writeLineToProcess("setoption name Ponder value false");
+		// disable multiple threads for now: internal engine (Stockfish 5)
+		// crashes
+		// int nThreads = getNumCPUs();
+		// if (nThreads > 8)
+		// nThreads = 8;
+		// process.writeLineToProcess(String.format("setoption name Threads value %d",
+		// nThreads));
+		Log.d("SCID", "engine: writing ucinewgame");
+		process.writeLineToProcess("ucinewgame");
+		syncReady();
 		timeLimit = 0;
-		book = new Book();
 	}
 
 	private static int getNumCPUs() {
@@ -77,19 +69,11 @@ public class ComputerPlayer {
 		}
 	}
 
-	public final void setListener(SearchListener listener) {
-		this.listener = listener;
-	}
-
-	public final void setBookFileName(String bookFileName) {
-		book.setBookFileName(bookFileName);
-	}
-
 	private void readUCIOptions() {
-		synchronized (npp) {
+		synchronized (process) {
 			long startTime = System.currentTimeMillis();
 			while (true) {
-				String s = npp.readLineFromProcess();
+				String s = process.readLineFromProcess();
 				try {
 					Thread.sleep(50);
 				} catch (InterruptedException e) {
@@ -112,7 +96,7 @@ public class ComputerPlayer {
 					}
 				} else if (System.currentTimeMillis() - startTime > 15000) {
 					// no reaction from uci engine --> retry uci command
-					npp.writeLineToProcess("uci");
+					process.writeLineToProcess("uci");
 					startTime = System.currentTimeMillis();
 				}
 			}
@@ -126,18 +110,20 @@ public class ComputerPlayer {
 	}
 
 	private final void syncReady() {
-		synchronized (npp) {
-			npp.writeLineToProcess("isready");
+		synchronized (process) {
+			process.writeLineToProcess("isready");
 			Log.d("SCID", "waiting for readyok");
 			long start = System.currentTimeMillis();
-			while (true) {
-				String s = npp.readLineFromProcess();
+			int retries = 3;
+			while (retries > 0) {
+				String s = process.readLineFromProcess();
 				if (s != null && s.equals("readyok"))
 					break;
 				if ((System.currentTimeMillis() - start) > 5000) {
 					Log.i("SCID", "no reaction from engine - retrying...");
-					npp.writeLineToProcess("isready");
+					process.writeLineToProcess("isready");
 					start = System.currentTimeMillis();
+					retries--;
 				}
 				try {
 					Thread.sleep(50);
@@ -150,21 +136,25 @@ public class ComputerPlayer {
 	}
 
 	public PipedProcess getEngine() {
-		return npp;
+		return process;
 	}
 
 	/** Stop the engine process. */
 	public final void shutdownEngine() {
-		synchronized (npp) {
-			if (npp != null) {
-				npp.shutDown();
-				npp = null;
+		synchronized (process) {
+			if (process != null) {
+				process.writeLineToProcess("quit");
+				try {
+					// wait 2 sec for engine to shut down
+					Thread.sleep(2000);
+				} catch (InterruptedException e1) {
+					// ignore
+				}
+				if (process != null) {
+					process.shutDown();
+				}
+				process = null;
 			}
 		}
-	}
-
-	public final Pair<String, ArrayList<Move>> getBookHints(Position pos) {
-		Pair<String, ArrayList<Move>> bi = book.getAllBookMoves(pos);
-		return new Pair<String, ArrayList<Move>>(bi.first, bi.second);
 	}
 }

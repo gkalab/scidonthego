@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import android.util.Log;
 
 public class PipedProcess {
+	private static final String TAG = PipedProcess.class.getSimpleName();
 	private EngineConfig engineConfig;
 	private boolean processAlive = false;
 	private BufferedReader reader = null;
@@ -21,7 +22,7 @@ public class PipedProcess {
 	public final void initialize(EngineConfig engineConfig) {
 		if (!processAlive) {
 			this.engineConfig = engineConfig;
-			Log.d("SCID", "process not alive, starting " + engineConfig.getName());
+			Log.d(TAG, "process not alive, starting " + engineConfig.getName());
 			startProcess(engineConfig);
 		}
 	}
@@ -31,26 +32,39 @@ public class PipedProcess {
 	}
 
 	public boolean isAlive() {
-		return processAlive;
+		return processAlive && !isTerminated();
 	}
 
 	/** Shut down process. */
 	public final void shutDown() {
-		if (processAlive) {
-			writeLineToProcess("quit");
+		if (processAlive && !isTerminated()) {
 			if (process != null) {
 				process.destroy();
-				Log.d("SCID", "uci process killed");
+				Log.d(TAG, "uci process killed");
 			}
 			processAlive = false;
 		}
 	}
 
+	public boolean isTerminated() {
+		boolean terminated = true;
+		if (process != null) {
+			try {
+				int exitValue = process.exitValue();
+				Log.d(TAG, "exitValue=" + exitValue);
+				processAlive = false;
+			} catch (IllegalThreadStateException e) {
+				terminated = false;
+			}
+		}
+		return terminated;
+	}
+
 	@Override
 	protected void finalize() throws Throwable {
-		if (processAlive && process != null) {
+		if (processAlive && process != null && !isTerminated()) {
 			process.destroy();
-			Log.d("SCID", "uci process killed in finalize");
+			Log.d(TAG, "uci process killed in finalize");
 		}
 		super.finalize();
 	}
@@ -67,12 +81,11 @@ public class PipedProcess {
 		try {
 			ret = readFromProcess();
 		} catch (IOException e) {
-			Log.e("SCID", "Error reading from process");
-			e.printStackTrace();
+			Log.e(TAG, "Error reading from process");
 		}
-		if (ret != null && ret.length() > 0) {
-			// Log.d("SCID", "Engine -> GUI: " + ret);
-		}
+//		if (ret != null && ret.length() > 0) {
+//			Log.d("SCID", "Engine -> GUI: " + ret);
+//		}
 		return ret;
 	}
 
@@ -82,12 +95,12 @@ public class PipedProcess {
 	 * @throws IOException
 	 */
 	public final synchronized void writeLineToProcess(String data) {
-		// Log.d("SCID", "GUI -> Engine: " + data);
+//		Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
 		} catch (IOException e) {
-			Log.e("SCID", "Error writing to process: " + data, e);
-			processAlive = false;
+			Log.e(TAG, "Error writing to process: " + data, e);
+			isTerminated();
 		}
 	}
 
@@ -96,19 +109,19 @@ public class PipedProcess {
 		ProcessBuilder builder = new ProcessBuilder(engineConfig.getExecutablePath());
 		builder.redirectErrorStream(true);
 		try {
-			Log.d("SCID", "starting process");
+			Log.d(TAG, "starting process");
 			process = builder.start();
-			Log.d("SCID", "getting output stream");
+			Log.d(TAG, "getting output stream");
 			OutputStream stdout = process.getOutputStream();
-			Log.d("SCID", "getting input stream");
+			Log.d(TAG, "getting input stream");
 			InputStream stdin = process.getInputStream();
-			Log.d("SCID", "initializing readers");
+			Log.d(TAG, "initializing readers");
 			reader = new BufferedReader(new InputStreamReader(stdin));
 			writer = new BufferedWriter(new OutputStreamWriter(stdout));
 			processAlive = true;
-			Log.d("SCID", "process is now alive");
+			Log.d(TAG, "process is now alive");
 		} catch (IOException e) {
-			Log.e("SCID", "Error initializing engine " + engineConfig.getName(), e);
+			Log.e(TAG, "Error initializing engine " + engineConfig.getName(), e);
 		}
 	}
 
