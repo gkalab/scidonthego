@@ -13,10 +13,15 @@ import org.scid.android.GameMode;
 import org.scid.android.PGNOptions;
 import org.scid.android.engine.ComputerPlayer;
 import org.scid.android.engine.EngineConfig;
+import org.scid.android.engine.PipedProcess;
+import org.scid.android.engine.UciReadTask;
 import org.scid.android.gamelogic.Game.GameState;
 import org.scid.android.gamelogic.GameTree.Node;
 import org.scid.database.DataBaseView;
 
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 /**
@@ -27,12 +32,10 @@ import android.util.Log;
 public class ChessController {
 	private ComputerPlayer computerPlayer = null;
 	private PgnToken.PgnTokenReceiver gameTextListener = null;
-	private String bookFileName = "";
 	private Game game;
 	private GUIInterface gui;
 	private GameMode gameMode;
 	private PGNOptions pgnOptions;
-	private AnalysisTask analysisTask;
 
 	private int timeControl;
 	private int movesPerSession;
@@ -107,35 +110,74 @@ public class ChessController {
 		}
 
 		public void notifyCurrMove(Position pos, Move m, int moveNr) {
-			currMove = TextIO.moveToString(pos, m, false);
-			currMoveNr = moveNr;
-			setSearchInfo();
+			if (pos.equals(new Position(game.currPos()))) {
+				currMove = TextIO.moveToString(pos, m, false);
+				currMoveNr = moveNr;
+				setSearchInfo();
+			} else {
+				clearSearchInfo();
+			}
 		}
 
 		public void notifyPV(Position pos, int depth, int score, int time,
 				int nodes, int nps, boolean isMate, boolean upperBound,
-				boolean lowerBound, ArrayList<Move> pv) {
-			pvDepth = depth;
-			pvScore = score;
-			currTime = time;
-			currNodes = nodes;
-			currNps = nps;
-			pvIsMate = isMate;
-			pvUpperBound = upperBound;
-			pvLowerBound = lowerBound;
-			whiteMove = pos.whiteMove;
+				boolean lowerBound, ArrayList<String> pvStat) {
+			if (pos.equals(new Position(game.currPos()))) {
+				pvDepth = depth;
+				pvScore = score;
+				currTime = time;
+				currNodes = nodes;
+				currNps = nps;
+				pvIsMate = isMate;
+				pvUpperBound = upperBound;
+				pvLowerBound = lowerBound;
+				whiteMove = pos.whiteMove;
 
-			StringBuilder buf = new StringBuilder();
-			Position tmpPos = new Position(pos);
-			UndoInfo ui = new UndoInfo();
-			for (Move m : pv) {
-				buf.append(String.format(" %s",
-						TextIO.moveToString(tmpPos, m, false)));
-				tmpPos.makeMove(m, ui);
+				StringBuilder buf = new StringBuilder();
+				Position tmpPos = new Position(pos);
+				UndoInfo ui = new UndoInfo();
+
+				ArrayList<Move> moves = new ArrayList<Move>();
+				ArrayList<String> copiedStatPV = new ArrayList<String>(pvStat);
+				int nMoves = copiedStatPV.size();
+				for (int i = 0; i < nMoves; i++)
+					moves.add(TextIO.UCIstringToMove(copiedStatPV.get(i)));
+				boolean legal = true;
+				for (Move m : moves) {
+					buf.append(String.format(" %s",
+							TextIO.moveToString(tmpPos, m, false)));
+					if (isLegal(tmpPos, m)) {
+						tmpPos.makeMove(m, ui);
+					} else {
+						legal = false;
+						break;
+					}
+				}
+				if (legal) {
+					pvStr = buf.toString();
+					pvMoves = moves;
+					setSearchInfo();
+				}
+			} else {
+				clearSearchInfo();
 			}
-			pvStr = buf.toString();
-			pvMoves = pv;
-			setSearchInfo();
+		}
+
+		private final boolean isLegal(Position pos, Move move) {
+			ArrayList<Move> moves = new MoveGen().legalMoves(pos);
+			int promoteTo = move.promoteTo;
+			for (Move m : moves) {
+				if ((m.from == move.from) && (m.to == move.to)) {
+					if ((m.promoteTo != Piece.EMPTY)
+							&& (promoteTo == Piece.EMPTY)) {
+						return false;
+					}
+					if (m.promoteTo == promoteTo) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		public void notifyStats(int nodes, int nps, int time) {
@@ -167,41 +209,16 @@ public class ChessController {
 		listener = new SearchListener();
 	}
 
-	public final void setBookFileName(String bookFileName) {
-		if (!this.bookFileName.equals(bookFileName)) {
-			this.bookFileName = bookFileName;
-			if (computerPlayer != null) {
-				computerPlayer.setBookFileName(bookFileName);
-				if (analysisTask != null) {
-					stopAnalysis();
-					startAnalysis();
-				}
-				updateBookHints();
-			}
-		}
-	}
-
-	private final void updateBookHints() {
-		if (computerPlayer != null && gameMode != null) {
-			boolean analysis = gameMode.analysisMode();
-			if (!analysis) {
-				ss = new SearchStatus();
-				Pair<String, ArrayList<Move>> bi = computerPlayer
-						.getBookHints(game.currPos());
-				listener.notifyBookInfo(bi.first, bi.second);
-			}
-		}
-	}
-
 	private final class SearchStatus {
 		boolean searchResultWanted = true;
 	}
 
 	SearchStatus ss = new SearchStatus();
+	private UciReadTask readTask;
 
 	public final void newGame(GameMode gameMode) {
-		ss.searchResultWanted = false;
 		stopAnalysis();
+		ss.searchResultWanted = false;
 		this.gameMode = gameMode;
 		game = new Game(computerPlayer, gameTextListener, timeControl,
 				movesPerSession, timeIncrement);
@@ -209,13 +226,19 @@ public class ChessController {
 		updateGameMode();
 	}
 
+	@SuppressLint("NewApi")
 	public final void startEngine(EngineConfig engineDef) {
 		if (computerPlayer == null) {
 			computerPlayer = new ComputerPlayer(engineDef);
-			computerPlayer.setListener(listener);
-			computerPlayer.setBookFileName(bookFileName);
 			game.setComputerPlayer(computerPlayer);
 			gameTextListener.clear();
+			this.readTask = new UciReadTask(computerPlayer.getEngine(),
+					listener);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+				this.readTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			} else {
+				this.readTask.execute();
+			}
 		}
 	}
 
@@ -258,27 +281,55 @@ public class ChessController {
 			stopAnalysis();
 		if (clearPV) {
 			listener.clearSearchInfo();
-			updateBookHints();
 		}
 		if (analysis && this.computerPlayer != null)
 			startAnalysis();
 	}
 
+	private void cancelReadTask() {
+		if (readTask != null) {
+			readTask.cancel(false);
+			readTask = null;
+		}
+	}
+
 	private final synchronized void startAnalysis() {
 		if (gameMode.analysisMode()) {
-			if (analysisTask == null) {
-				ss = new SearchStatus();
-				final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
-				final Position currPos = new Position(game.currPos());
-				final boolean valid = game.tree.getGameState() != GameState.WHITE_MATE
-						&& game.tree.getGameState() != GameState.BLACK_MATE
-						&& game.tree.getGameState() != GameState.BLACK_STALEMATE
-						&& game.tree.getGameState() != GameState.WHITE_STALEMATE;
-				listener.clearSearchInfo();
-				if (valid) {
-					analysisTask = (AnalysisTask) new AnalysisTask().execute(
-							computerPlayer.getEngine(), listener, ph.first,
-							ph.second, currPos);
+			ss = new SearchStatus();
+			final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+			Position currentPosition = new Position(game.currPos());
+			final boolean valid = game.tree.getGameState() != GameState.WHITE_MATE
+					&& game.tree.getGameState() != GameState.BLACK_MATE
+					&& game.tree.getGameState() != GameState.BLACK_STALEMATE
+					&& game.tree.getGameState() != GameState.WHITE_STALEMATE;
+			listener.clearSearchInfo();
+			if (valid) {
+				Position prevPos = ph.first;
+				ArrayList<Move> mList = ph.second;
+
+				// If no legal moves, there is nothing to analyze
+				ArrayList<Move> moves = new MoveGen()
+						.pseudoLegalMoves(currentPosition);
+				moves = MoveGen.removeIllegal(currentPosition, moves);
+				if (moves.size() != 0) {
+					StringBuilder posStr = new StringBuilder();
+					posStr.append("position fen ");
+					posStr.append(TextIO.toFEN(prevPos));
+					int nMoves = mList.size();
+					if (nMoves > 0) {
+						posStr.append(" moves");
+						for (int i = 0; i < nMoves; i++) {
+							posStr.append(" ");
+							posStr.append(TextIO.moveToUCIString(mList.get(i)));
+						}
+					}
+					PipedProcess process = computerPlayer.getEngine();
+					process.writeLineToProcess("stop");
+					process.writeLineToProcess("isready");
+					process.writeLineToProcess(posStr.toString());
+					process.writeLineToProcess("go infinite");
+					readTask.setCurrentPosition(currentPosition);
+					readTask.setCurrentGame(game);
 				}
 				updateGUI();
 			}
@@ -286,20 +337,10 @@ public class ChessController {
 	}
 
 	private final synchronized void stopAnalysis() {
-		if (analysisTask != null) {
-			synchronized (analysisTask) {
-				analysisTask.cancel(false);
-				while (!analysisTask.isFinished()) {
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-					}
-				}
-				analysisTask = null;
-				listener.clearSearchInfo();
-				updateGUI();
-			}
-		}
+		ss.searchResultWanted = true;
+		listener.clearSearchInfo();
+		ss.searchResultWanted = false;
+		updateGUI();
 	}
 
 	/** Set game mode. */
@@ -317,7 +358,6 @@ public class ChessController {
 	}
 
 	public final void prefsChanged() {
-		updateBookHints();
 		updateMoveList();
 		listener.prefsChanged();
 	}
@@ -441,8 +481,8 @@ public class ChessController {
 
 	public final void redoMove() {
 		if (canRedoMove()) {
-			ss.searchResultWanted = false;
 			stopAnalysis();
+			ss.searchResultWanted = false;
 			redoMoveNoUpdate();
 			updateComputeThreads(true);
 			setSelection();
@@ -591,38 +631,44 @@ public class ChessController {
 	}
 
 	final public void updateGUI() {
-		updateStatus();
-		updateMoveList();
+		if (game != null) {
+			updateStatus();
+			updateMoveList();
 
-		StringBuilder sb = new StringBuilder();
-		if (game.tree.currentNode != game.tree.rootNode) {
-			game.tree.goBack();
-			Position pos = game.currPos();
-			List<Move> prevVarList = game.tree.variations();
-			for (int i = 0; i < prevVarList.size(); i++) {
-				if (i > 0)
-					sb.append(' ');
-				if (i == game.tree.currentNode.defaultChild)
-					sb.append("<b>");
-				sb.append(TextIO.moveToString(pos, prevVarList.get(i), false));
-				if (i == game.tree.currentNode.defaultChild)
-					sb.append("</b>");
+			StringBuilder sb = new StringBuilder();
+			if (game.tree.currentNode != game.tree.rootNode) {
+				game.tree.goBack();
+				Position pos = game.currPos();
+				List<Move> prevVarList = game.tree.variations();
+				for (int i = 0; i < prevVarList.size(); i++) {
+					if (i > 0)
+						sb.append(' ');
+					if (i == game.tree.currentNode.defaultChild)
+						sb.append("<b>");
+					sb.append(TextIO.moveToString(pos, prevVarList.get(i),
+							false));
+					if (i == game.tree.currentNode.defaultChild)
+						sb.append("</b>");
+				}
+				game.tree.goForward(-1);
 			}
-			game.tree.goForward(-1);
+			gui.setPosition(game.currPos(), sb.toString(),
+					game.tree.variations());
+			// TODO: all this does not belong to ChessController
+			DataBaseView dbv = gui.getScidAppContext().getDataBaseView();
+			String gameTitle = "";
+			if (dbv != null) {
+				int position = dbv.getPosition() + 1, id = dbv.getGameId() + 1, count = dbv
+						.getCount(), total = dbv.getTotalGamesInFile();
+				gameTitle = ""
+						+ position
+						+ "/"
+						+ count
+						+ ((count == total) ? "" : " (" + id + "/" + total
+								+ ")");
+			}
+			gui.setGameInformation(game.tree.white, game.tree.black, gameTitle);
 		}
-		gui.setPosition(game.currPos(), sb.toString(), game.tree.variations());
-		// TODO: all this does not belong to ChessController
-		DataBaseView dbv = gui.getScidAppContext().getDataBaseView();
-		String gameTitle = "";
-		if (dbv != null) {
-			int position = dbv.getPosition() + 1, id = dbv.getGameId() + 1,
-					count = dbv.getCount(), total = dbv.getTotalGamesInFile();
-			gameTitle = "" + position + "/" + count
-					+ ((count == total)
-							? ""
-							: " (" + id + "/" + total + ")");
-		}
-		gui.setGameInformation(game.tree.white, game.tree.black, gameTitle);
 	}
 
 	private void updateStatus() {
@@ -683,12 +729,13 @@ public class ChessController {
 	}
 
 	public final synchronized void shutdownEngine() {
-			ss.searchResultWanted = false;
-			stopAnalysis();
-			if (computerPlayer != null) {
-				computerPlayer.shutdownEngine();
-				computerPlayer = null;
-			}
+		cancelReadTask();
+		ss.searchResultWanted = false;
+		stopAnalysis();
+		if (computerPlayer != null) {
+			computerPlayer.shutdownEngine();
+			computerPlayer = null;
+		}
 	}
 
 	/**
