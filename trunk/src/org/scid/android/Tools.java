@@ -26,13 +26,16 @@ import java.util.zip.ZipInputStream;
 
 import org.scid.android.engine.Engine;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import android.view.WindowManager;
@@ -52,7 +55,7 @@ public class Tools {
 
 	/**
 	 * Extract links from html using regular expressions
-	 * 
+	 *
 	 * @param html
 	 *            html content for validation
 	 * @return List of links
@@ -78,7 +81,7 @@ public class Tools {
 	/**
 	 * Add names of engine files (files which not have an ignored extension) to
 	 * the specified set of already found engines.
-	 * 
+	 *
 	 * @param foundEngines
 	 *            Set of already found engines or null if a new set should be
 	 *            created.
@@ -93,6 +96,7 @@ public class Tools {
 		File dir = new File(dirPath);
 		final Set<String> _ignore = ignoreExtensions;
 		File[] files = dir.listFiles(new FileFilter() {
+			@Override
 			public boolean accept(File pathname) {
 				if (pathname.isFile() && !pathname.getName().startsWith(".")) {
 					int index = pathname.getName().lastIndexOf('.');
@@ -119,7 +123,7 @@ public class Tools {
 	/**
 	 * Download file to scid directory with file name from HTTP header or create
 	 * temp file if the HTTP header does not provide enough information
-	 * 
+	 *
 	 * @param path
 	 *            the path to the URL
 	 * @return the downloaded file
@@ -205,6 +209,7 @@ public class Tools {
 			fileExistsDialog.setIcon(android.R.drawable.ic_dialog_alert);
 			fileExistsDialog.setButton(activity.getString(android.R.string.ok),
 					new DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							startPgnImport(activity, pgnFileName, resultId);
 						}
@@ -212,6 +217,7 @@ public class Tools {
 			fileExistsDialog.setButton2(
 					activity.getString(android.R.string.cancel),
 					new DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							Toast.makeText(
 									activity.getApplicationContext(),
@@ -270,6 +276,7 @@ public class Tools {
 	public static void showErrorMessage(final Activity activity,
 			final String message) {
 		activity.runOnUiThread(new Runnable() {
+			@Override
 			public void run() {
 				final AlertDialog.Builder builder = new AlertDialog.Builder(
 						activity);
@@ -478,5 +485,15 @@ public class Tools {
 	public static String getScidDirectory() {
 		return Environment.getExternalStorageDirectory() + File.separator
 				+ Constants.SCID_DIRECTORY;
+	}
+
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+	public static String getNativeLibraryDir(Context context) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+			return context.getApplicationInfo().nativeLibraryDir;
+		} else {
+			return context.getApplicationInfo().dataDir + File.separator
+					+ "lib";
+		}
 	}
 }

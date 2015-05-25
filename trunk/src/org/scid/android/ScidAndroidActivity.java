@@ -225,9 +225,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		} else {
 			Log.d(TAG, "Engine is missing from data. Intializing...");
 			try {
-				InputStream istream = new FileInputStream(getApplicationInfo().dataDir
-								+ File.separator
-								+ "lib"
+				String nativeLibraryDir = Tools.getNativeLibraryDir(this);
+				InputStream istream = new FileInputStream(nativeLibraryDir
 								+ File.separator
 								+ EngineManager.INTERNAL_ENGINE_FILE_NAME);
 				FileOutputStream fout = new FileOutputStream(
