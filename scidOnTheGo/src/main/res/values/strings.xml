@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Scid on the go</string>
+	<string-array name="font_size_texts">
+    	<item>Small</item>
+	    <item>Medium</item>
+    	<item>Large</item>
+        <item>X-Large</item>
+	</string-array>
+	<string-array name="font_size_values" translatable="false">
+	    <item>10</item>
+    	<item>12</item>
+        <item>14</item>
+	    <item>16</item>
+	</string-array>
+    <string-array name="move_display_texts">
+        <item>Display all moves</item>
+        <item>Display current move</item>
+    </string-array>
+    <string-array name="move_display_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    <string-array name="study_orientation_texts">
+        <item>The side that has the move</item>
+        <item>The opposite side</item>
+        <item>Use my player names</item>
+    </string-array>
+    <string-array name="study_orientation_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="endOfVariationInStudy_texts">
+        <item>Do nothing</item>
+        <item>Go to next game</item>
+        <item>Switch to review mode</item>
+    </string-array>
+    <string-array name="endOfVariationInStudy_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="animation_speed_texts">
+        <item>Fast</item>
+        <item>Medium</item>
+        <item>Slow</item>
+    </string-array>
+    <string-array name="animation_speed_values" translatable="false">
+        <item>50</item>
+        <item>10</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="theme_texts">
+        <item>Default</item>
+        <item>Brown</item>
+        <item>Blue</item>
+        <item>Green</item>
+    </string-array>
+    <string-array name="theme_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+	<string name="about_info">\
+<b>About</b>\n\
+<i>Scid on the go</i> is a viewer for <i>Scid</i> chess database files. \n\
+\n\
+<b>Features</b>\n\
+* Browse Scid (Shane\'s Chess Information Database) files, optimized for databases with millions of games\n\
+* Header search using player names, sites, events, dates, results, ECO, ELO ratings,…\n\
+* Search games by material and position\n\
+* Favorites\n\
+* Copy/paste games and positions to/from clipboard\n\
+* Edit board\n\
+* Support for variations\n\
+* Replay the game with a configurable delay between moves (autoplay)\n\
+* PGN import and export (including import from Internet)\n\
+* Analysis with included chess engine: Critter 1.2 (ARM) or Stockfish 2.1.1 (x86); you can add additional UCI engines for analysis\n\
+* Study mode\n\
+* <b>Experimental</b> write support and marking of games for deletion (needs Scid for PC to compact database after marking games for deletion)\n\
+* Retrieve positions from external programs, such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free),
+ which will let you use the camera to take a picture of a chess diagram and automatically set up the position in Scid on the go.\n\
+\n\
+<b>Hints</b>\n\
+* Put all three files (*.si4, *.sg4, *.sn4) of a Scid database into the scid folder on your SD Card.\n\
+* If you do not have a database, you can import it with import menu: both from local file or from several Internet sites.\n\
+* Put UCI chess engines in the scid folder on your SD Card.\n\
+* Use the search button on your device to enter search menu.\n\
+* Long press chess board to activate copy/paste, edit board and favorites menu.\n\
+* In edit board mode, long press chess board to activate edit menu.\n\
+* If the game contains multiple variations, scroll up/down on the chess board to go to the previous/next variation.\n\
+* The small black/white square shows who makes the next move, the star near it shows whether the game is favorite — touch it to change this.\n\
+* Browse preferences for other hints\n\
+\n\
+<b>License</b>\n\
+GNU GPL v2\n\
+Source: &lt;https://code.google.com/p/scidonthego/&gt;\n\
+\n\
+<b>What is new</b>\n\
+* Export filtered games to PGN file\n\
+* Retrieve position using external programs such as <a href="https://play.google.com/store/apps/details?id=com.kgroth.chessocr">ChessOcr</a> (non-free)\n\
+\n\
+<b>Permissions</b>\n\
+* Storage for accessing databases stored on the SD card\n\
+* Internet access for downloading PGN files from <i>The Week in Chess</i> &lt;http://www.theweekinchess.com/twic/&gt;\n\
+\n\
+<b>Developers</b>\n\
+* Most of the GUI code was taken from Peter Österlunds DroidFish and re-released under GPL v2 by the authors permission.\n\
+* Scid integration by Gerhard Kalab.\n\
+* Various enhancements by Alexander Klimov.\n\
+* Manage UCI engines by Larry Isaacs.
+	</string>
+	<string name="queen">Queen</string>
+	<string name="rook">Rook</string>
+	<string name="bishop">Bishop</string>
+	<string name="knight">Knight</string>
+	<string name="promote_pawn_to">Promote pawn to?</string>
+	<string name="copy_game">Copy game to clipboard</string>
+	<string name="copy_position">Copy position to clipboard</string>
+	<string name="paste">Paste from clipboard</string>
+	<string name="tools_menu">Tools</string>
+	<string name="invalid_number_format">Invalid number format</string>
+	<string name="side_to_move">Side to move</string>
+	<string name="clear_board">Clear board</string>
+	<string name="initial_position">Initial position</string>
+	<string name="castling_flags">Castling flags</string>
+	<string name="en_passant_file">En passant file</string>
+	<string name="move_counters">Move counters</string>
+	<string name="paste_position">Paste position</string>
+	<string name="edit_board">Edit Board</string>
+	<string name="select_side_to_move_first">Select side to move first</string>
+	<string name="white">White</string>
+	<string name="black">Black</string>
+	<string name="white_king_castle">White king castle</string>
+	<string name="white_queen_castle">White queen castle</string>
+	<string name="black_king_castle">Black king castle</string>
+	<string name="black_queen_castle">Black queen castle</string>
+	<string name="none">None</string>
+	<string name="select_en_passant_file">Select en passant file</string>
+	<string name="edit_move_counters">Edit move counters</string>
+	<string name="please_wait">Please wait…</string>
+	<string name="no_scid_files">No files found in directory\n\
+/scid on the SD card.</string>
+    <string name="reset_filter">Reset search filter</string>
+    <string name="search_current_board">Search current board</string>
+    <string name="search">Search</string>
+    <string name="search_exact_position">All pieces on same squares</string>
+    <string name="search_pawns">Same material, all pawns on same squares</string>
+    <string name="search_files">Same material, all pawns on same files</string>
+    <string name="search_any">Same material, pawns and pieces anywhere</string>
+    <string name="ignore_colors">Ignore colors</string>
+    <string name="search_header">Search header</string>
+    <string name="canceled">Canceled</string>
+    <string name="search_previous_request">Previous request</string>
+    <string name="search_next_request">Next request</string>
+    <string name="search_no_history">The requests history is empty</string>
+    <string name="search_history_done">The whole history is already explored, rewinding</string>
+    <string name="search_nothing_to_redo">Nothing to redo</string>
+    <string name="search_redo">Let us pretend that request history was never touched</string>
+    <string name="search_exact">Exact</string>
+    <string name="event">Event</string>
+    <string name="site">Site</string>
+    <string name="round">Round</string>
+    <string name="halfmove">Halfmove clock</string>
+    <string name="fullmove">Fullmove counter</string>
+    <string name="search_date_range">Date range:</string>
+    <string name="search_year_hint">YYYY</string>
+    <string name="search_month_hint">MM</string>
+    <string name="search_day_hint">DD</string>
+    <string name="result">Result:</string>
+    <string name="result_none">*</string>
+    <string name="result_white_wins">1–0</string>
+    <string name="result_black_wins">0–1</string>
+    <string name="result_draw">½–½</string>
+    <string name="eco_code">ECO:</string>
+    <string name="en_dash"> – </string>
+    <string name="search_eco_from_default">A00</string>
+    <string name="search_eco_to_default">E99</string>
+    <string name="search_game_id_hint">ID min</string>
+    <string name="search_min_hint">min</string>
+    <string name="search_max_hint">max</string>
+    <string name="search_white_elo">White ELO:</string>
+    <string name="search_black_elo">Black ELO:</string>
+    <string name="search_diff_elo">ELO difference:</string>
+    <string name="search_min_elo">ELO of the weaker:</string>
+    <string name="search_max_elo">ELO of the stronger:</string>
+    <string name="search_allow_unknown_elo">Allow games with unknown ELO</string>
+    <string name="search_half_moves">Half moves:</string>
+    <string name="search_filter_prompt">Operation on the current filter:</string>
+    <string-array name="search_filter_array">
+        <item>Ignore filter</item>
+        <item>Add to filter</item>
+        <item>Intersect with filter</item>
+        <item>Subtract from filter</item>
+    </string-array>
+    <string name="eco_none">no ECO</string>
+    <string name="search_half_moves_even">Even</string>
+    <string name="search_half_moves_odd">Odd</string>
+    <string name="search_annotated_only">Only annotated</string>
+    <string name="error">Error</string>
+    <string name="mode_preserved">The current mode was not changed.</string>
+    <string name="review_mode_enabled">Review mode is enabled.</string>
+    <string name="analysis_mode_enabled">Analysis mode is enabled using \n%s.</string>
+    <string name="study_mode_enabled">Study mode is enabled.</string>
+    <string name="filter_no_games">No games found.</string>
+    <string name="filter_no_favorites">There are no favorite games.</string>
+    <string name="filter_one_game_reset_filter">Only one game is found.\n\
+Filter is reset.</string>
+    <string name="filter_one_game_preserved_filter">Only one game is found.\n\
+Filter is preserved.</string>
+    <string name="filter_number_of_games">Filter contains now %d games.</string>
+    <string name="downloading">Downloading…</string>
+    <string name="download_started">Download started in the background.</string>
+    <string name="twic_downloading">Downloading from TWIC</string>
+    <string name="get_twic_information">Getting information from TWIC</string>
+    <string name="import_pgn_title">PGN Import</string>
+    <string name="import_pgn_file">Import PGN file</string>
+    <string name="import_twic">Import from TWIC (The Week in Chess Magazine)</string>
+    <string name="pgn_import_success">Import from %s successful.</string>
+    <string name="pgn_import_failure">There where errors during the PGN import.</string>
+    <string name="pgn_import_cancel">Import canceled.</string>
+    <string name="pgn_import_db_exists">There is already a database with the same name (%s).\n\
+Do you want to continue to import and delete all the previous data in this database?</string>
+    <string name="export_pgn_title">Export filtered games</string>
+    <string name="export_pgn_filename">PGN file:</string>
+    <string name="pgn_export_success">Successfully exported %d games.</string>
+    <string name="pgn_export_failure">Error exporting to PGN file.</string>
+    <string name="download_error">Error downloading file. Please check your internet connection.</string>
+    <string name="download_error_file_empty">The file downloaded was empty.\n\
+Please try again later or contact the site hosting the link.</string>
+    <string name="gamelist">Game list</string>
+    <string name="invalid_move">Invalid move %1$s-%2$s</string>
+    <string name="wrong_move">Wrong move %1$s-%2$s</string>
+    <string name="your_time">Your thought for %.2f seconds</string>
+    <string name="autoplay_started">Autoplay started,\n\
+touch anything to stop it.</string>
+    <string name="autoplay_stopped">Autoplay stopped.</string>
+    <string name="time_is_up">Time is up!</string>
+    <string name="add_favorites">Add to favorites</string>
+    <string name="remove_favorites">Remove from favorites</string>
+    <string name="add_favorites_success">Game added to favorites.</string>
+    <string name="add_favorites_failure">Error adding game to favorites!</string>
+    <string name="remove_favorites_success">Game removed from favorites.</string>
+    <string name="remove_favorites_failure">Error removing game from favorites!</string>
+    <string name="favorites">Favorites</string>
+    <string name="save_game">Save game (experimental)</string>
+    <string name="game_saved">Game saved.</string>
+    <string name="delete_game">Delete game</string>
+    <string name="undelete_game">Undelete game</string>
+    <string name="delete_game_success">Game marked for deletion.</string>
+    <string name="delete_game_failure">Error: unable to set the delete flag.</string>
+    <string name="undelete_game_success">Undelete successful.</string>
+    <string name="undelete_game_failure">Error: unable to remove the delete flag.</string>
+    <string name="start_of_game">Start of game.\n\
+No more moves.</string>
+    <string name="end_of_variation">End of variation.\n\
+No more moves.</string>
+    <string name="initializing_engine">Initializing engine</string>
+    <string name="manage_engines_title">Manage UCI engines</string>
+    <string name="add_engine">Add engine</string>
+    <string name="name_label">Name:</string>
+    <string name="executable_label">Executable:</string>
+    <string name="make_current_engine">Make this the current analysis engine</string>
+    <string name="add_engine_exists">\"%s\" already exists.</string>
+    <string name="remove_engine">Remove engine</string>
+    <string name="no_engine_selected">No engine selected. Put a chess engine into the scid directory and select it.</string>
+    <string name="engine_added">Engine \"%s\" added.</string>
+    <string name="engine_added_copied">Engine \"%s\" added. The executable file was copied to internal storage for execution.</string>
+    <string name="engine_removed">Engine \"%s\" removed.</string>
+    <string name="engine_copy_title">Copying executable…</string>
+    <string name="engine_copy_msg">Copying executable \"%s\" to internal storage.</string>
+    <string name="engine_copy_failed">Error occurred copying executable: %s</string>
+    <string name="engine_copy_canceled">Addition of engine \"%s\" canceled.</string>
+    <string name="remove_unused_executable">The \"%s\" executable file is no longer used by any engine. Do you want to delete it from internal storage?</string>
+    <string name="add">Add</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="header_event">Event:</string>
+    <string name="header_site">Site:</string>
+    <string name="header_date">Date:</string>
+    <string name="header_round">Round:</string>
+    <string name="header_white">White:</string>
+    <string name="header_black">Black:</string>
+    <string name="header_result">Result:</string>
+    <string name="save">Save (replace)</string>
+    <string name="saving">Saving</string>
+    <string name="save_as_new">Save as new game</string>
+    <string-array name="result_array" translatable="false">
+        <item>*</item>
+        <item>½–½</item>
+        <item>1–0</item>
+        <item>0–1</item>
+    </string-array>
+    <string name="edit_game">Edit game</string>
+    <string name="truncate_gametree">Strip moves to the end</string>
+    <string name="move_var_up">Move variation up</string>
+    <string name="move_var_down">Move variation down</string>
+    <string name="create_db_exists">Error: there is already a database with the same name (%s).</string>
+    <string name="create_db_success">The new database file has been created.</string>
+    <string name="create_db_title">New database</string>
+    <string name="create_db_message">Please specify the name of the new database file:</string>
+    <string name="err_too_few_spaces">Too few space-separated fields</string>
+    <string name="err_invalid_piece">Invalid piece</string>
+    <string name="err_invalid_side">Invalid side</string>
+    <string name="err_invalid_castling_flags">Invalid castling flags</string>
+    <string name="err_invalid_en_passant_square">Invalid en passant square</string>
+    <string name="err_white_num_kings">White must have exactly one king</string>
+    <string name="err_black_num_kings">Black must have exactly one king</string>
+    <string name="err_king_capture_possible">King capture possible</string>
+    <string name="err_too_many_rows">Too many rows</string>
+    <string name="err_too_many_columns">Too many columns</string>
+    <string name="err_pawn_on_first_last_rank">Pawn on first/last rank</string>
+    <string name="err_too_many_white_pieces">Too many white pieces</string>
+    <string name="err_too_many_black_pieces">Too many black pieces</string>
+    <string name="err_no_db">No database is currently open.\n\
+Please, open a database first.</string>
+    <string name="err_no_prev_game">Cannot go to the previous game.</string>
+    <string name="err_no_next_game">Cannot go to the next game.</string>
+    <string name="goto_game_title">Go to game</string>
+    <string name="goto_game_number">Enter game position (among filtered):</string>
+    <string name="menu_file">File</string>
+    <string name="menu_open_db">Open database</string>
+    <string name="menu_import_pgn">Import</string>
+    <string name="menu_export_pgn">Export</string>
+    <string name="menu_game_list">Game list</string>
+    <string name="menu_game">Game</string>
+    <string name="menu_goto_game">Go to game…</string>
+    <string name="menu_random_game">Go to random game</string>
+    <string name="menu_new_game">New game</string>
+    <string name="menu_game_deleted">Game deleted</string>
+    <string name="menu_game_isfavorite">Favorite game</string>
+    <string name="menu_mode">Mode</string>
+    <string name="menu_review_mode">Review</string>
+    <string name="menu_analysis_mode">Analysis</string>
+    <string name="menu_study_mode">Study</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_share_game">Share game…</string>
+    <string name="menu_share_position">Share position…</string>
+    <string name="menu_preferences">Preferences</string>
+    <string name="menu_about_help">About / Help</string>
+    <string name="pref_behavior">Behavior</string>
+    <string name="pref_analysisEngine_title">Analysis engine…</string>
+    <string name="pref_analysisEngine_summary">Select engine for analysis mode</string>
+    <string name="pref_playerNames_title">My player names…</string>
+    <string name="pref_playerNames_summary">After loading a game the chessboard will be rotated to show the game from that players perspective.\nEnter one name per line.</string>
+    <string name="pref_studyOrientation_title">Orientation in study mode…</string>
+    <string name="pref_studyOrientation_summary">Select initial orientation of the board in the study mode.</string>
+    <string name="pref_cruiseMode_title">Cruise mode</string>
+    <string name="pref_cruiseMode_summary">If enabled, in the end of variation \"next\" acts as \"next game\".</string>
+    <string name="pref_endOfVariationInStudy_title">After the last human move in study mode…</string>
+    <string name="pref_endOfVariationInStudy_summary">What to do in the study mode once you have made the last move in variation.</string>
+    <string name="pref_nextGameIsRandom_title">Next game is random</string>
+    <string name="pref_nextGameIsRandom_summary">If enabled, the next game is chosen randomly</string>
+    <string name="pref_studyAutoMoveDelay_title">Study first move delay…</string>
+    <string name="pref_studyAutoMoveDelay_summary">If non-zero, then in study mode the computer waits so many seconds after the next game is loaded and do a move.</string>
+    <string name="pref_reportThinkingTime_title">Report thinking time</string>
+    <string name="pref_reportThinkingTime_summary">Report the time it takes you to make the correct move in study mode.</string>
+    <string name="pref_autoPlayInterval_title">Auto play interval…</string>
+    <string name="pref_autoPlayInterval_summary">If non-zero, then a long click on next move button starts autoplay with this interval in seconds.</string>
+    <string name="pref_animationSpeed_title">Animation speed…</string>
+    <string name="pref_animationSpeed_summary">Set speed of the move animation. If you are often undo the last move to see what piece was just taken, this option is for you.</string>
+    <string name="pref_makeFavoriteOnWrongMove_title">Make game favorite on wrong move</string>
+    <string name="pref_makeFavoriteOnWrongMove_summary">If enabled, then once you guess a wrong move in study mode, the game is marked as favorite.</string>
+    <string name="pref_oneTouchModeChange_title">One-touch mode change</string>
+    <string name="pref_oneTouchModeChange_summary">If enabled, you can touch the game status (the line above the view with game notation) to change mode: review on the left, analysis in the middle, and study on the right.</string>
+    <string name="pref_humanThinkingAlarmInterval_title">Thinking alarm interval…</string>
+    <string name="pref_humanThinkingAlarmInterval_summary">If non-zero, then notify you that you are thinking for too long after this many seconds.</string>
+    <string name="pref_humanThinkingAlarmSound_title">Audible thinking alarm</string>
+    <string name="pref_humanThinkingAlarmSound_summary">Play sound when your thinking time is up.</string>
+    <string name="pref_appearance">Appearance</string>
+    <string name="pref_moveDisplay_title">Move list…</string>
+    <string name="pref_moveDisplay_summary">Display all moves or current move only.</string>
+    <string name="pref_fontSize_title">Text size…</string>
+    <string name="pref_fontSize_summary">Font size for move list and game information.</string>
+    <string name="pref_colorTheme_title">Color theme…</string>
+    <string name="pref_colorTheme_summary">Change the color theme.</string>
+    <string name="activity_edit">Edit board</string>
+    <string name="activity_search_board">Position search</string>
+    <string name="activity_search_header">Header search</string>
+    <string name="activity_select_file">Select file</string>
+    <string name="get_fen">Retrieve position</string>
+</resources>

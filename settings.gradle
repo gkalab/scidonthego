@@ -1,0 +1,2 @@
+include ':chessEngineSupportLibrary'
+include ':scidOnTheGo'
