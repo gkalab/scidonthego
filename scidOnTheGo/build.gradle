@@ -4,6 +4,11 @@ android {
     compileSdkVersion 29
     buildToolsVersion "28.0.3"
 
+    sourceSets.main {
+        jniLibs.srcDir 'src/main/libs'
+        jni.srcDirs = [] //disable automatic ndk-build call
+    }
+
     defaultConfig {
         applicationId "org.scid.android"
         minSdkVersion 14

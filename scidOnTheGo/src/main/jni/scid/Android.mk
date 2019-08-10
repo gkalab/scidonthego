@@ -10,11 +10,6 @@ LOCAL_SRC_FILES := \
     mfile.cpp dstring.cpp pgnparse.cpp stored.cpp \
     movelist.cpp
 
-LOCAL_CFLAGS    := -mandroid \
-	-DTARGET_OS=android -D__ANDROID__ \
-	-isystem $(SYSROOT)/usr/include \
-	-DNO_PREFETCH=1
-
 LOCAL_STATIC_LIBRARIES :=
 
 include $(BUILD_STATIC_LIBRARY)
