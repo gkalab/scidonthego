@@ -1,14 +1,9 @@
 package org.scid.android.twic;
 
-import java.io.File;
-
-import org.scid.android.IDownloadCallback;
-import org.scid.android.R;
-import org.scid.android.Tools;
-
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,6 +11,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import org.scid.android.IDownloadCallback;
+import org.scid.android.R;
+import org.scid.android.Tools;
+
+import java.io.File;
 
 public class ImportTwicActivity extends ListActivity implements
 		IDownloadCallback {
@@ -62,8 +63,8 @@ public class ImportTwicActivity extends ListActivity implements
 		if (progressDlg != null && progressDlg.isShowing()) {
 			progressDlg.dismiss();
 		}
-		final ArrayAdapter<TwicItem> aa = new ArrayAdapter<TwicItem>(this,
-				android.R.layout.simple_list_item_1, downloader.getLinkList());
+		final ArrayAdapter<TwicItem> aa = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, downloader.getLinkList());
 		setListAdapter(aa);
 		ListView lv = getListView();
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -74,7 +75,7 @@ public class ImportTwicActivity extends ListActivity implements
 				progressDlg = ProgressDialog.show(ImportTwicActivity.this,
 						getString(R.string.twic_downloading),
 						getString(R.string.downloading), true, false);
-				new ImportZipTask().execute(ImportTwicActivity.this,
+				new ImportZipTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ImportTwicActivity.this,
 						progressDlg, item.getLink());
 			}
 		});
@@ -103,16 +104,13 @@ public class ImportTwicActivity extends ListActivity implements
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case RESULT_PGN_IMPORT:
-			// the result after importing the pgn file - delete pgn file
+		if (requestCode == RESULT_PGN_IMPORT) {// the result after importing the pgn file - delete pgn file
 			if (resultCode == RESULT_OK && data != null) {
 				String pgnFileName = data.getAction();
 				if (pgnFileName != null) {
 					new File(pgnFileName).delete();
 				}
 			}
-			break;
 		}
 	}
 }
