@@ -70,7 +70,7 @@
             android:key="oneTouchModeChange"
             android:title="@string/pref_oneTouchModeChange_title"
             android:summary="@string/pref_oneTouchModeChange_summary"
-            android:defaultValue="1" />
+            android:defaultValue="0" />
         <EditTextPreference
             android:key="humanThinkingAlarmInterval"
             android:inputType="number"
