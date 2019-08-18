@@ -3,6 +3,7 @@ package org.scid.android;
 import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -25,6 +26,6 @@ public class SearchFavoritesActivity extends SearchActivityBase {
 		                R.string.filter_no_favorites, Toast.LENGTH_LONG).show();
 				activity.finish();
 			}
-		}).execute();
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 }

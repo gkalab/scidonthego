@@ -1,25 +1,5 @@
 package org.scid.android.engine;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.scid.android.R;
-import org.scid.android.Tools;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlSerializer;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -33,6 +13,26 @@ import android.widget.Toast;
 
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
+
+import org.scid.android.R;
+import org.scid.android.Tools;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Class to manage UCI chess engines.
@@ -50,7 +50,7 @@ public class EngineManager {
 	private Map<String, EngineConfig> engines;
 	private List<EngineChangeListener> changeListeners = new ArrayList<EngineChangeListener>();
 	// Lock object to manage access to engines and changeListeners
-	private Object managerLock = new Object();
+	private final Object managerLock = new Object();
 
 	public class EngineChangeEvent {
 		public static final int ADD_ENGINE = 1;
@@ -60,8 +60,8 @@ public class EngineManager {
 		private int changeType;
 		private boolean success;
 
-		public EngineChangeEvent(String engineName, int changeType,
-				boolean success) {
+		EngineChangeEvent(String engineName, int changeType,
+						  boolean success) {
 			this.engineName = engineName;
 			this.changeType = changeType;
 			this.success = success;
@@ -88,12 +88,8 @@ public class EngineManager {
 		this.context = context;
 		// Establish the default engine
 		defaultEngine = new EngineConfig(INTERNAL_ENGINE_NAME,
-				new File(context.getFilesDir(), INTERNAL_ENGINE_FILE_NAME)
+				new File(context.getApplicationInfo().nativeLibraryDir, INTERNAL_ENGINE_FILE_NAME)
 						.getAbsolutePath(), null, 0);
-	}
-
-	public String getFilesDir() {
-		return context.getFilesDir().getPath();
 	}
 
 	public void addEngineChangeListener(EngineChangeListener listener) {
@@ -215,9 +211,9 @@ public class EngineManager {
 				if (externFile.exists()) {
 					// Copy the engine file and add when done.
 					new CopyExecutableTask(engineName, enginePackage,
-							engineVersion).execute(externFile, engineFile);
+							engineVersion).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, externFile, engineFile);
 				} else {
-					addOpenExchangeEngine(executable, engineAbsPath, engineName);
+					addOpenExchangeEngine(executable, engineName);
 				}
 				return true;
 			} else {
@@ -238,8 +234,8 @@ public class EngineManager {
 		return false;
 	}
 
-	public void saveToConfiguration(String engineName, String engineAbsPath,
-			String packageName, int versionCode) {
+	private void saveToConfiguration(String engineName, String engineAbsPath,
+									 String packageName, int versionCode) {
 		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
 				getEnginesList());
 		enginesList.put(engineName, new EngineConfig(engineName, engineAbsPath,
@@ -252,32 +248,16 @@ public class EngineManager {
 				EngineChangeEvent.ADD_ENGINE, true));
 	}
 
-	private void addOpenExchangeEngine(String executable, String engineAbsPath,
-			String engineName) {
+	private void addOpenExchangeEngine(String executable, String engineName) {
 		ChessEngineResolver resolver = new ChessEngineResolver(context);
 		List<ChessEngine> openEngines = resolver.resolveEngines();
 		boolean found = false;
 		for (ChessEngine openEngine : openEngines) {
+		    found = true;
 			if (openEngine.getFileName().equals(executable)) {
-				found = true;
-				try {
-					openEngine.copyToFiles(context.getContentResolver(),
-							context.getFilesDir());
-					Toast.makeText(
-							context,
-							context.getString(R.string.engine_added_copied,
-									engineName), Toast.LENGTH_LONG).show();
-					saveToConfiguration(engineName, engineAbsPath,
-							openEngine.getPackageName(),
-							openEngine.getVersionCode());
-				} catch (IOException e) {
-					notifyListeners(new EngineChangeEvent(engineName,
-							EngineChangeEvent.ADD_ENGINE, false));
-					Toast.makeText(
-							context,
-							context.getString(R.string.engine_copy_failed,
-									e.getMessage()), Toast.LENGTH_LONG).show();
-				}
+				saveToConfiguration(engineName, openEngine.getEnginePath(),
+                        openEngine.getPackageName(),
+                        openEngine.getVersionCode());
 				break;
 			}
 		}
@@ -446,12 +426,8 @@ public class EngineManager {
 				parser.setInput(fr);
 				int eventType = parser.getEventType();
 				while (eventType != XmlPullParser.END_DOCUMENT) {
-					switch (eventType) {
-					case XmlPullParser.START_TAG:
+					if (eventType == XmlPullParser.START_TAG) {
 						readEngine(parser, list);
-						break;
-					default:
-						break;
 					}
 					eventType = parser.next();
 				}
@@ -527,8 +503,8 @@ public class EngineManager {
 		private String enginePackage;
 		private int engineVersion;
 
-		public CopyExecutableTask(String engineName, String enginePackage,
-				int engineVersion) {
+		CopyExecutableTask(String engineName, String enginePackage,
+						   int engineVersion) {
 			this.engineName = engineName;
 			this.enginePackage = enginePackage;
 			this.engineVersion = engineVersion;
@@ -584,7 +560,7 @@ public class EngineManager {
 			if (!canceled && result) {
 				String absPath = destFile.getAbsolutePath();
 				try {
-					String cmd[] = { "chmod", "744", absPath };
+					String[] cmd = {"chmod", "744", absPath};
 					Process process = Runtime.getRuntime().exec(cmd);
 					try {
 						process.waitFor();

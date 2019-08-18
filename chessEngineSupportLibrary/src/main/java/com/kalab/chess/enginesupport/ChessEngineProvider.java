@@ -13,20 +13,18 @@
  */
 package com.kalab.chess.enginesupport;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import android.annotation.TargetApi;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class ChessEngineProvider extends ContentProvider {
 
@@ -70,14 +68,8 @@ public class ChessEngineProvider extends ContentProvider {
 		return descriptor;
 	}
 
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	private String getNativeLibraryDir() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-			return getContext().getApplicationInfo().nativeLibraryDir;
-		} else {
-			return getContext().getApplicationInfo().dataDir + File.separator
-					+ "lib";
-		}
+		return getContext().getApplicationInfo().nativeLibraryDir;
 	}
 
 	public ParcelFileDescriptor openLibFile(File f)
@@ -93,7 +85,7 @@ public class ChessEngineProvider extends ContentProvider {
 
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
-			String[] selectionArgs, String sortOrder) {
+						String[] selectionArgs, String sortOrder) {
 		throw new UnsupportedOperationException(UNSUPPORTED);
 	}
 
@@ -109,7 +101,7 @@ public class ChessEngineProvider extends ContentProvider {
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
+					  String[] selectionArgs) {
 		throw new UnsupportedOperationException(UNSUPPORTED);
 	}
 }

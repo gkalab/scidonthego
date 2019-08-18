@@ -13,21 +13,11 @@
  */
 package com.kalab.chess.enginesupport;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageInfo;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
@@ -36,6 +26,15 @@ import android.content.res.XmlResourceParser;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ChessEngineResolver {
 
@@ -46,12 +45,13 @@ public class ChessEngineResolver {
 	private Context context;
 	private String target;
 	/** map of package -> activity for license checks */
-	Map<String, String> licenseCheckActivities = new HashMap<String, String>();
+	private Map<String, String> licenseCheckActivities = new HashMap<>();
 
+	@SuppressWarnings("deprecation")
 	public ChessEngineResolver(Context context) {
 		super();
 		this.context = context;
-		this.target = Build.CPU_ABI;
+		this.target = Build.CPU_ABI; // use Build.SUPPORTED_ABIS[0] from API level 21 onwards
 		sanitizeArmV6Target();
 	}
 
@@ -68,7 +68,7 @@ public class ChessEngineResolver {
 	 */
 	public List<ChessEngine> resolveEngines() {
 		resolveLicenseCheckActivitiesPerPackage();
-		List<ChessEngine> result = new ArrayList<ChessEngine>();
+		List<ChessEngine> result = new ArrayList<>();
 		final Intent engineProviderIntent = new Intent(ENGINE_PROVIDER_MARKER);
 		List<ResolveInfo> engineProviderList = context.getPackageManager()
 				.queryIntentActivities(engineProviderIntent,
@@ -130,7 +130,7 @@ public class ChessEngineResolver {
 	}
 
 	private void parseEngineListXml(XmlResourceParser parser, String authority,
-			List<ChessEngine> result, String packageName) {
+									List<ChessEngine> result, String packageName) {
 		try {
 			int eventType = parser.getEventType();
 			while (eventType != XmlResourceParser.END_DOCUMENT) {
@@ -149,7 +149,7 @@ public class ChessEngineResolver {
 	}
 
 	private void addEngine(List<ChessEngine> result, XmlResourceParser parser,
-			String authority, String packageName) {
+						   String authority, String packageName) {
 		if (parser.getName().equalsIgnoreCase("engine")) {
 			String fileName = parser.getAttributeValue(null, "filename");
 			String title = parser.getAttributeValue(null, "name");
@@ -165,66 +165,18 @@ public class ChessEngineResolver {
 					} catch (NameNotFoundException e) {
 						Log.e(TAG, e.getMessage());
 					}
-					result.add(new ChessEngine(title, fileName, authority,
-							packageName, versionCode, licenseCheckActivities
-									.get(packageName)));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Ensure that the engine is current. It re-copies the engine if it was not
-	 * current.
-	 *
-	 * @param fileName
-	 *            the file name of the engine
-	 * @param packageName
-	 *            the package name of the engine
-	 * @param versionCode
-	 *            the (installed) version code of the engine
-	 * @param destination
-	 *            the destination folder to copy a new engine to
-	 * @return the new version of the engine, -1 in case of an error (IOError or
-	 *         if no engine was found)
-	 */
-	public int ensureEngineVersion(String fileName, String packageName,
-			int versionCode, File destination) {
-		int result = -1;
-		PackageInfo packageInfo;
-		Log.d(TAG, "checking engine " + fileName + ", " + packageName
-				+ ", version " + versionCode);
-		try {
-			packageInfo = context.getPackageManager().getPackageInfo(
-					packageName, 0);
-			if (packageInfo.versionCode > versionCode
-					|| !(new File(destination, fileName).exists())) {
-				// package is updated or file is missing, need to copy engine
-				// again
-				for (ChessEngine engine : resolveEngines()) {
-					if (engine.getPackageName().equals(packageName)
-							&& engine.getFileName().equals(fileName)) {
-						try {
-							Log.d(TAG, "engine is outdated");
-							engine.copyToFiles(context.getContentResolver(),
-									destination);
-							result = packageInfo.versionCode;
-						} catch (FileNotFoundException e) {
-							Log.e(TAG, e.getMessage(), e);
-						} catch (IOException e) {
-							Log.e(TAG, e.getMessage(), e);
-						}
-						break;
+					try {
+						ApplicationInfo app = context.getPackageManager().getApplicationInfo(packageName, 0);
+						String enginePath = new File(app.nativeLibraryDir, fileName).getAbsolutePath();
+						result.add(new ChessEngine(title, fileName, enginePath, authority,
+								packageName, versionCode, licenseCheckActivities
+								.get(packageName)));
+					} catch (NameNotFoundException e) {
+						Log.e(TAG, e.getLocalizedMessage(), e);
 					}
 				}
-			} else {
-				Log.d(TAG, "engine is up-to-date");
-				result = packageInfo.versionCode;
 			}
-		} catch (NameNotFoundException e) {
-			Log.w(TAG, "package " + packageName + " not found");
 		}
-		return result;
 	}
 
 	/**
@@ -242,7 +194,7 @@ public class ChessEngineResolver {
 	 *            If a license check is performed the caller must check the result in onActivityResult()
 	 */
 	public boolean checkLicense(Activity caller, int requestCode,
-			String fileName, String packageName) {
+								String fileName, String packageName) {
 		Log.d(TAG, "checking license for engine " + fileName + ", "
 				+ packageName);
 		for (ChessEngine engine : resolveEngines()) {

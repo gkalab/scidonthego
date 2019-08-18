@@ -1,5 +1,22 @@
 package org.scid.android;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.util.Log;
+import android.view.WindowManager;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.scid.android.engine.Engine;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -24,29 +41,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.scid.android.engine.Engine;
-
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-import android.util.Log;
-import android.view.WindowManager;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
-
 public class Tools {
 	private static final String TAG = Tools.class.getSimpleName();
-	private static Matcher matcherTag;
-	private static Matcher matcherLink;
 	private static final String HTML_A_TAG_PATTERN = "(?i)<a([^>]+)>(.+?)</a>";
 	private static final String HTML_A_HREF_TAG_PATTERN = "\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))";
 	private static Pattern patternTag = Pattern.compile(HTML_A_TAG_PATTERN);
@@ -62,13 +58,13 @@ public class Tools {
 	 */
 	public static List<Link> getLinks(final String html) {
 		List<Link> result = new ArrayList<Link>();
-		matcherTag = patternTag.matcher(html);
+		Matcher matcherTag = patternTag.matcher(html);
 		while (matcherTag.find()) {
 			String anchor = matcherTag.group(0);
 			final String description = anchor.substring(
 					anchor.indexOf(">") + 1, anchor.lastIndexOf("<"));
 			String href = matcherTag.group(1); // href
-			matcherLink = patternLink.matcher(href);
+			Matcher matcherLink = patternLink.matcher(href);
 			while (matcherLink.find()) {
 				final Link link = new Link(matcherLink.group(1).replaceAll(
 						"\"", ""), description); // link
@@ -82,16 +78,13 @@ public class Tools {
 	 * Add names of engine files (files which not have an ignored extension) to
 	 * the specified set of already found engines.
 	 *
-	 * @param foundEngines
-	 *            Set of already found engines or null if a new set should be
-	 *            created.
 	 * @param dirPath
 	 *            Path of directory to search.
 	 * @param ignoreExtensions
 	 *            Extensions (including the period) of non-engine files.
 	 * @return Updated or created set of engine file names.
 	 */
-	public static final SortedSet<Engine> findEnginesInDirectory(
+	static SortedSet<Engine> findEnginesInDirectory(
 			String dirPath, Set<String> ignoreExtensions) {
 		File dir = new File(dirPath);
 		final Set<String> _ignore = ignoreExtensions;
@@ -113,8 +106,8 @@ public class Tools {
 		});
 		SortedSet<Engine> engines = new TreeSet<Engine>();
 		if (files != null) {
-			for (int i = 0; i < files.length; i++) {
-				engines.add(new Engine(files[i].getName()));
+			for (File file : files) {
+				engines.add(new Engine(file.getName()));
 			}
 		}
 		return engines;
@@ -130,7 +123,7 @@ public class Tools {
 	 * @throws IOException
 	 *             if there's an error downloading the file
 	 */
-	public static final File downloadFile(String path) throws IOException {
+	public static File downloadFile(String path) throws IOException {
 		File result = null;
 		URL url = null;
 		try {
@@ -142,7 +135,7 @@ public class Tools {
 			// get file name from http headers
 			String fileName = uc.getHeaderField("Content-Disposition");
 			if (fileName != null) {
-				if (fileName.indexOf("filename=") > -1) {
+				if (fileName.contains("filename=")) {
 					fileName = fileName.substring(
 							fileName.indexOf("filename=") + 9).trim();
 					if (fileName.length() > 0)
@@ -188,8 +181,8 @@ public class Tools {
 		return result;
 	}
 
-	public static void importPgn(final Activity activity, String baseName,
-			final int resultId) {
+	static void importPgn(final Activity activity, String baseName,
+						  final int resultId) {
 		final String pgnFileName;
 		if (baseName.endsWith(".pgn")) {
 			pgnFileName = baseName;
@@ -240,12 +233,12 @@ public class Tools {
 		activity.startActivityForResult(i, resultId);
 	}
 
-	public static String getFullScidFileName(final String fileName) {
+	static String getFullScidFileName(final String fileName) {
 		String pathName = getFullFileName(fileName);
 		return stripExtension(pathName);
 	}
 
-	public static String stripExtension(String pathName) {
+	static String stripExtension(String pathName) {
 		int pos = pathName.lastIndexOf(".");
 		if (pos > 0) {
 			pathName = pathName.substring(0, pos);
@@ -254,11 +247,10 @@ public class Tools {
 	}
 
 	private static String getFullFileName(final String fileName) {
-		String pathName = getScidDirectory() + File.separator + fileName;
-		return pathName;
+		return getScidDirectory() + File.separator + fileName;
 	}
 
-	public static String getFileNameFromUrl(String path) {
+	private static String getFileNameFromUrl(String path) {
 		String result = null;
 		int lastPathSep = path.lastIndexOf("/");
 		if (lastPathSep > 0 && path.length() > lastPathSep + 1) {
@@ -290,8 +282,8 @@ public class Tools {
 		});
 	}
 
-	public static void bringPointtoView(TextView textView,
-			ScrollView scrollView, int offset) {
+	static void bringPointtoView(TextView textView,
+								 ScrollView scrollView, int offset) {
 		if (textView.getLayout() != null) {
 			int line = textView.getLayout().getLineForOffset(offset);
 			int y = (int) ((line + 0.5) * textView.getLineHeight());
@@ -299,7 +291,7 @@ public class Tools {
 		}
 	}
 
-	public static void setKeepScreenOn(Activity activity, boolean alwaysOn) {
+	static void setKeepScreenOn(Activity activity, boolean alwaysOn) {
 		if (alwaysOn) {
 			activity.getWindow().addFlags(
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -310,7 +302,7 @@ public class Tools {
 		}
 	}
 
-	public static boolean copyFile(File sourceFile, File destFile) {
+	private static boolean copyFile(File sourceFile, File destFile) {
 		FileInputStream istream = null;
 		FileOutputStream fout = null;
 		String errorMsg;
@@ -350,12 +342,12 @@ public class Tools {
 		return copied;
 	}
 
-	public static void processUri(Activity activity, Uri data,
-			final int resultCode) {
+	static void processUri(Activity activity, Uri data,
+						   final int resultCode) {
 		Log.i(TAG, "Intent data=" + data);
 		if (data.getScheme().startsWith("http")) {
 			String url = data.toString();
-			new DownloadTask().execute(activity, url);
+			new DownloadTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, activity, url);
 			Toast.makeText(activity,
 					activity.getString(R.string.download_started),
 					Toast.LENGTH_LONG).show();
@@ -430,7 +422,7 @@ public class Tools {
 				if (entry.getName().toLowerCase().endsWith(".pgn")) {
 					Log.d(TAG, "Extracting: " + entry);
 					int count;
-					byte data[] = new byte[BUFFER];
+					byte[] data = new byte[BUFFER];
 					// write the files to the disk
 					result = new File(directory, entry.getName());
 					FileOutputStream fos = new FileOutputStream(result);
@@ -455,7 +447,7 @@ public class Tools {
 	}
 
 	/** Read all data from an input stream. Return null if IO error. */
-	public static String readFromStream(InputStream is) {
+	static String readFromStream(InputStream is) {
 		InputStreamReader isr;
 		try {
 			isr = new InputStreamReader(is, "UTF-8");
@@ -475,7 +467,7 @@ public class Tools {
 		}
 	}
 
-	public static boolean hasFenProvider(PackageManager manager) {
+	static boolean hasFenProvider(PackageManager manager) {
 		Intent i = new Intent(Intent.ACTION_GET_CONTENT);
 		i.setType("application/x-chess-fen");
 		List<ResolveInfo> resolvers = manager.queryIntentActivities(i, 0);
@@ -483,17 +475,7 @@ public class Tools {
 	}
 
 	public static String getScidDirectory() {
-		return Environment.getExternalStorageDirectory() + File.separator
+		return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
 				+ Constants.SCID_DIRECTORY;
-	}
-
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
-	public static String getNativeLibraryDir(Context context) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-			return context.getApplicationInfo().nativeLibraryDir;
-		} else {
-			return context.getApplicationInfo().dataDir + File.separator
-					+ "lib";
-		}
 	}
 }

@@ -4,6 +4,7 @@ import org.scid.database.DataBaseView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 public class ExportPgnActivity extends Activity {
@@ -27,6 +28,6 @@ public class ExportPgnActivity extends Activity {
 					return false;
 				}
 			}
-		}).execute();
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 }

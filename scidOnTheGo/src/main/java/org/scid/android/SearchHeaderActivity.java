@@ -7,6 +7,7 @@ import org.scid.database.GameFilter;
 import org.scid.database.SearchHeaderRequest;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -31,7 +32,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
     private class FilterableNames extends BaseAdapter implements Filterable {
         private int nameType;
         private int[] names = new int[0];
-        public FilterableNames(int nameType){
+        FilterableNames(int nameType){
             this.nameType = nameType;
         }
         public int getCount() { return names.length; }
@@ -97,7 +98,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 
     private class ExactSetter implements AdapterView.OnItemClickListener, OnKeyListener {
         private int checkBoxId;
-        public ExactSetter(int checkBoxId){
+        ExactSetter(int checkBoxId){
             this.checkBoxId = checkBoxId;
         }
         private void set(boolean checked){
@@ -377,6 +378,6 @@ public class SearchHeaderActivity extends SearchActivityBase {
         requestHistory.add(currentState()); // after validations
         (new SearchTask(this){ protected GameFilter doInBackground(Void... params) {
           return dbv.getMatchingHeaders(filterOperation, r, progress);
-        }}).execute();
+        }}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 }

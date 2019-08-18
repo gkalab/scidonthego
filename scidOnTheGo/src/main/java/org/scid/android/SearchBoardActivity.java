@@ -4,6 +4,7 @@ import org.scid.database.DataBaseView;
 import org.scid.database.GameFilter;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioGroup;
@@ -48,6 +49,6 @@ public class SearchBoardActivity extends SearchActivityBase {
 			protected GameFilter doInBackground(Void... params) {
 				return dbv.getMatchingBoards(filterOperation, fen, searchType, progress);
 			}
-		}).execute();
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 }

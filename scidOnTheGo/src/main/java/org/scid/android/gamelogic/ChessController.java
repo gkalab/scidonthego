@@ -1,12 +1,7 @@
 package org.scid.android.gamelogic;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import org.scid.android.GUIInterface;
 import org.scid.android.GameMode;
@@ -19,10 +14,13 @@ import org.scid.android.gamelogic.Game.GameState;
 import org.scid.android.gamelogic.GameTree.Node;
 import org.scid.database.DataBaseView;
 
-import android.annotation.SuppressLint;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.util.Log;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * The glue between the chess engine and the GUI.
@@ -60,7 +58,7 @@ public class ChessController {
 		private List<Move> bookMoves = null;
 		private boolean whiteMove = true;
 
-		public final void clearSearchInfo() {
+		final void clearSearchInfo() {
 			pvDepth = 0;
 			currDepth = 0;
 			bookInfo = "";
@@ -69,7 +67,7 @@ public class ChessController {
 			setSearchInfo();
 		}
 
-		private final void setSearchInfo() {
+		private void setSearchInfo() {
 			StringBuilder buf = new StringBuilder();
 			if (pvDepth > 0) {
 				buf.append(String.format("[%d] ", pvDepth));
@@ -163,7 +161,7 @@ public class ChessController {
 			}
 		}
 
-		private final boolean isLegal(Position pos, Move move) {
+		private boolean isLegal(Position pos, Move move) {
 			ArrayList<Move> moves = new MoveGen().legalMoves(pos);
 			int promoteTo = move.promoteTo;
 			for (Move m : moves) {
@@ -194,12 +192,12 @@ public class ChessController {
 			setSearchInfo();
 		}
 
-		public void prefsChanged() {
+		void prefsChanged() {
 			setSearchInfo();
 		}
 	}
 
-	SearchListener listener;
+	private SearchListener listener;
 
 	public ChessController(GUIInterface gui,
 			PgnToken.PgnTokenReceiver gameTextListener, PGNOptions options) {
@@ -213,7 +211,7 @@ public class ChessController {
 		boolean searchResultWanted = true;
 	}
 
-	SearchStatus ss = new SearchStatus();
+	private SearchStatus ss = new SearchStatus();
 	private UciReadTask readTask;
 
 	public final void newGame(GameMode gameMode) {
@@ -226,7 +224,6 @@ public class ChessController {
 		updateGameMode();
 	}
 
-	@SuppressLint("NewApi")
 	public final void startEngine(EngineConfig engineDef) {
 		if (computerPlayer == null) {
 			computerPlayer = new ComputerPlayer(engineDef);
@@ -234,11 +231,7 @@ public class ChessController {
 			gameTextListener.clear();
 			this.readTask = new UciReadTask(computerPlayer.getEngine(),
 					listener);
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-				this.readTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-			} else {
-				this.readTask.execute();
-			}
+			this.readTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		}
 	}
 
@@ -268,14 +261,14 @@ public class ChessController {
 		}
 	}
 
-	private final void updateGameMode() {
+	private void updateGameMode() {
 		if (game != null) {
 			boolean gamePaused = gameMode.analysisMode() || guiPaused;
 			game.setGamePaused(gamePaused);
 		}
 	}
 
-	private final void updateComputeThreads(boolean clearPV) {
+	private void updateComputeThreads(boolean clearPV) {
 		boolean analysis = gameMode.analysisMode();
 		if (!analysis)
 			stopAnalysis();
@@ -293,7 +286,7 @@ public class ChessController {
 		}
 	}
 
-	private final synchronized void startAnalysis() {
+	private synchronized void startAnalysis() {
 		if (gameMode.analysisMode()) {
 			ss = new SearchStatus();
 			final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
@@ -332,7 +325,7 @@ public class ChessController {
 		}
 	}
 
-	private final synchronized void stopAnalysis() {
+	private synchronized void stopAnalysis() {
 		ss.searchResultWanted = true;
 		listener.clearSearchInfo();
 		ss.searchResultWanted = false;
@@ -358,7 +351,7 @@ public class ChessController {
 		listener.prefsChanged();
 	}
 
-	private final void setPlayerNames(Game game) {
+	private void setPlayerNames(Game game) {
 		if (game != null) {
 			String white = "";
 			String black = "";
@@ -399,7 +392,7 @@ public class ChessController {
 		}
 	}
 
-	public void updateGame() {
+	private void updateGame() {
 		ss.searchResultWanted = false;
 		game.setComputerPlayer(computerPlayer);
 		gameTextListener.clear();
@@ -439,7 +432,7 @@ public class ChessController {
 		return gameMode.analysisMode();
 	}
 
-	private final boolean undoMoveNoUpdate() {
+	private boolean undoMoveNoUpdate() {
 		if (game.getLastMove() == null)
 			return false;
 		ss.searchResultWanted = false;
@@ -464,7 +457,7 @@ public class ChessController {
 		}
 	}
 
-	private final void redoMoveNoUpdate() {
+	private void redoMoveNoUpdate() {
 		if (game.canRedoMove()) {
 			ss.searchResultWanted = false;
 			game.redoMove();
@@ -567,7 +560,7 @@ public class ChessController {
 		}
 	}
 
-	Move promoteMove;
+	private Move promoteMove;
 
 	public final void reportPromotePiece(int choice) {
 		final boolean white = game.currPos().whiteMove;
@@ -597,7 +590,7 @@ public class ChessController {
 	 *
 	 * @return True if the move was legal, false otherwise.
 	 */
-	final private boolean doMove(Move move) {
+	private boolean doMove(Move move) {
 		Position pos = game.currPos();
 		ArrayList<Move> moves = new MoveGen().pseudoLegalMoves(pos);
 		moves = MoveGen.removeIllegal(pos, moves);
@@ -689,7 +682,7 @@ public class ChessController {
 		gui.setStatusString(str);
 	}
 
-	final private void updateMoveList() {
+	private void updateMoveList() {
 		if (game != null) {
 			if (!gameTextListener.isUpToDate()) {
 				PGNOptions tmpOptions = new PGNOptions();
@@ -707,7 +700,7 @@ public class ChessController {
 		}
 	}
 
-	final private void setSelection() {
+	private void setSelection() {
 		Move m = game.getLastMove();
 		int fromSq = (m != null) ? m.from : -1;
 		gui.setFromSelection(fromSq);
@@ -745,7 +738,7 @@ public class ChessController {
 		return true;
 	}
 
-	private final boolean findValidDrawClaim() {
+	private boolean findValidDrawClaim() {
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
 		game.processString("draw accept", false);
@@ -755,9 +748,7 @@ public class ChessController {
 		if (game.getGameState() != GameState.ALIVE)
 			return true;
 		game.processString("draw 50", false);
-		if (game.getGameState() != GameState.ALIVE)
-			return true;
-		return false;
+		return game.getGameState() != GameState.ALIVE;
 	}
 
 	public final void setHeaders(Map<String, String> headers) {

@@ -1,6 +1,7 @@
 package org.scid.android;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 
@@ -10,7 +11,7 @@ public class ImportPgnActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.pgnimport);
 		String pgnFileName = getIntent().getAction();
-		new ImportPgnTask(this, pgnFileName).execute();
+		new ImportPgnTask(this, pgnFileName).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	public void onOkClick(View view) {

@@ -1,30 +1,6 @@
 package org.scid.android;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.scid.android.dialog.MoveListDialog;
-import org.scid.android.dialog.PromoteDialog;
-import org.scid.android.engine.EngineManager;
-import org.scid.android.engine.EngineManager.EngineChangeEvent;
-import org.scid.android.gamelogic.ChessController;
-import org.scid.android.gamelogic.ChessParseError;
-import org.scid.android.gamelogic.Move;
-import org.scid.android.gamelogic.Position;
-import org.scid.android.gamelogic.TextIO;
-import org.scid.android.twic.ImportTwicActivity;
-import org.scid.database.DataBase;
-import org.scid.database.DataBaseView;
-
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -34,11 +10,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
@@ -60,6 +40,30 @@ import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.scid.android.dialog.MoveListDialog;
+import org.scid.android.dialog.PromoteDialog;
+import org.scid.android.engine.EngineManager;
+import org.scid.android.engine.EngineManager.EngineChangeEvent;
+import org.scid.android.gamelogic.ChessController;
+import org.scid.android.gamelogic.ChessParseError;
+import org.scid.android.gamelogic.Move;
+import org.scid.android.gamelogic.Position;
+import org.scid.android.gamelogic.TextIO;
+import org.scid.android.twic.ImportTwicActivity;
+import org.scid.database.DataBase;
+import org.scid.database.DataBaseView;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ScidAndroidActivity extends Activity implements GUIInterface,
 		IClipboardChangedListener, IDownloadCallback {
@@ -103,12 +107,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		File scidFileDir = new File(Tools.getScidDirectory());
-		if (!scidFileDir.exists()) {
-			scidFileDir.mkdirs();
-		}
+		requestPermissions();
 		engineManager = new EngineManager(this);
-		checkUciEngine();
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		preferences.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
 			@Override
@@ -163,6 +163,57 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		handleIncomingContent();
 	}
 
+	private void requestPermissions() {
+		if (ContextCompat.checkSelfPermission(this,
+				Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					RESULT_PERMISSION_REQUEST);
+		} else {
+			initAfterPermissionSuccess();
+		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		if (requestCode == RESULT_PERMISSION_REQUEST) {
+			if (grantResults.length > 0
+					&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				initAfterPermissionSuccess();
+			} else {
+				final AlertDialog d = new AlertDialog.Builder(this)
+						.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								finish();
+							}
+						})
+						.setOnCancelListener(new DialogInterface.OnCancelListener() {
+							@Override
+							public void onCancel(DialogInterface dialog) {
+								finish();
+							}
+						})
+						.setTitle(
+								this.getString(android.R.string.dialog_alert_title))
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setMessage(getString(
+								R.string.error_no_permissions)).create();
+				d.show();
+			}
+			return;
+		}
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+	}
+
+	private void initAfterPermissionSuccess() {
+		File scidFileDir = new File(Tools.getScidDirectory());
+		if (!scidFileDir.exists()) {
+			scidFileDir.mkdirs();
+		}
+	}
+
 	private void handleIncomingContent() {
 		Uri data = getIntent().getData();
 		if (data == null) {
@@ -202,59 +253,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private boolean isXChessType() {
 		return "application/x-chess-pgn".equals(getIntent().getType())
 				|| "application/x-chess-fen".equals(getIntent().getType());
-	}
-
-	private void checkUciEngine() {
-		// check if engine exists in the files directory
-		File engine = new File(engineManager.getDefaultEngine()
-				.getExecutablePath());
-		if (engine.exists()) {
-			try {
-				String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
-				Process process = Runtime.getRuntime().exec(cmd);
-				try {
-					process.waitFor();
-					Log.d(TAG, "chmod 744 " + engine.getAbsolutePath());
-				} catch (InterruptedException e) {
-					Log.e(TAG, e.getMessage(), e);
-				}
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-		} else {
-			Log.d(TAG, "Engine is missing from data. Intializing...");
-			try {
-				String nativeLibraryDir = Tools.getNativeLibraryDir(this);
-				InputStream istream = new FileInputStream(nativeLibraryDir
-								+ File.separator
-								+ EngineManager.INTERNAL_ENGINE_FILE_NAME);
-				FileOutputStream fout = new FileOutputStream(
-						engine.getAbsolutePath());
-				byte[] b = new byte[1024];
-				int noOfBytes = 0;
-				while ((noOfBytes = istream.read(b)) != -1) {
-					fout.write(b, 0, noOfBytes);
-				}
-				istream.close();
-				fout.close();
-				Log.d(TAG, engine.getName()
-						+ " copied to files directory");
-				try {
-					String cmd[] = { "chmod", "744", engine.getAbsolutePath() };
-					Process process = Runtime.getRuntime().exec(cmd);
-					try {
-						process.waitFor();
-						Log.d(TAG, "chmod 744 " + engine.getAbsolutePath());
-					} catch (InterruptedException e) {
-						Log.e(TAG, e.getMessage(), e);
-					}
-				} catch (IOException e) {
-					Log.e(TAG, e.getMessage(), e);
-				}
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-		}
 	}
 
 	private static Random generator = new Random();
@@ -1276,7 +1274,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	private void startAnalysis() {
 		if (!ctrl.hasEngineStarted()) {
 			moveList.setText(R.string.initializing_engine);
-			new StartEngineTask().execute(this, ctrl,
+			new StartEngineTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this, ctrl,
 					engineManager.getCurrentEngine());
 		} else {
 			onFinishStartAnalysis();
