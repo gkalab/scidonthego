@@ -267,7 +267,7 @@ No more moves.</string>
     <string name="remove_engine">Remove engine</string>
     <string name="no_engine_selected">No engine selected. Put a chess engine into the scid directory and select it.</string>
     <string name="engine_added">Engine \"%s\" added.</string>
-    <string name="engine_added_copied">Engine \"%s\" added. The executable file was copied to internal storage for execution.</string>
+    <string name="engine_added_copied">Engine \"%s\" added.</string>
     <string name="engine_removed">Engine \"%s\" removed.</string>
     <string name="engine_copy_title">Copying executable…</string>
     <string name="engine_copy_msg">Copying executable \"%s\" to internal storage.</string>

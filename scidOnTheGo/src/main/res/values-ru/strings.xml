@@ -237,7 +237,7 @@ GNU GPL v2\n\
     <string name="remove_engine">Удалить движок</string>
     <string name="no_engine_selected">Движок не выбран. Запишите движок в каталог /scid и выберете его.</string>
     <string name="engine_added">Движок \"%s\" добавлен.</string>
-    <string name="engine_added_copied">Движок \"%s\" добавлен. Исполняемый файл был скопирован во внутреннее хранилище для запуска.</string>
+    <string name="engine_added_copied">Движок \"%s\" добавлен.</string>
     <string name="engine_removed">Движок \"%s\" удален.</string>
     <string name="engine_copy_title">Копирование исполняемого файла…</string>
     <string name="engine_copy_msg">Копирование исполняемого файла \"%s\" во внутреннее хранилище.</string>

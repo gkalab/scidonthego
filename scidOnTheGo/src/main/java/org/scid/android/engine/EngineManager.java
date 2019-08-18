@@ -38,9 +38,9 @@ import java.util.TreeMap;
  * Class to manage UCI chess engines.
  */
 public class EngineManager {
-	public static final String INTERNAL_ENGINE_FILE_NAME = "libstockfish.so";
+	private static final String INTERNAL_ENGINE_NAME = "Stockfish 10";
+	private static final String INTERNAL_ENGINE_FILE_NAME = "libstockfish.so";
 	private static final String ENGINE_DATA_FILE = "chessengines.xml";
-	private static final String INTERNAL_ENGINE_NAME = "Stockfish 6";
 	private static EngineConfig defaultEngine;
 
 	private Context context;
