@@ -455,8 +455,8 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 			this.lastWhitePlayerName = white;
 			this.lastBlackPlayerName = black;
 			String[] names = myPlayerNames.split("\\n");
-			for (int i = 0; i < names.length; i++) {
-				String playerName = names[i].trim();
+			for (String name : names) {
+				String playerName = name.trim();
 				if (playerName.length() > 0) {
 					if (white.equalsIgnoreCase(playerName)) {
 						setFlipped(false);
@@ -510,7 +510,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		setFlipped(!cb.flipped);
 	}
 
-	private final byte[] strToByteArr(String str) {
+	private byte[] strToByteArr(String str) {
 		int nBytes = str.length() / 2;
 		byte[] ret = new byte[nBytes];
 		for (int i = 0; i < nBytes; i++) {
@@ -521,11 +521,11 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		return ret;
 	}
 
-	private final String byteArrToString(byte[] data) {
+	private String byteArrToString(byte[] data) {
 		StringBuilder ret = new StringBuilder(32768);
 		int nBytes = data.length;
-		for (int i = 0; i < nBytes; i++) {
-			int b = data[i];
+		for (int datum : data) {
+			int b = datum;
 			if (b < 0) {
 				b += 256;
 			}
@@ -560,7 +560,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		setFavoriteRating();
 	}
 
-	private final void initUI(boolean initTitle) {
+	private void initUI(boolean initTitle) {
 		if (initTitle) {
 			requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		}
@@ -681,7 +681,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						return true;
 					}
 
-					private final void handleClick(MotionEvent e) {
+					private void handleClick(MotionEvent e) {
 						int sq = cb.eventToSquare(e);
 						Move m = cb.mousePressed(sq);
 						makeHumanMove(m);
@@ -884,7 +884,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		super.onDestroy();
 	}
 
-	private final void readPrefs() {
+	private void readPrefs() {
 		this.myPlayerNames = preferences.getString("playerNames", "");
 		setFlipped(preferences.getBoolean("boardFlipped", false));
 		studyOrientation = Integer.parseInt(preferences.getString("studyOrientation", "0"));
@@ -939,7 +939,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		ctrl.prefsChanged();
 	}
 
-	private final void setFullScreenMode(boolean fullScreenMode) {
+	private void setFullScreenMode(boolean fullScreenMode) {
 		WindowManager.LayoutParams attrs = getWindow().getAttributes();
 		if (fullScreenMode) {
 			attrs.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
@@ -973,7 +973,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 	static private final int RESULT_PGN_FILE_IMPORT = 11;
 	static private final int RESULT_GET_FEN = 12;
 	static private final int RESULT_EXPORT_PGN = 13;
-
+	static private final int RESULT_PERMISSION_REQUEST = 14;
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -1217,7 +1217,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 				&& getScidAppContext().getNoGames() > 0;
 	}
 
-	private final void getFen() {
+	private void getFen() {
 		Intent i = new Intent(Intent.ACTION_GET_CONTENT);
 		i.setType("application/x-chess-fen");
 		try {
@@ -1586,7 +1586,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		engineManager.addEngine(engineName, executable, enginePackage, engineVersion);
 	}
 
-	private final void setFlipped(boolean flipped) {
+	private void setFlipped(boolean flipped) {
 		if(flipped != cb.flipped){
 			cb.setFlipped(flipped);
 			ImageButton flip_button = (ImageButton)findViewById(R.id.flip_board);
@@ -1680,7 +1680,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		updateThinkingInfo();
 	}
 
-	private final void updateThinkingInfo() {
+	private void updateThinkingInfo() {
 		boolean thinkingEmpty = true;
 		{
 			String s = "";
@@ -1782,8 +1782,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 					}
 				});
 		builder.setNegativeButton(android.R.string.cancel, null);
-		AlertDialog alert = builder.create();
-		return alert;
+		return builder.create();
 	}
 
 	private void showAboutDialog() {
@@ -1818,8 +1817,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						dialog.cancel();
 					}
 				});
-		AlertDialog alert = builder.create();
-		return alert;
+		return builder.create();
 	}
 
 	private boolean hasNoDataBaseViewOpened() {
@@ -1882,8 +1880,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						}
 					}
 				});
-		AlertDialog alert = builder.create();
-		return alert;
+		return builder.create();
 	}
 
 	private AlertDialog createClipboardDialog() {
@@ -1975,8 +1972,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						}
 					}
 				});
-		AlertDialog alert = builder.create();
-		return alert;
+		return builder.create();
 	}
 
 	private AlertDialog createImportDialog() {
@@ -2006,8 +2002,7 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 						}
 					}
 				});
-		AlertDialog alert = builder.create();
-		return alert;
+		return builder.create();
 	}
 
 	private void editBoard(String fen) {
