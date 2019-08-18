@@ -35,20 +35,20 @@ public class ColorTheme {
 			"selectedSquare", "cursorSquare", "darkPiece", "brightPiece",
 			"currentMove", "arrow0", "arrow1", "arrow2", "arrow3", "arrow4",
 			"arrow5" };
-	private static final String prefPrefix = "color_";
+	private static final String prefPrefix = "colors_";
 
 	private final static String themeColors[][] = {
 			{ "#FF80A0A0", "#FFD0E0D0", "#FFFF0000", "#FF00FF00", "#FF000000",
-					"#FFFFFFFF", "#FF666666", "#A01F1FFF", "#A0FF1F1F",
+					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" },
 			{ "#B58863", "#F0D9B5", "#FFFF0000", "#FF00FF00", "#FF000000",
-					"#FFFFFFFF", "#FF666666", "#A01F1FFF", "#A0FF1F1F",
+					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" },
 			{ "#FF83A5D2", "#FFFFFFFA", "#FF3232D1", "#FF5F5FFD", "#FF282828",
-					"#FFF0F0F0", "#FF666666", "#A01F1FFF", "#A01FFF1F",
+					"#FFF0F0F0", "#FFAFC4D4", "#A01F1FFF", "#A01FFF1F",
 					"#501F1FFF", "#501FFF1F", "#1E1F1FFF", "#281FFF1F" },
 			{ "#FF769656", "#FFEEEED2", "#FFFF0000", "#FF0000FF", "#FF000000",
-					"#FFFFFFFF", "#FF666666", "#A01F1FFF", "#A0FF1F1F",
+					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" } };
 
 	final void readColors(SharedPreferences preferences) {
