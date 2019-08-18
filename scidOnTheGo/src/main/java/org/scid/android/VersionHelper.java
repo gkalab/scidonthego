@@ -28,8 +28,4 @@ public class VersionHelper {
 	static void refreshActionBarMenu(Activity activity) {
 		activity.invalidateOptionsMenu();
 	}
-
-	public static void removeIconFromActionbar(Activity activity) {
-		activity.getActionBar().setDisplayShowHomeEnabled(false);
-	}
 }

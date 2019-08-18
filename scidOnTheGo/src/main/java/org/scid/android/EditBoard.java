@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.ClipboardManager;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -27,7 +28,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class EditBoard extends Activity {
+public class EditBoard extends AppCompatActivity {
 	private ChessBoardEdit cb;
 	private TextView status;
 	private Button okButton;

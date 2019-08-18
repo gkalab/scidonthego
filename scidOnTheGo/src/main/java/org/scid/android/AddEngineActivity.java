@@ -9,10 +9,10 @@ import java.util.SortedSet;
 
 import org.scid.android.engine.Engine;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +27,7 @@ import android.widget.TextView;
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
 
-public class AddEngineActivity extends Activity {
-	public static final String DATA_ENGINE_MANAGER = "org.scid.android.engine.manager";
+public class AddEngineActivity extends AppCompatActivity {
 	public static final String DATA_ENGINE_NAME = "org.scid.android.engine.name";
 	public static final String DATA_ENGINE_EXECUTABLE = "org.scid.android.engine.executable";
 	public static final String DATA_ENGINE_PACKAGE = "org.scid.android.engine.package";
@@ -36,8 +35,6 @@ public class AddEngineActivity extends Activity {
 	public static final String DATA_MAKE_CURRENT_ENGINE = "org.scid.android.make.current.engine";
 
 	public static final int RESULT_EXECUTABLE_EXISTS = 2;
-	public static final int RESULT_EXECUTABLE_COPYING = 3;
-	public static final int RESULT_EXECUTABLE_COPYFAILED = 3;
 
 	private List<Engine> executablesList;
 	private volatile String currentExecutable;

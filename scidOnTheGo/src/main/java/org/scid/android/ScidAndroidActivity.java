@@ -1,7 +1,6 @@
 package org.scid.android;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -19,6 +18,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.text.ClipboardManager;
 import android.text.Html;
 import android.text.InputType;
@@ -65,7 +65,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ScidAndroidActivity extends Activity implements GUIInterface,
+public class ScidAndroidActivity extends AppCompatActivity implements GUIInterface,
 		IClipboardChangedListener, IDownloadCallback {
 
 	private static final String ANALYSIS_ENGINE = "analysisEngine";
@@ -126,10 +126,6 @@ public class ScidAndroidActivity extends Activity implements GUIInterface,
 		initUI(Integer.valueOf(android.os.Build.VERSION.SDK) < 11);
 		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
 			VersionHelper.registerClipChangedListener(this);
-			if (!ScreenTools.isLargeScreenLayout(this)) {
-				// remove Icon from ActionBar if it's a phone and >= Honeycomb
-				VersionHelper.removeIconFromActionbar(this);
-			}
 		}
 
 		gameTextListener = new PgnScreenText(pgnOptions);

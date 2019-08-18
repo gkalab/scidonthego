@@ -4,10 +4,10 @@ import java.util.TreeMap;
 
 import org.scid.database.DataBase;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -17,7 +17,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-public class SaveGameActivity extends Activity {
+public class SaveGameActivity extends AppCompatActivity {
 	private int resultSelected = 0;
 	private ProgressDialog progressDlg;
 	private EditText event;

@@ -2,12 +2,12 @@ package org.scid.android;
 
 import org.scid.database.DataBaseView;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
-public class ExportPgnActivity extends Activity {
+public class ExportPgnActivity extends AppCompatActivity {
 	private String pgnFileName;
 
 	@Override
