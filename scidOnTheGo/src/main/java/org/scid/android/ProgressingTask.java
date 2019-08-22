@@ -22,7 +22,7 @@ public abstract class ProgressingTask<Result> extends
 	private ProgressDialog progressDialog;
 	protected Progress progress;
 
-	public ProgressingTask(Activity activity, int titleId, int messageId) {
+	ProgressingTask(Activity activity, int titleId, int messageId) {
 		this.activity = activity;
 		this.titleId = titleId;
 		this.messageId = messageId;
@@ -67,7 +67,7 @@ public abstract class ProgressingTask<Result> extends
 	/**
 	 * Dismisses the ProgressDialog. Must be called from <code>onPostExecute(Result)</code>.
 	 */
-	protected void dismissProgress() {
+	void dismissProgress() {
 		progressDialog.dismiss();
 	}
 

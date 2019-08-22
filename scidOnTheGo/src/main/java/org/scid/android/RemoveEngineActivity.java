@@ -17,7 +17,7 @@ public class RemoveEngineActivity extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		String [] engineNames = getIntent().getStringArrayExtra(DATA_ENGINE_NAMES);
-		setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, engineNames));
+		setListAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_single_choice, engineNames));
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 
 			@Override

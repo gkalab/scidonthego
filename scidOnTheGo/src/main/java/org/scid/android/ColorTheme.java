@@ -4,11 +4,11 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 
-public class ColorTheme {
+class ColorTheme {
 	private static ColorTheme inst = null;
 
 	/** Get singleton instance. */
-	static final ColorTheme instance() {
+	static ColorTheme instance() {
 		if (inst == null)
 			inst = new ColorTheme();
 		return inst;
@@ -29,7 +29,7 @@ public class ColorTheme {
 	final static int ARROW_5 = 12;
 	private final static int numColors = 13;
 
-	private int colorTable[] = new int[numColors];
+	private int[] colorTable = new int[numColors];
 
 	private static final String[] prefNames = { "darkSquare", "brightSquare",
 			"selectedSquare", "cursorSquare", "darkPiece", "brightPiece",
@@ -37,19 +37,19 @@ public class ColorTheme {
 			"arrow5" };
 	private static final String prefPrefix = "colors_";
 
-	private final static String themeColors[][] = {
-			{ "#FF80A0A0", "#FFD0E0D0", "#FFFF0000", "#FF00FF00", "#FF000000",
+	private final static String[][] themeColors = {
+			{"#FF80A0A0", "#FFD0E0D0", "#FFFF0000", "#FF00FF00", "#FF000000",
 					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
-					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" },
-			{ "#B58863", "#F0D9B5", "#FFFF0000", "#FF00FF00", "#FF000000",
+					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F"},
+			{"#B58863", "#F0D9B5", "#FFFF0000", "#FF00FF00", "#FF000000",
 					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
-					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" },
-			{ "#FF83A5D2", "#FFFFFFFA", "#FF3232D1", "#FF5F5FFD", "#FF282828",
+					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F"},
+			{"#FF83A5D2", "#FFFFFFFA", "#FF3232D1", "#FF5F5FFD", "#FF282828",
 					"#FFF0F0F0", "#FFAFC4D4", "#A01F1FFF", "#A01FFF1F",
-					"#501F1FFF", "#501FFF1F", "#1E1F1FFF", "#281FFF1F" },
-			{ "#FF769656", "#FFEEEED2", "#FFFF0000", "#FF0000FF", "#FF000000",
+					"#501F1FFF", "#501FFF1F", "#1E1F1FFF", "#281FFF1F"},
+			{"#FF769656", "#FFEEEED2", "#FFFF0000", "#FF0000FF", "#FF000000",
 					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
-					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F" } };
+					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F"}};
 
 	final void readColors(SharedPreferences preferences) {
 		for (int i = 0; i < numColors; i++) {

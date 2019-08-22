@@ -29,7 +29,7 @@ import java.util.TimeZone;
  */
 public class ChessController {
 	private ComputerPlayer computerPlayer = null;
-	private PgnToken.PgnTokenReceiver gameTextListener = null;
+	private PgnToken.PgnTokenReceiver gameTextListener;
 	private Game game;
 	private GUIInterface gui;
 	private GameMode gameMode;
@@ -135,8 +135,8 @@ public class ChessController {
 				Position tmpPos = new Position(pos);
 				UndoInfo ui = new UndoInfo();
 
-				ArrayList<Move> moves = new ArrayList<Move>();
-				ArrayList<String> copiedStatPV = new ArrayList<String>(pvStat);
+				ArrayList<Move> moves = new ArrayList<>();
+				ArrayList<String> copiedStatPV = new ArrayList<>(pvStat);
 				int nMoves = copiedStatPV.size();
 				for (int i = 0; i < nMoves; i++)
 					moves.add(TextIO.UCIstringToMove(copiedStatPV.get(i)));
@@ -235,15 +235,8 @@ public class ChessController {
 		}
 	}
 
-	public EngineConfig getEngineConfig() {
-		if (computerPlayer != null && computerPlayer.getEngine() != null) {
-			return computerPlayer.getEngine().getEngineConfig();
-		}
-		return null;
-	}
-
 	public final void startGame() {
-		updateComputeThreads(true);
+		updateComputeThreads();
 		setSelection();
 		updateGUI();
 		updateGameMode();
@@ -257,7 +250,7 @@ public class ChessController {
 		if (paused) {
 			stopAnalysis();
 		} else {
-			updateComputeThreads(true);
+			updateComputeThreads();
 		}
 	}
 
@@ -268,13 +261,11 @@ public class ChessController {
 		}
 	}
 
-	private void updateComputeThreads(boolean clearPV) {
+	private void updateComputeThreads() {
 		boolean analysis = gameMode.analysisMode();
 		if (!analysis)
 			stopAnalysis();
-		if (clearPV) {
-			listener.clearSearchInfo();
-		}
+		listener.clearSearchInfo();
 		if (analysis && this.computerPlayer != null)
 			startAnalysis();
 	}
@@ -289,9 +280,9 @@ public class ChessController {
 	private synchronized void startAnalysis() {
 		if (gameMode.analysisMode()) {
 			ss = new SearchStatus();
-			final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+			Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
 			Position currentPosition = new Position(game.currPos());
-			final boolean valid = game.tree.getGameState() != GameState.WHITE_MATE
+			boolean valid = game.tree.getGameState() != GameState.WHITE_MATE
 					&& game.tree.getGameState() != GameState.BLACK_MATE
 					&& game.tree.getGameState() != GameState.BLACK_STALEMATE
 					&& game.tree.getGameState() != GameState.WHITE_STALEMATE;
@@ -340,7 +331,7 @@ public class ChessController {
 			ss.searchResultWanted = false;
 			gameMode = newMode;
 			updateGameMode();
-			updateComputeThreads(true);
+			updateComputeThreads();
 			updateGUI();
 		}
 		return changed;
@@ -399,7 +390,7 @@ public class ChessController {
 		updateGameMode();
 		stopAnalysis();
 		if (computerPlayer != null) {
-			updateComputeThreads(true);
+			updateComputeThreads();
 		}
 		gui.setSelection(-1);
 		gui.setFromSelection(-1);
@@ -425,13 +416,6 @@ public class ChessController {
 		}
 	}
 
-	/** Return true if computer player is using CPU power. */
-	public final boolean computerBusy() {
-		if (game.getGameState() != GameState.ALIVE)
-			return false;
-		return gameMode.analysisMode();
-	}
-
 	private boolean undoMoveNoUpdate() {
 		if (game.getLastMove() == null)
 			return false;
@@ -449,7 +433,7 @@ public class ChessController {
 			ss.searchResultWanted = false;
 			stopAnalysis();
 			boolean didUndo = undoMoveNoUpdate();
-			updateComputeThreads(true);
+			updateComputeThreads();
 			setSelection();
 			if (didUndo)
 				setAnimMove(game.currPos(), game.getNextMove(), false);
@@ -473,7 +457,7 @@ public class ChessController {
 			stopAnalysis();
 			ss.searchResultWanted = false;
 			redoMoveNoUpdate();
-			updateComputeThreads(true);
+			updateComputeThreads();
 			setSelection();
 			setAnimMove(game.prevPos(), game.getLastMove(), true);
 			updateGUI();
@@ -489,7 +473,7 @@ public class ChessController {
 			ss.searchResultWanted = false;
 			stopAnalysis();
 			game.changeVariation(delta);
-			updateComputeThreads(true);
+			updateComputeThreads();
 			setSelection();
 			updateGUI();
 		}
@@ -499,7 +483,7 @@ public class ChessController {
 		ss.searchResultWanted = false;
 		stopAnalysis();
 		game.removeSubTree();
-		updateComputeThreads(true);
+		updateComputeThreads();
 		setSelection();
 		updateGUI();
 	}
@@ -540,7 +524,7 @@ public class ChessController {
 		if (needUpdate) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			updateComputeThreads(true);
+			updateComputeThreads();
 			setSelection();
 			updateGUI();
 		}
@@ -550,7 +534,7 @@ public class ChessController {
 		if (doMove(m)) {
 			ss.searchResultWanted = false;
 			stopAnalysis();
-			updateComputeThreads(true);
+			updateComputeThreads();
 			updateGUI();
 			if (gameMode.studyMode()) {
 				redoMove();
@@ -563,7 +547,7 @@ public class ChessController {
 	private Move promoteMove;
 
 	public final void reportPromotePiece(int choice) {
-		final boolean white = game.currPos().whiteMove;
+		boolean white = game.currPos().whiteMove;
 		int promoteTo;
 		switch (choice) {
 		case 1:
@@ -727,30 +711,6 @@ public class ChessController {
 		}
 	}
 
-	/**
-	 * Help human to claim a draw by trying to find and execute a valid draw
-	 * claim.
-	 */
-	public final boolean claimDrawIfPossible() {
-		if (!findValidDrawClaim())
-			return false;
-		updateGUI();
-		return true;
-	}
-
-	private boolean findValidDrawClaim() {
-		if (game.getGameState() != GameState.ALIVE)
-			return true;
-		game.processString("draw accept", false);
-		if (game.getGameState() != GameState.ALIVE)
-			return true;
-		game.processString("draw rep", false);
-		if (game.getGameState() != GameState.ALIVE)
-			return true;
-		game.processString("draw 50", false);
-		return game.getGameState() != GameState.ALIVE;
-	}
-
 	public final void setHeaders(Map<String, String> headers) {
 		game.tree.setHeaders(headers);
 		gameTextListener.clear();
@@ -759,13 +719,6 @@ public class ChessController {
 
 	public final void getHeaders(Map<String, String> headers) {
 		game.tree.getHeaders(headers);
-	}
-
-	public final void resignGame() {
-		if (game.getGameState() == GameState.ALIVE) {
-			game.processString("resign", false);
-			updateGUI();
-		}
 	}
 
 	private void setAnimMove(Position sourcePos, Move move, boolean forward) {

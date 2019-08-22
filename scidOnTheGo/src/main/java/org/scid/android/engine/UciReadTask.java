@@ -27,12 +27,10 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 	private int statTime = 0;
 	private int statNodes = 0;
 	private int statNps = 0;
-	private ArrayList<String> statPV = new ArrayList<String>();
-	private int seldepth = 0;
-	private int cpuload;
+	private ArrayList<String> statPV = new ArrayList<>();
 	private String statCurrMove = "";
 	private int statCurrMoveNr = 0;
-	private SearchListener listener = null;
+	private SearchListener listener;
 	private Position currentPosition;
 	private Game game;
 
@@ -47,7 +45,6 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 		Thread.currentThread().setName("UciReadTask");
 		android.os.Process
 				.setThreadPriority(android.os.Process.THREAD_PRIORITY_LESS_FAVORABLE);
-		Position currPos = new Position(); // (Position) params[0];
 		long lastPublishedTime = System.currentTimeMillis();
 		while (!isCancelled()) {
 			String line = engineProcess.readLineFromProcess();
@@ -115,7 +112,7 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 		}
 	}
 
-	private final void clearInfo() {
+	private void clearInfo() {
 		depthModified = false;
 		currMoveModified = false;
 		pvModified = false;
@@ -127,53 +124,61 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 		clearInfo();
 	}
 
-	private final void parseInfoCmd(String[] tokens) {
+	private void parseInfoCmd(String[] tokens) {
 		try {
 			int nTokens = tokens.length;
 			int i = 1;
 			while (i < nTokens - 1) {
 				String is = tokens[i++];
-				if (is.equals("depth")) {
-					statCurrDepth = Integer.parseInt(tokens[i++]);
-					depthModified = true;
-				} else if (is.equals("seldepth")) {
-					seldepth = Integer.parseInt(tokens[i++]);
-				} else if (is.equals("cpuload")) {
-					cpuload = Integer.parseInt(tokens[i++]);
-				} else if (is.equals("currmove")) {
-					statCurrMove = tokens[i++];
-					currMoveModified = true;
-				} else if (is.equals("currmovenumber")) {
-					statCurrMoveNr = Integer.parseInt(tokens[i++]);
-					currMoveModified = true;
-				} else if (is.equals("time")) {
-					statTime = Integer.parseInt(tokens[i++]);
-					statsModified = true;
-				} else if (is.equals("nodes")) {
-					statNodes = Integer.parseInt(tokens[i++]);
-					statsModified = true;
-				} else if (is.equals("nps")) {
-					statNps = Integer.parseInt(tokens[i++]);
-					statsModified = true;
-				} else if (is.equals("pv")) {
-					statPV.clear();
-					while (i < nTokens && !tokens[i].equals("cpuload"))
-						statPV.add(tokens[i++]);
-					pvModified = true;
-					statPVDepth = statCurrDepth;
-				} else if (is.equals("score")) {
-					statIsMate = tokens[i++].equals("mate");
-					statScore = Integer.parseInt(tokens[i++]);
-					statUpperBound = false;
-					statLowerBound = false;
-					if (tokens[i].equals("upperbound")) {
-						statUpperBound = true;
-						i++;
-					} else if (tokens[i].equals("lowerbound")) {
-						statLowerBound = true;
-						i++;
-					}
-					pvModified = true;
+				switch (is) {
+					case "depth":
+						statCurrDepth = Integer.parseInt(tokens[i++]);
+						depthModified = true;
+						break;
+					case "seldepth":
+					case "cpuload":
+						break;
+					case "currmove":
+						statCurrMove = tokens[i++];
+						currMoveModified = true;
+						break;
+					case "currmovenumber":
+						statCurrMoveNr = Integer.parseInt(tokens[i++]);
+						currMoveModified = true;
+						break;
+					case "time":
+						statTime = Integer.parseInt(tokens[i++]);
+						statsModified = true;
+						break;
+					case "nodes":
+						statNodes = Integer.parseInt(tokens[i++]);
+						statsModified = true;
+						break;
+					case "nps":
+						statNps = Integer.parseInt(tokens[i++]);
+						statsModified = true;
+						break;
+					case "pv":
+						statPV.clear();
+						while (i < nTokens && !tokens[i].equals("cpuload"))
+							statPV.add(tokens[i++]);
+						pvModified = true;
+						statPVDepth = statCurrDepth;
+						break;
+					case "score":
+						statIsMate = tokens[i++].equals("mate");
+						statScore = Integer.parseInt(tokens[i++]);
+						statUpperBound = false;
+						statLowerBound = false;
+						if (tokens[i].equals("upperbound")) {
+							statUpperBound = true;
+							i++;
+						} else if (tokens[i].equals("lowerbound")) {
+							statLowerBound = true;
+							i++;
+						}
+						pvModified = true;
+						break;
 				}
 			}
 		} catch (NumberFormatException nfe) {
@@ -184,7 +189,7 @@ public class UciReadTask extends AsyncTask<Void, Void, Void> {
 	}
 
 	/** Convert a string to tokens by splitting at whitespace characters. */
-	private final String[] tokenize(String cmdLine) {
+	private String[] tokenize(String cmdLine) {
 		return cmdLine.trim().split("\\s+");
 	}
 

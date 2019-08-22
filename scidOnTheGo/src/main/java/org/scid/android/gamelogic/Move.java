@@ -45,7 +45,7 @@ public class Move {
         return (from * 64 + to) * 16 + promoteTo;
     }
 
-    public boolean isNullMove() {
+    boolean isNullMove() {
     	return (from==0 && to==0);
     }
     

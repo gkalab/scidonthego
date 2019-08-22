@@ -1,15 +1,13 @@
 package org.scid.android.twic;
 
-
 public class TwicItem {
-
 	private String link;
 
-	public TwicItem(String link) {
+	TwicItem(String link) {
 		this.link = link;
 	}
 
-	public String getLink() {
+	String getLink() {
 		return link;
 	}
 
@@ -22,5 +20,4 @@ public class TwicItem {
 		}
 		return "The Week in Chess " + twicNo;
 	}
-
 }

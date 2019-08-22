@@ -16,12 +16,12 @@ public class Sharer {
 	private Activity context;
 	private Intent intent = null;
 
-	public Sharer(Activity context, ComponentName caller) {
+	Sharer(Activity context, ComponentName caller) {
 		this.context = context;
 		this.caller = caller;
 	}
 
-	public void createShareIntent(String type, String data) {
+	void createShareIntent(String type, String data) {
 		// put all possible intents into one list
 		List<Intent> targets = getTargetIntentsForType(type, data, caller);
 		if (!targets.isEmpty()) {
@@ -63,7 +63,7 @@ public class Sharer {
 		PackageManager packageManager = this.context.getPackageManager();
 		Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
 		shareIntent.setType(type);
-		List<Intent> targetedShareIntents = new ArrayList<Intent>();
+		List<Intent> targetedShareIntents = new ArrayList<>();
 		List<ResolveInfo> resInfo = packageManager.queryIntentActivityOptions(
 				caller, null, shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
 		for (ResolveInfo resolveInfo : resInfo) {

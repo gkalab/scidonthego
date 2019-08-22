@@ -23,22 +23,22 @@ public class GameTree {
 	// the game tree.
 
 	Position startPos;
-	String timeControl;
+	private String timeControl;
 
 	// Non-standard tags
     static private final class TagPair {
 		String tagName;
 		String tagValue;
 	}
-	List<TagPair> tagPairs;
+	private List<TagPair> tagPairs;
 
 	Node rootNode;
 	Node currentNode;
 	Position currentPos; // Cached value. Computable from "currentNode".
 
-	PgnToken.PgnTokenReceiver gameStateListener;
+	private PgnToken.PgnTokenReceiver gameStateListener;
 
-	public GameTree(PgnToken.PgnTokenReceiver gameStateListener) {
+	GameTree(PgnToken.PgnTokenReceiver gameStateListener) {
 		this.gameStateListener = gameStateListener;
 		try {
 			setStartPos(TextIO.readFEN(TextIO.startPosFEN));
@@ -67,14 +67,14 @@ public class GameTree {
 		black = "?";
 		startPos = pos;
 		timeControl = "?";
-		tagPairs = new ArrayList<TagPair>();
+		tagPairs = new ArrayList<>();
 		rootNode = new Node();
 		currentNode = rootNode;
 		currentPos = new Position(startPos);
 		updateListener();
 	}
 
-	private final void updateListener() {
+	private void updateListener() {
 		if (gameStateListener != null) {
 			gameStateListener.clear();
 		}
@@ -93,7 +93,7 @@ public class GameTree {
 
 			String[] words = sb.toString().split(" ");
 			int currLineLength = 0;
-			final int arrLen = words.length;
+			int arrLen = words.length;
 			for (int i = 0; i < arrLen; i++) {
 				String word = words[i].trim();
 				int wordLen = word.length();
@@ -198,7 +198,7 @@ public class GameTree {
 	}
 
 	/** Export game tree in PGN format. */
-	public final String toPGN(PGNOptions options) {
+	final String toPGN(PGNOptions options) {
 		PgnText pgnText = new PgnText();
 		options.exp.pgnPromotions = true;
 		pgnTreeWalker(options, pgnText);
@@ -206,8 +206,8 @@ public class GameTree {
 	}
 
 	/** Walks the game tree in PGN export order. */
-	public final void pgnTreeWalker(PGNOptions options,
-			PgnToken.PgnTokenReceiver out) {
+	final void pgnTreeWalker(PGNOptions options,
+							 PgnToken.PgnTokenReceiver out) {
 		// Go to end of mainline to evaluate PGN result string.
 		String pgnResultString;
 		{
@@ -247,7 +247,7 @@ public class GameTree {
 		out.processToken(null, PgnToken.EOF, null);
 	}
 
-    private final void addTagPair(PgnToken.PgnTokenReceiver out, String tagName, String tagValue) {
+    private void addTagPair(PgnToken.PgnTokenReceiver out, String tagName, String tagValue) {
 		out.processToken(null, PgnToken.LEFT_BRACKET, null);
 		out.processToken(null, PgnToken.SYMBOL, tagName);
 		out.processToken(null, PgnToken.STRING, tagValue);
@@ -260,7 +260,7 @@ public class GameTree {
 		List<PgnToken> savedTokens;
 
 		PgnScanner(String pgn) {
-			savedTokens = new ArrayList<PgnToken>();
+			savedTokens = new ArrayList<>();
 			// Skip "escape" lines, ie lines starting with a '%' character
 			StringBuilder sb = new StringBuilder();
 			int len = pgn.length();
@@ -323,7 +323,7 @@ public class GameTree {
 						break;
 					} else if (c == '{') {
 						ret.type = PgnToken.COMMENT;
-                        StringBuilder sb = new StringBuilder();;
+                        StringBuilder sb = new StringBuilder();
 						while ((c = data.charAt(idx++)) != '}') {
 							sb.append(c);
 						}
@@ -331,7 +331,7 @@ public class GameTree {
 						break;
 					} else if (c == ';') {
 						ret.type = PgnToken.COMMENT;
-                        StringBuilder sb = new StringBuilder();;
+                        StringBuilder sb = new StringBuilder();
 						while (true) {
 							c = data.charAt(idx++);
 							if ((c == '\n') || (c == '\r'))
@@ -342,7 +342,7 @@ public class GameTree {
 						break;
 					} else if (c == '"') {
 						ret.type = PgnToken.STRING;
-                        StringBuilder sb = new StringBuilder();;
+                        StringBuilder sb = new StringBuilder();
 						while (true) {
 							c = data.charAt(idx++);
 							if (c == '"') {
@@ -356,7 +356,7 @@ public class GameTree {
 						break;
 					} else if (c == '$') {
 						ret.type = PgnToken.NAG;
-                        StringBuilder sb = new StringBuilder();;
+                        StringBuilder sb = new StringBuilder();
 						while (true) {
 							c = data.charAt(idx++);
 							if (!Character.isDigit(c)) {
@@ -372,7 +372,7 @@ public class GameTree {
 						StringBuilder sb = new StringBuilder();
 						sb.append(c);
 						boolean onlyDigits = Character.isDigit(c);
-						final String term = ".*[](){;\"$";
+						String term = ".*[](){;\"$";
 						while (true) {
 							c = data.charAt(idx++);
                             if (Character.isWhitespace(c) || (term.indexOf(c) >= 0)) {
@@ -406,12 +406,12 @@ public class GameTree {
 	}
 
 	/** Import PGN data. */
-    public final boolean readPGN(String pgn, PGNOptions options) throws ChessParseError {
+    final boolean readPGN(String pgn, PGNOptions options) throws ChessParseError {
 		PgnScanner scanner = new PgnScanner(pgn);
 		PgnToken tok = scanner.nextToken();
 
 		// Parse tag section
-		List<TagPair> tagPairs = new ArrayList<TagPair>();
+		List<TagPair> tagPairs = new ArrayList<>();
 		while (tok.type == PgnToken.LEFT_BRACKET) {
 			TagPair tp = new TagPair();
 			tok = scanner.nextTokenDropComments();
@@ -528,7 +528,7 @@ public class GameTree {
 	}
 
 	/** Serialize to byte array. */
-	public final byte[] toByteArray() {
+	final byte[] toByteArray() {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream(32768);
 			DataOutputStream dos = new DataOutputStream(baos);
@@ -563,7 +563,7 @@ public class GameTree {
 	}
 
 	/** De-serialize from byte array. */
-	public final void fromByteArray(byte[] data) {
+	final void fromByteArray(byte[] data) {
 		try {
 			ByteArrayInputStream bais = new ByteArrayInputStream(data);
 			DataInputStream dis = new DataInputStream(bais);
@@ -600,7 +600,7 @@ public class GameTree {
 
 
 	/** Go backward in game tree. */
-	public final void goBack() {
+	final void goBack() {
 		if (currentNode.parent != null) {
 			currentPos.unMakeMove(currentNode.move, currentNode.ui);
 			currentNode = currentNode.parent;
@@ -610,10 +610,10 @@ public class GameTree {
     /** Go forward in game tree.
      * @param variation Which variation to follow. -1 to follow default variation.
 	 */
-	public final void goForward(int variation) {
+	final void goForward(int variation) {
 		goForward(variation, true);
 	}
-	public final void goForward(int variation, boolean updateDefault) {
+	private void goForward(int variation, boolean updateDefault) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		if (variation < 0)
@@ -634,7 +634,7 @@ public class GameTree {
 	public final List<Move> variations() {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
-		List<Move> ret = new ArrayList<Move>();
+		List<Move> ret = new ArrayList<>();
 		for (Node child : currentNode.children)
 			ret.add(child.move);
 		return ret;
@@ -643,7 +643,7 @@ public class GameTree {
     /** Add a move last in the list of variations.
 	 * @return Move number in variations list. -1 if moveStr is not a valid move
 	 */
-    public final int addMove(String moveStr, String playerAction, int nag, String preComment, String postComment) {
+    final int addMove(String moveStr, String playerAction, int nag, String preComment, String postComment) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		int idx = currentNode.children.size();
@@ -662,7 +662,7 @@ public class GameTree {
 	}
 
 	/** Move a variation in the ordered list of variations. */
-	public final void reorderVariation(int varNo, int newPos) {
+	final void reorderVariation(int varNo, int newPos) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		int nChild = currentNode.children.size();
@@ -684,7 +684,7 @@ public class GameTree {
 	}
 
 	/** Delete a variation. */
-	public final void deleteVariation(int varNo) {
+	final void deleteVariation(int varNo) {
 		if (currentNode.verifyChildren(currentPos))
 			updateListener();
 		int nChild = currentNode.children.size();
@@ -700,8 +700,8 @@ public class GameTree {
 	}
 
 	/* Get linear game history, using default variations at branch points. */
-	public final Pair<List<Node>, Integer> getMoveList() {
-		List<Node> ret = new ArrayList<Node>();
+	final Pair<List<Node>, Integer> getMoveList() {
+		List<Node> ret = new ArrayList<>();
 		Node node = currentNode;
 		while (node != rootNode) {
 			ret.add(node);
@@ -725,7 +725,7 @@ public class GameTree {
 		}
 		if (changed)
 			updateListener();
-		return new Pair<List<Node>, Integer>(ret, numMovesPlayed);
+		return new Pair<>(ret, numMovesPlayed);
 	}
 
 	final void setRemainingTime(int remaining) {
@@ -800,7 +800,7 @@ public class GameTree {
 		return ret;
 	}
 
-	public final String getPGNResultString() {
+	private String getPGNResultString() {
 		String gameResult = "*";
 		switch (getGameState()) {
 		case ALIVE:
@@ -825,7 +825,7 @@ public class GameTree {
 		return gameResult;
 	}
 
-	private static final boolean insufficientMaterial(Position pos) {
+	private static boolean insufficientMaterial(Position pos) {
         if (pos.nPieces(Piece.WQUEEN) > 0) return false;
         if (pos.nPieces(Piece.WROOK)  > 0) return false;
         if (pos.nPieces(Piece.WPAWN)  > 0) return false;
@@ -905,14 +905,14 @@ public class GameTree {
 		int defaultChild;
 		private List<Node> children;
 
-		public Node() {
+		Node() {
 			this.moveStr = "";
 			this.move = null;
 			this.ui = null;
 			this.playerAction = "";
 			this.remainingTime = Integer.MIN_VALUE;
 			this.parent = null;
-			this.children = new ArrayList<Node>();
+			this.children = new ArrayList<>();
 			this.defaultChild = 0;
 			this.nag = 0;
 			this.preComment = "";
@@ -920,15 +920,15 @@ public class GameTree {
 			this.moveNumber = 0;
 		}
 
-        public Node(Node parent, String moveStr, String playerAction, int remainingTime, int nag,
-                    String preComment, String postComment) {
+        Node(Node parent, String moveStr, String playerAction, int remainingTime, int nag,
+			 String preComment, String postComment) {
 			this.moveStr = moveStr;
 			this.move = null;
 			this.ui = null;
 			this.playerAction = playerAction;
 			this.remainingTime = remainingTime;
 			this.parent = parent;
-			this.children = new ArrayList<Node>();
+			this.children = new ArrayList<>();
 			this.defaultChild = 0;
 			this.nag = nag;
 			this.preComment = preComment;
@@ -936,7 +936,7 @@ public class GameTree {
 		}
 
 		/** nodePos must represent the same position as this Node object. */
-		private final boolean verifyChildren(Position nodePos) {
+		private boolean verifyChildren(Position nodePos) {
 			boolean anyToRemove = false;
 			for (Node child : children) {
 				if (child.move == null) {
@@ -951,7 +951,7 @@ public class GameTree {
 				}
 			}
 			if (anyToRemove) {
-				List<Node> validChildren = new ArrayList<Node>();
+				List<Node> validChildren = new ArrayList<>();
 				for (Node child : children)
 					if (child.move != null)
 						validChildren.add(child);
@@ -961,7 +961,7 @@ public class GameTree {
 		}
 
 		final List<Integer> getPathFromRoot() {
-			List<Integer> ret = new ArrayList<Integer>(64);
+			List<Integer> ret = new ArrayList<>(64);
 			Node node = this;
 			while (node.parent != null) {
 				ret.add(node.getVariation());
@@ -971,7 +971,7 @@ public class GameTree {
 			return ret;
 		}
 
-        static final void writeToStream(DataOutputStream dos, Node node) throws IOException {
+        static void writeToStream(DataOutputStream dos, Node node) throws IOException {
 			while (true) {
 				dos.writeUTF(node.moveStr);
 				if (node.move != null) {
@@ -998,7 +998,7 @@ public class GameTree {
 			}
 		}
 
-        static final void readFromStream(DataInputStream dis, Node node) throws IOException {
+        static void readFromStream(DataInputStream dis, Node node) throws IOException {
 			while (true) {
 				node.moveStr = dis.readUTF();
 				int from = dis.readByte();
@@ -1031,8 +1031,8 @@ public class GameTree {
 		}
 
 		/** Export whole tree rooted at "node" in PGN format. */
-        public static final void addPgnData(PgnToken.PgnTokenReceiver out, Node node,
-                                            MoveNumber moveNum, PGNOptions options) {
+        static void addPgnData(PgnToken.PgnTokenReceiver out, Node node,
+							   MoveNumber moveNum, PGNOptions options) {
             boolean needMoveNr = node.addPgnDataOneNode(out, moveNum, true, options);
 			while (true) {
 				int nChild = node.children.size();
@@ -1054,8 +1054,8 @@ public class GameTree {
 		}
 
 		/** Export this node in PGN format. */
-		private final boolean addPgnDataOneNode(PgnToken.PgnTokenReceiver out,
-				MoveNumber mn, boolean needMoveNr, PGNOptions options) {
+		private boolean addPgnDataOneNode(PgnToken.PgnTokenReceiver out,
+										  MoveNumber mn, boolean needMoveNr, PGNOptions options) {
 			this.moveNumber = mn.moveNo;
 			if ((preComment.length() > 0) && options.exp.comments) {
 				out.processToken(this, PgnToken.COMMENT, preComment);
@@ -1102,12 +1102,12 @@ public class GameTree {
 			return needMoveNr;
 		}
 
-		private final void addExtendedInfo(PgnToken.PgnTokenReceiver out,
-				String extCmd, String extData) {
+		private void addExtendedInfo(PgnToken.PgnTokenReceiver out,
+									 String extCmd, String extData) {
             out.processToken(this, PgnToken.COMMENT, "{[%" + extCmd + " " + extData + "]}");
 		}
 
-		private static final String getTimeStr(int remainingTime) {
+		private static String getTimeStr(int remainingTime) {
 			int secs = (int) Math.floor((remainingTime + 999) / 1000.0);
 			boolean neg = false;
 			if (secs < 0) {
@@ -1131,13 +1131,13 @@ public class GameTree {
 			return ret.toString();
 		}
 
-		private final Node addChild(Node child) {
+		private Node addChild(Node child) {
 			child.parent = this;
 			children.add(child);
 			return child;
 		}
 
-        public static final void parsePgn(PgnScanner scanner, Node node, PGNOptions options) {
+        static void parsePgn(PgnScanner scanner, Node node, PGNOptions options) {
 			Node nodeToAdd = new Node();
 			boolean moveAdded = false;
 			while (true) {
@@ -1252,7 +1252,7 @@ public class GameTree {
 			}
 		}
 
-		private static final Pair<String, String> extractExtInfo(
+		private static Pair<String, String> extractExtInfo(
 				String comment, String cmd) {
 			// this is not needed here --> added for the whole pgn text
 			// comment = comment.replaceAll("\n|\r|\t", " ");
@@ -1267,11 +1267,11 @@ public class GameTree {
 					param = comment.substring(start + match.length(), end);
 				}
 			}
-			return new Pair<String, String>(remaining, param);
+			return new Pair<>(remaining, param);
 		}
 
 		/** Convert hh:mm:ss to milliseconds */
-		private static final int parseTimeString(String str) {
+		private static int parseTimeString(String str) {
 			str = str.trim();
 			int ret = 0;
 			boolean neg = false;
@@ -1281,7 +1281,7 @@ public class GameTree {
 				i++;
 			}
 			int num = 0;
-			final int len = str.length();
+			int len = str.length();
 			for (; i < len; i++) {
 				char c = str.charAt(i);
 				if ((c >= '0') && (c <= '9')) {
@@ -1319,7 +1319,7 @@ public class GameTree {
 			}
 		}
 
-		public final static int strToNag(String str) {
+		public static int strToNag(String str) {
             if      (str.equals("!"))  return 1;
             else if (str.equals("?"))  return 2;
             else if (str.equals("!!")) return 3;
@@ -1388,7 +1388,7 @@ public class GameTree {
 		return result;
 	}
 
-	public final void gotoNode(Node node) {
+	final void gotoNode(Node node) {
         if (node == currentNode)
             return;
         List<Integer> path = node.getPathFromRoot();
@@ -1465,7 +1465,7 @@ public class GameTree {
 	}
 
 	private List<Integer> getCurrentPath() {
-		List<Integer> currPath = new ArrayList<Integer>();
+		List<Integer> currPath = new ArrayList<>();
 		while (currentNode != rootNode) {
 			Node child = currentNode;
 			goBack();

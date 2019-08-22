@@ -1,12 +1,5 @@
 package org.scid.android;
 
-import org.scid.android.gamelogic.ChessParseError;
-import org.scid.android.gamelogic.Move;
-import org.scid.android.gamelogic.Piece;
-import org.scid.android.gamelogic.Position;
-import org.scid.android.gamelogic.TextIO;
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -28,11 +21,15 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.scid.android.gamelogic.ChessParseError;
+import org.scid.android.gamelogic.Move;
+import org.scid.android.gamelogic.Piece;
+import org.scid.android.gamelogic.Position;
+import org.scid.android.gamelogic.TextIO;
+
 public class EditBoard extends AppCompatActivity {
 	private ChessBoardEdit cb;
 	private TextView status;
-	private Button okButton;
-	private Button cancelButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -65,12 +62,12 @@ public class EditBoard extends AppCompatActivity {
         status.setText(statusStr);
 	}
 
-	private final void initUI() {
+	private void initUI() {
 		setContentView(R.layout.editboard);
-		cb = (ChessBoardEdit)findViewById(R.id.eb_chessboard);
-        status = (TextView)findViewById(R.id.eb_status);
-		okButton = (Button)findViewById(R.id.eb_ok);
-		cancelButton = (Button)findViewById(R.id.eb_cancel);
+		cb = findViewById(R.id.eb_chessboard);
+        status = findViewById(R.id.eb_status);
+		Button okButton = findViewById(R.id.eb_ok);
+		Button cancelButton = findViewById(R.id.eb_cancel);
 
 		okButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -106,7 +103,7 @@ public class EditBoard extends AppCompatActivity {
                     handleClick(e);
                 return true;
             }
-            private final void handleClick(MotionEvent e) {
+            private void handleClick(MotionEvent e) {
                 int sq = cb.eventToSquare(e);
 		            Move m = cb.mousePressed(sq);
                 if (m != null)
@@ -170,7 +167,7 @@ public class EditBoard extends AppCompatActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 
-	private final void sendBackResult() {
+	private void sendBackResult() {
 		if (checkValid()) {
 			setPosFields();
 			String fen = TextIO.toFEN(cb.pos);
@@ -181,19 +178,19 @@ public class EditBoard extends AppCompatActivity {
 		finish();
 	}
 
-	private final void setPosFields() {
+	private void setPosFields() {
 		setEPFile(getEPFile()); // To handle sideToMove change
 		TextIO.fixupEPSquare(cb.pos);
 		TextIO.removeBogusCastleFlags(cb.pos);
 	}
 	
-	private final int getEPFile() {
+	private int getEPFile() {
 		int epSquare = cb.pos.getEpSquare();
 		if (epSquare < 0) return 8;
 		return Position.getX(epSquare);
 	}
 	
-	private final void setEPFile(int epFile) {
+	private void setEPFile(int epFile) {
 		int epSquare = -1;
 		if ((epFile >= 0) && (epFile < 8)) {
 			int epRank = cb.pos.whiteMove ? 5 : 2;
@@ -203,7 +200,7 @@ public class EditBoard extends AppCompatActivity {
 	}
 
 	/** Test if a position is valid. */
-	private final boolean checkValid() {
+	private boolean checkValid() {
 		try {
 			String fen = TextIO.toFEN(cb.pos);
 			TextIO.readFEN(fen);
@@ -215,7 +212,7 @@ public class EditBoard extends AppCompatActivity {
 		return false;
 	}
 
-    private final String getParseErrString(ChessParseError e) {
+    private String getParseErrString(ChessParseError e) {
         if (e.resourceId == -1)
             return e.getMessage();
         else
@@ -232,7 +229,7 @@ public class EditBoard extends AppCompatActivity {
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case EDIT_DIALOG: {
-			final CharSequence[] items = {
+			CharSequence[] items = {
 					getString(R.string.side_to_move),
 					getString(R.string.clear_board), getString(R.string.initial_position),
 					getString(R.string.castling_flags), getString(R.string.en_passant_file),
@@ -312,13 +309,12 @@ public class EditBoard extends AppCompatActivity {
 			    	}
 			    }
 			});
-			AlertDialog alert = builder.create();
-			return alert;
+			return builder.create();
 		}
 		case SIDE_DIALOG: {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.select_side_to_move_first);
-            final int selectedItem = (cb.pos.whiteMove) ? 0 : 1;
+            int selectedItem = (cb.pos.whiteMove) ? 0 : 1;
             builder.setSingleChoiceItems(new String[]{getString(R.string.white), getString(R.string.black)}, selectedItem, new Dialog.OnClickListener() {
 			           public void onClick(DialogInterface dialog, int id) {
                     if (id == 0) { // white to move
@@ -332,11 +328,10 @@ public class EditBoard extends AppCompatActivity {
 			           }
 				}
 			       });
-			AlertDialog alert = builder.create();
-			return alert;
+			return builder.create();
 		}
 		case CASTLE_DIALOG: {
-			final CharSequence[] items = {
+			CharSequence[] items = {
 				getString(R.string.white_king_castle), getString(R.string.white_queen_castle),
 				getString(R.string.black_king_castle), getString(R.string.black_queen_castle)
 			};
@@ -370,11 +365,10 @@ public class EditBoard extends AppCompatActivity {
 					checkValid();
 				}
 			});
-			AlertDialog alert = builder.create();
-			return alert;
+			return builder.create();
 		}
 		case EP_DIALOG: {
-			final CharSequence[] items = {
+			CharSequence[] items = {
 					"A", "B", "C", "D", "E", "F", "G", "H", getString(R.string.none)
 			};
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -385,12 +379,11 @@ public class EditBoard extends AppCompatActivity {
                     dialog.cancel();
 			    }
 			});
-			AlertDialog alert = builder.create();
-			return alert;
+			return builder.create();
 		}
 		case MOVCNT_DIALOG: {
         	View content = View.inflate(this, R.layout.edit_move_counters, null);
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
             
             builder.setView(content);
             builder.setTitle(R.string.edit_move_counters);
@@ -415,15 +408,15 @@ public class EditBoard extends AppCompatActivity {
 					setCounters.run();
 				}
             });
-            builder.setNegativeButton("Cancel", null);
-            
-            final Dialog dialog = builder.create();
-            
+			builder.setNegativeButton("Cancel", null);
+
+			final Dialog dialog = builder.create();
+
 			fullMoveCounter.setOnKeyListener(new OnKeyListener() {
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
 					if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
 						setCounters.run();
-                        dialog.cancel();
+						dialog.cancel();
 						return true;
 					}
 					return false;

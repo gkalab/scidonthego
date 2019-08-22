@@ -26,7 +26,7 @@ public class Piece {
     public static final int BKNIGHT = 11;
     public static final int BPAWN = 12;
 
-    public static final int nPieceTypes = 13;
+    static final int nPieceTypes = 13;
 
     /**
      * Return true if p is a white piece, false otherwise.
@@ -34,11 +34,5 @@ public class Piece {
      */
     public static boolean isWhite(int pType) {
         return pType < BKING;
-    }
-    public static int makeWhite(int pType) {
-    	return pType < BKING ? pType : pType - (BKING - WKING);
-    }
-    public static int makeBlack(int pType) {
-    	return ((pType >= WKING) && (pType <= WPAWN)) ? pType + (BKING - WKING) : pType;
     }
 }

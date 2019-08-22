@@ -3,11 +3,11 @@ package org.scid.android;
 public class GameMode {
 	private int mode;
 
-	public static final int REVIEW_MODE = 0;
-	public static final int ANALYSIS_MODE = 1;
-	public static final int STUDY_MODE = 2;
+	static final int REVIEW_MODE = 0;
+	static final int ANALYSIS_MODE = 1;
+	static final int STUDY_MODE = 2;
 
-	public GameMode(int mode) {
+	GameMode(int mode) {
 		this.mode = mode;
 	}
 

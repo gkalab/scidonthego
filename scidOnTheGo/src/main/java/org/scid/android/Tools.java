@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -56,17 +57,17 @@ public class Tools {
 	 *            html content for validation
 	 * @return List of links
 	 */
-	public static List<Link> getLinks(final String html) {
-		List<Link> result = new ArrayList<Link>();
+	public static List<Link> getLinks(String html) {
+		List<Link> result = new ArrayList<>();
 		Matcher matcherTag = patternTag.matcher(html);
 		while (matcherTag.find()) {
 			String anchor = matcherTag.group(0);
-			final String description = anchor.substring(
+			String description = anchor.substring(
 					anchor.indexOf(">") + 1, anchor.lastIndexOf("<"));
 			String href = matcherTag.group(1); // href
 			Matcher matcherLink = patternLink.matcher(href);
 			while (matcherLink.find()) {
-				final Link link = new Link(matcherLink.group(1).replaceAll(
+				Link link = new Link(matcherLink.group(1).replaceAll(
 						"\"", ""), description); // link
 				result.add(link);
 			}
@@ -95,16 +96,14 @@ public class Tools {
 					int index = pathname.getName().lastIndexOf('.');
 					if (index >= 0) {
 						String ext = pathname.getName().substring(index);
-						if (_ignore != null && _ignore.contains(ext)) {
-							return false;
-						}
+						return _ignore == null || !_ignore.contains(ext);
 					}
 					return true;
 				}
 				return false;
 			}
 		});
-		SortedSet<Engine> engines = new TreeSet<Engine>();
+		SortedSet<Engine> engines = new TreeSet<>();
 		if (files != null) {
 			for (File file : files) {
 				engines.add(new Engine(file.getName()));
@@ -125,7 +124,7 @@ public class Tools {
 	 */
 	public static File downloadFile(String path) throws IOException {
 		File result = null;
-		URL url = null;
+		URL url;
 		try {
 			url = new URL(path);
 			Log.d(TAG, "start downloading from: " + url.toString());
@@ -192,7 +191,7 @@ public class Tools {
 		String scidFileName = pgnFileName.replace(".pgn", ".si4");
 		File scidFile = new File(scidFileName);
 		if (scidFile.exists()) {
-			final AlertDialog fileExistsDialog = new AlertDialog.Builder(
+			AlertDialog fileExistsDialog = new AlertDialog.Builder(
 					activity).create();
 			fileExistsDialog.setTitle("Database exists");
 			String message = String.format(
@@ -225,7 +224,7 @@ public class Tools {
 	}
 
 	private static void startPgnImport(Activity activity, String pgnFileName,
-			final int resultId) {
+			int resultId) {
 		if (pgnFileName.length() == 0)
 			return;
 		Intent i = new Intent(activity, ImportPgnActivity.class);
@@ -233,7 +232,7 @@ public class Tools {
 		activity.startActivityForResult(i, resultId);
 	}
 
-	static String getFullScidFileName(final String fileName) {
+	static String getFullScidFileName(String fileName) {
 		String pathName = getFullFileName(fileName);
 		return stripExtension(pathName);
 	}
@@ -246,7 +245,7 @@ public class Tools {
 		return pathName;
 	}
 
-	private static String getFullFileName(final String fileName) {
+	private static String getFullFileName(String fileName) {
 		return getScidDirectory() + File.separator + fileName;
 	}
 
@@ -270,7 +269,7 @@ public class Tools {
 		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				final AlertDialog.Builder builder = new AlertDialog.Builder(
+				AlertDialog.Builder builder = new AlertDialog.Builder(
 						activity);
 				builder.setTitle(activity.getString(R.string.error));
 				builder.setMessage(message);
@@ -311,7 +310,7 @@ public class Tools {
 			istream = new FileInputStream(sourceFile);
 			fout = new FileOutputStream(destFile);
 			byte[] b = new byte[4096];
-			int cnt = 0;
+			int cnt;
 			while ((cnt = istream.read(b)) != -1) {
 				fout.write(b, 0, cnt);
 			}
@@ -343,7 +342,7 @@ public class Tools {
 	}
 
 	static void processUri(Activity activity, Uri data,
-						   final int resultCode) {
+						   int resultCode) {
 		Log.i(TAG, "Intent data=" + data);
 		if (data.getScheme().startsWith("http")) {
 			String url = data.toString();
@@ -409,10 +408,10 @@ public class Tools {
 	}
 
 	public static File unzip(String directory, File f, boolean deleteAfterUnzip) {
-		final int BUFFER = 2048;
+		int BUFFER = 2048;
 		File result = null;
 		try {
-			BufferedOutputStream dest = null;
+			BufferedOutputStream dest;
 			FileInputStream fis = new FileInputStream(f.getAbsolutePath());
 			ZipInputStream zis = new ZipInputStream(
 					new BufferedInputStream(fis));
@@ -450,7 +449,7 @@ public class Tools {
 	static String readFromStream(InputStream is) {
 		InputStreamReader isr;
 		try {
-			isr = new InputStreamReader(is, "UTF-8");
+			isr = new InputStreamReader(is, StandardCharsets.UTF_8);
 			BufferedReader br = new BufferedReader(isr);
 			StringBuilder sb = new StringBuilder();
 			String line;

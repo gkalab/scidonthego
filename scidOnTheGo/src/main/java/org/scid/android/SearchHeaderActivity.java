@@ -116,7 +116,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
     }
 
     private void bindActv(int actvId, int nameId, int exactId) {
-        AutoCompleteTextView actv = ((AutoCompleteTextView) findViewById(actvId));
+        AutoCompleteTextView actv = findViewById(actvId);
         actv.setAdapter(new FilterableNames(nameId));
         ExactSetter es = new ExactSetter(exactId);
         actv.setOnItemClickListener(es); // set "exact" on auto-complete
@@ -157,7 +157,7 @@ public class SearchHeaderActivity extends SearchActivityBase {
 
 
     /** list of previous requests */
-    private static ArrayList<Bundle> requestHistory = new ArrayList<Bundle>();
+    private static ArrayList<Bundle> requestHistory = new ArrayList<>();
     private int requestIndex;
     private Bundle savedRequest; // saved on the first "Previous" click
     private Bundle currentState() {

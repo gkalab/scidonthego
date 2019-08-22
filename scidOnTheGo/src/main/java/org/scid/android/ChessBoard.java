@@ -76,7 +76,7 @@ public class ChessBoard extends View {
 		blackPiecePaint = new Paint();
 		blackPiecePaint.setAntiAlias(true);
 
-		moveMarkPaint = new ArrayList<Paint>();
+		moveMarkPaint = new ArrayList<>();
 		for (int i = 0; i < 6; i++) {
 			Paint p = new Paint();
 			p.setStyle(Paint.Style.FILL);
@@ -120,25 +120,23 @@ public class ChessBoard extends View {
 		int piece1, from1, to1, hide1;
 		int piece2, from2, to2, hide2;
 
-		public final boolean updateState() {
+		final boolean updateState() {
 			now = System.currentTimeMillis();
 			return animActive();
 		}
 
-		private final boolean animActive() {
-			if (paused || (startTime < 0) || (now >= stopTime)
-					|| (posHash != pos.zobristHash()))
-				return false;
-			return true;
+		private boolean animActive() {
+			return !paused && (startTime >= 0) && (now < stopTime)
+					&& (posHash == pos.zobristHash());
 		}
 
-		public final boolean squareHidden(int sq) {
+		final boolean squareHidden(int sq) {
 			if (!animActive())
 				return false;
 			return (sq == hide1) || (sq == hide2);
 		}
 
-		public final void draw(Canvas canvas) {
+		final void draw(Canvas canvas) {
 			if (!animActive())
 				return;
 			double animState = (now - startTime)
@@ -162,13 +160,13 @@ public class ChessBoard extends View {
 				double animState) {
 			if (piece == Piece.EMPTY)
 				return;
-			final int xCrd1 = getXCrd(Position.getX(from));
-			final int yCrd1 = getYCrd(Position.getY(from));
-			final int xCrd2 = getXCrd(Position.getX(to));
-			final int yCrd2 = getYCrd(Position.getY(to));
-			final int xCrd = xCrd1
+			int xCrd1 = getXCrd(Position.getX(from));
+			int yCrd1 = getYCrd(Position.getY(from));
+			int xCrd2 = getXCrd(Position.getX(to));
+			int yCrd2 = getYCrd(Position.getY(to));
+			int xCrd = xCrd1
 					+ (int) Math.round((xCrd2 - xCrd1) * animState);
-			final int yCrd = yCrd1
+			int yCrd = yCrd1
 					+ (int) Math.round((yCrd2 - yCrd1) * animState);
 			drawPiece(canvas, xCrd, yCrd, piece);
 		}
@@ -269,21 +267,16 @@ public class ChessBoard extends View {
 	/**
 	 * Set the board to a given state.
 	 *
-	 * @param pos
+	 * @param pos the position to set
 	 */
 	final public void setPosition(Position pos) {
-		boolean doInvalidate = false;
 		if (anim.paused = true) {
 			anim.paused = false;
-			doInvalidate = true;
 		}
 		if (!this.pos.equals(pos)) {
 			this.pos = new Position(pos);
-			doInvalidate = true;
 		}
-		if (doInvalidate) {
-			invalidate();
-		}
+		invalidate();
 	}
 
 	/**
@@ -370,16 +363,16 @@ public class ChessBoard extends View {
         if (isInEditMode())
             return;
 		boolean animActive = anim.updateState();
-		final int width = getWidth();
-		final int height = getHeight();
+		int width = getWidth();
+		int height = getHeight();
 		sqSize = Math.min(getSqSizeW(width), getSqSizeH(height));
 		blackPiecePaint.setTextSize(sqSize);
 		whitePiecePaint.setTextSize(sqSize);
 		computeOrigin(width, height);
 		for (int x = 0; x < 8; x++) {
 			for (int y = 0; y < 8; y++) {
-				final int xCrd = getXCrd(x);
-				final int yCrd = getYCrd(y);
+				int xCrd = getXCrd(x);
+				int yCrd = getYCrd(y);
 				Paint paint = Position.darkSquare(x, y) ? darkPaint
 						: brightPaint;
 				canvas
@@ -428,7 +421,7 @@ public class ChessBoard extends View {
 		anim.draw(canvas);
 	}
 
-	private final void drawMoveHints(Canvas canvas) {
+	private void drawMoveHints(Canvas canvas) {
 		if (moveHints == null)
 			return;
 		float h = (float) (sqSize / 2.0);
@@ -553,7 +546,7 @@ public class ChessBoard extends View {
 		return sq;
 	}
 
-	final private boolean myColor(int piece) {
+	private boolean myColor(int piece) {
         return (piece != Piece.EMPTY) && (Piece.isWhite(piece) == pos.whiteMove);
 	}
 
@@ -632,8 +625,7 @@ public class ChessBoard extends View {
     protected int getSquare(int x, int y) { return Position.getSquare(x, y); }
 
 	public final Move handleTrackballEvent(MotionEvent event) {
-		switch (event.getAction()) {
-		case MotionEvent.ACTION_DOWN:
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			invalidate();
 			if (cursorVisible) {
 				int x = Math.round(cursorX);
@@ -658,7 +650,7 @@ public class ChessBoard extends View {
 	}
 
 	public final void setMoveHints(List<Move> moveHints) {
-		boolean equal = false;
+		boolean equal;
 		if ((this.moveHints == null) || (moveHints == null)) {
 			equal = this.moveHints == moveHints;
 		} else {

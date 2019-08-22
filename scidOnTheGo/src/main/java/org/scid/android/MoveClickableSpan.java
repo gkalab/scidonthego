@@ -15,7 +15,7 @@ import android.view.View;
 public class MoveClickableSpan extends ClickableSpan {
 	private Node node;
 
-	public MoveClickableSpan(Node node) {
+	MoveClickableSpan(Node node) {
 		this.node = node;
 	}
 

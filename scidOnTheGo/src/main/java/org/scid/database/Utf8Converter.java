@@ -72,7 +72,7 @@ public class Utf8Converter {
 		}
 	};
 
-	public static String convertToUTF8(String value) {
+	static String convertToUTF8(String value) {
 		for (String source : CP1252_CONVERSION.keySet()) {
 			value = value.replace(source, CP1252_CONVERSION.get(source));
 		}

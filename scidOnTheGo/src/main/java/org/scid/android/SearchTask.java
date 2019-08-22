@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.widget.Toast;
 
 public abstract class SearchTask extends ProgressingTask<GameFilter> {
-	public SearchTask(Activity activity){
+	SearchTask(Activity activity){
 		super(activity, R.string.search, R.string.please_wait);
 	}
 	/** called from onPostExecute if the result is empty */

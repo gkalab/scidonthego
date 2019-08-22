@@ -46,7 +46,7 @@ public class ScidApplication extends Application {
 	}
 
 	public boolean isFavorite() {
-		return (dbv == null) ? false : dbv.isFavorite();
+		return (dbv != null) && dbv.isFavorite();
 	}
 
 	public void setFavorite(boolean value) {
@@ -55,7 +55,7 @@ public class ScidApplication extends Application {
 	}
 
 	public boolean isDeleted() {
-		return (dbv == null) ? false : dbv.isDeleted();
+		return (dbv != null) && dbv.isDeleted();
 	}
 
 	public void setDeleted(boolean value) {

@@ -40,7 +40,7 @@ public class GameInfo {
 		return info.toString();
 	}
 
-	public String getColumn(int position) {
+	String getColumn(int position) {
 		switch (position) {
 		case 0:
 			return "" + id;
@@ -155,9 +155,9 @@ public class GameInfo {
 		return currentPly;
 	}
 
-	public String getDetails() {
+	private String getDetails() {
 		StringBuilder info = new StringBuilder();
-		info.append("<b>" + result + "</b>");
+		info.append("<b>").append(result).append("</b>");
 		info.append(' ');
 		if (event.length() > 0) {
 			info.append(' ');
@@ -178,11 +178,11 @@ public class GameInfo {
 		return info.toString();
 	}
 
-	public void setFavorite(boolean isFavorite) {
+	void setFavorite(boolean isFavorite) {
 		this.isFavorite = isFavorite;
 	}
 
-	public void setDeleted(boolean isDeleted) {
+	void setDeleted(boolean isDeleted) {
 		this.isDeleted = isDeleted;
 	}
 

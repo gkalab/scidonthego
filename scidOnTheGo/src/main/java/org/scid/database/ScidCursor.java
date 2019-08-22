@@ -26,14 +26,14 @@ public class ScidCursor extends AbstractCursor {
 
 	private boolean reloadIndex = true;
 
-	public ScidCursor(String fileName, String[] projection, boolean singleGame) {
+	ScidCursor(String fileName, String[] projection, boolean singleGame) {
 		super();
 		this.singleGame = singleGame;
 		init(fileName, projection, 0);
 	}
 
-	public ScidCursor(String fileName, String[] projection, int startPosition,
-			boolean singleGame) {
+	ScidCursor(String fileName, String[] projection, int startPosition,
+			   boolean singleGame) {
 		this(fileName, projection, singleGame);
 		this.startPosition = startPosition;
 		handleProjection(projection);
@@ -69,7 +69,7 @@ public class ScidCursor extends AbstractCursor {
 				this.projection[i] = i;
 			}
 		} else {
-			ArrayList<Integer> proj = new ArrayList<Integer>();
+			ArrayList<Integer> proj = new ArrayList<>();
 			for (String p : projection) {
 				int idx = 0;
 				for (int i = 0; i < ScidMetaData.columns.length; i++) {
@@ -153,8 +153,7 @@ public class ScidCursor extends AbstractCursor {
 		gameInfo.setDeleted(DataBase.isDeleted());
 	}
 
-	private String getSanitizedString(byte[] value)
-			throws UnsupportedEncodingException {
+	private String getSanitizedString(byte[] value) {
 		if (value == null) {
 			return "";
 		} else {

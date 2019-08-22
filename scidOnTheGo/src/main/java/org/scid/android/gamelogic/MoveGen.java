@@ -15,7 +15,7 @@ public class MoveGen {
 	}
 
     /** Generate and return a list of legal moves. */
-    public final ArrayList<Move> legalMoves(Position pos) {
+    final ArrayList<Move> legalMoves(Position pos) {
         ArrayList<Move> moveList = pseudoLegalMoves(pos);
         moveList = MoveGen.removeIllegal(pos, moveList);
         return moveList;
@@ -27,7 +27,7 @@ public class MoveGen {
      */
     public final ArrayList<Move> pseudoLegalMoves(Position pos) {
         ArrayList<Move> moveList = getMoveListObj();
-        final boolean wtm = pos.whiteMove;
+        boolean wtm = pos.whiteMove;
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
             	int sq = Position.getSquare(x, y);
@@ -145,7 +145,7 @@ public class MoveGen {
     /**
      * Return true if the side to move is in check.
      */
-    public static final boolean inCheck(Position pos) {
+    static boolean inCheck(Position pos) {
         int kingSq = pos.getKingSq(pos.whiteMove);
         if (kingSq < 0)
             return false;
@@ -155,15 +155,15 @@ public class MoveGen {
     /**
      * Return true if a square is attacked by the opposite side.
      */
-    public static final boolean sqAttacked(Position pos, int sq) {
+    private static boolean sqAttacked(Position pos, int sq) {
         int x = Position.getX(sq);
         int y = Position.getY(sq);
         boolean isWhiteMove = pos.whiteMove;
 
-        final int oQueen= isWhiteMove ? Piece.BQUEEN: Piece.WQUEEN;
-        final int oRook = isWhiteMove ? Piece.BROOK : Piece.WROOK;
-        final int oBish = isWhiteMove ? Piece.BBISHOP : Piece.WBISHOP;
-        final int oKnight = isWhiteMove ? Piece.BKNIGHT : Piece.WKNIGHT;
+        int oQueen= isWhiteMove ? Piece.BQUEEN: Piece.WQUEEN;
+        int oRook = isWhiteMove ? Piece.BROOK : Piece.WROOK;
+        int oBish = isWhiteMove ? Piece.BBISHOP : Piece.WBISHOP;
+        int oKnight = isWhiteMove ? Piece.BKNIGHT : Piece.WKNIGHT;
 
         int p;
         if (y > 0) {
@@ -212,8 +212,8 @@ public class MoveGen {
      * "moveList" is assumed to be a list of pseudo-legal moves.
      * This function removes the moves that don't defend from check threats.
      */
-    public static final ArrayList<Move> removeIllegal(Position pos, ArrayList<Move> moveList) {
-        ArrayList<Move> ret = new ArrayList<Move>();
+    public static ArrayList<Move> removeIllegal(Position pos, ArrayList<Move> moveList) {
+        ArrayList<Move> ret = new ArrayList<>();
         UndoInfo ui = new UndoInfo();
         int mlSize = moveList.size();
         for (int mi = 0; mi < mlSize; mi++) {
@@ -233,10 +233,10 @@ public class MoveGen {
      * @param maxSteps Max steps until reaching a border. Set to 1 for non-sliding pieces.
      * @ return True if the enemy king could be captured, false otherwise.
      */
-    private final boolean addDirection(ArrayList<Move> moveList, Position pos, int sq0, int maxSteps, int delta) {
+    private boolean addDirection(ArrayList<Move> moveList, Position pos, int sq0, int maxSteps, int delta) {
     	int sq = sq0;
     	boolean wtm = pos.whiteMove;
-    	final int oKing = (wtm ? Piece.BKING : Piece.WKING);
+    	int oKing = (wtm ? Piece.BKING : Piece.WKING);
         while (maxSteps > 0) {
         	sq += delta;
             int p = pos.getPiece(sq);
@@ -263,7 +263,7 @@ public class MoveGen {
     /**
      * Generate all possible pawn moves from (x0,y0) to (x1,y1), taking pawn promotions into account.
      */
-    private final void addPawnMoves(ArrayList<Move> moveList, int sq0, int sq1) {
+    private void addPawnMoves(ArrayList<Move> moveList, int sq0, int sq1) {
             if (sq1 >= 56) { // White promotion
             moveList.add(getMoveObj(sq0, sq1, Piece.WQUEEN));
             moveList.add(getMoveObj(sq0, sq1, Piece.WKNIGHT));
@@ -286,7 +286,7 @@ public class MoveGen {
      * @return The first piece in the given direction, or EMPTY if there is no piece
      *         in that direction.
      */
-    private static final int checkDirection(Position pos, int sq, int maxSteps, int delta) {
+    private static int checkDirection(Position pos, int sq, int maxSteps, int delta) {
     	while (maxSteps > 0) {
     		sq += delta;
     		int p = pos.getPiece(sq);
@@ -304,7 +304,7 @@ public class MoveGen {
     private Object[] moveListCache = new Object[200];
     private int moveListsInCache = 0;
     
-    private final Move getMoveObj(int from, int to, int promoteTo) {
+    private Move getMoveObj(int from, int to, int promoteTo) {
         if (movesInCache > 0) {
             Move m = moveCache[--movesInCache];
             m.from = from;
@@ -315,16 +315,15 @@ public class MoveGen {
         return new Move(from, to, promoteTo);
     }
 
-    @SuppressWarnings("unchecked")
-    private final ArrayList<Move> getMoveListObj() {
+    private ArrayList<Move> getMoveListObj() {
         if (moveListsInCache > 0) {
             return (ArrayList<Move>)moveListCache[--moveListsInCache];
         }
-        return new ArrayList<Move>(60);
+        return new ArrayList<>(60);
     }
 
     /** Return all move objects in moveList to the move cache. */
-    public final void returnMoveList(ArrayList<Move> moveList) {
+    private void returnMoveList(ArrayList<Move> moveList) {
         if (movesInCache + moveList.size() <= moveCache.length) {
         	int mlSize = moveList.size();
         	for (int mi = 0; mi < mlSize; mi++) {

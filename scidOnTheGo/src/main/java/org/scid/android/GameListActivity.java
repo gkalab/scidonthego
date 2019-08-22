@@ -56,13 +56,13 @@ public class GameListActivity extends ListActivity {
 
     private class GameListAdapter extends BaseAdapter {
         public int getCount() { return dbv.getCount(); }
-        public Object getItem(int position) { return Integer.valueOf(position); }
+        public Object getItem(int position) { return position; }
         public long getItemId(int position) { return position; }
         public boolean hasStableIds() { return true; }
 
         /** put player info to TextView */
         private void ptv(View view, int tvId, String name, int elo){
-            TextView tv = (TextView) view.findViewById(tvId);
+            TextView tv = view.findViewById(tvId);
             if (tv != null) {
                 StringBuilder b = new StringBuilder();
                 b.append(name);
@@ -76,7 +76,7 @@ public class GameListActivity extends ListActivity {
         }
         /** put text to TextView */
         private void ttv(View view, int tvId, String text){
-            TextView tv = (TextView) view.findViewById(tvId);
+            TextView tv = view.findViewById(tvId);
             if (tv != null)
                 tv.setText(text);
         }
@@ -96,7 +96,7 @@ public class GameListActivity extends ListActivity {
                 ttv(view, R.id.item_round, dbv.getRound());
                 ttv(view, R.id.item_date, dbv.getDate());
 
-                RatingBar favorite = (RatingBar) view.findViewById(R.id.item_favorite);
+                RatingBar favorite = view.findViewById(R.id.item_favorite);
                 if (favorite != null) {
                     favorite.setRating(dbv.isFavorite() ? 1 : 0);
                     if(dbv.isDeleted())

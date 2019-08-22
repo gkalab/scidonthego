@@ -20,7 +20,7 @@ public class PipedProcess {
 	private String nextAnalyzeCommand;
 
 	/** Start process. */
-	public final void initialize(EngineConfig engineConfig) {
+	final void initialize(EngineConfig engineConfig) {
 		if (!processAlive) {
 			this.engineConfig = engineConfig;
 			Log.d(TAG, "process not alive, starting " + engineConfig.getName());
@@ -39,7 +39,7 @@ public class PipedProcess {
 		writeLineToProcess("go infinite");
 	}
 
-	public synchronized void analyzeNext() {
+	synchronized void analyzeNext() {
 		if (this.nextAnalyzeCommand != null) {
 			writeAnalyzeCommands(nextAnalyzeCommand);
 			this.nextAnalyzeCommand = null;
@@ -53,12 +53,8 @@ public class PipedProcess {
 		this.nextAnalyzeCommand = nextAnalyzeCommand;
 	}
 
-	public boolean isAlive() {
-		return processAlive && !isTerminated();
-	}
-
 	/** Shut down process. */
-	public final void shutDown() {
+	final void shutDown() {
 		if (processAlive && !isTerminated()) {
 			if (process != null) {
 				process.destroy();
@@ -68,7 +64,7 @@ public class PipedProcess {
 		}
 	}
 
-	public boolean isTerminated() {
+	private boolean isTerminated() {
 		boolean terminated = true;
 		if (process != null) {
 			try {
@@ -96,9 +92,8 @@ public class PipedProcess {
 	 * 
 	 * @return The line, without terminating newline characters, or empty string
 	 *         if no data available, or null if I/O error.
-	 * @throws IOException
 	 */
-	public final synchronized String readLineFromProcess() {
+	final synchronized String readLineFromProcess() {
 		String ret = null;
 		try {
 			ret = readFromProcess();
@@ -113,10 +108,8 @@ public class PipedProcess {
 
 	/**
 	 * Write a line to the process. \n will be added automatically.
-	 * 
-	 * @throws IOException
 	 */
-	public final synchronized void writeLineToProcess(String data) {
+	final synchronized void writeLineToProcess(String data) {
 		// Log.d("SCID", "GUI -> Engine: " + data);
 		try {
 			writeToProcess(data + "\n");
@@ -127,7 +120,7 @@ public class PipedProcess {
 	}
 
 	/** Start the child process. */
-	private final void startProcess(EngineConfig engineConfig) {
+	private void startProcess(EngineConfig engineConfig) {
 		ProcessBuilder builder = new ProcessBuilder(
 				engineConfig.getExecutablePath());
 		builder.redirectErrorStream(true);
@@ -151,10 +144,8 @@ public class PipedProcess {
 	/**
 	 * Read a line of data from the process. Return as soon as there is a full
 	 * line of data to return, or when timeoutMillis milliseconds have passed.
-	 * 
-	 * @throws IOException
 	 */
-	private final String readFromProcess() throws IOException {
+	private String readFromProcess() throws IOException {
 		String line = null;
 		if (processAlive && reader != null && reader.ready()) {
 			line = reader.readLine();
@@ -164,10 +155,8 @@ public class PipedProcess {
 
 	/**
 	 * Write data to the process.
-	 * 
-	 * @throws IOException
 	 */
-	private final void writeToProcess(String data) throws IOException {
+	private void writeToProcess(String data) throws IOException {
 		if (processAlive && writer != null) {
 			writer.write(data);
 			writer.flush();

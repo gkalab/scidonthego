@@ -5,18 +5,18 @@ import java.util.Arrays;
 import android.util.Log;
 
 public class GameFilter {
-	int[] id; // id[position]
-	short[] ply; // ply[position]
+	private int[] id; // id[position]
+	private short[] ply; // ply[position]
 
 	/** Create Filter from mask (full-size array with ply or 0 if game is not included */
-	public GameFilter(short[] plyById) {
+	GameFilter(short[] plyById) {
 		if (plyById == null) { // TODO: this should not be needed
 			id = new int[0];
 			ply = new short[0];
 		} else	{
 			int count = 0;
-			for (int i = 0; i < plyById.length; i++) {
-				if (plyById[i] > 0) {
+			for (short value : plyById) {
+				if (value > 0) {
 					count++;
 				}
 			}
@@ -33,7 +33,7 @@ public class GameFilter {
 	}
 
 	/** Create Filter from list of IDs (the list must be ascending): all ply are assumed to be 1 */
-	public GameFilter(int[] id) {
+	GameFilter(int[] id) {
 		this.id = id;
 		ply = new short[id.length];
 		for (int i = 0; i < ply.length; i++) {
@@ -64,14 +64,14 @@ public class GameFilter {
 	}
 
 	/** returns negative value if id is not present */
-	public int getPosition(int id) {
+	int getPosition(int id) {
 		return Arrays.binarySearch(this.id, id);
 	}
 
 	/** Prepare a filtering array for a possibly null Filter
 	 * (if filter is null, then all games are included) */
-	public static short[] getFilterArray(GameFilter f, int length) {
-		short result[] = new short[length];
+	static short[] getFilterArray(GameFilter f, int length) {
+		short[] result = new short[length];
 		if (f == null) {
 			for (int i = 0; i < result.length; i++)
 				result[i] = 1;

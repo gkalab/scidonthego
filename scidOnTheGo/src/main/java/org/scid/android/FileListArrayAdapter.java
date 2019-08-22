@@ -12,8 +12,8 @@ import android.widget.TextView;
 
 public class FileListArrayAdapter extends ArrayAdapter<String> {
 
-	public FileListArrayAdapter(Context context, int layoutResourceId,
-			int textViewResourceId, List<String> fileNames) {
+	FileListArrayAdapter(Context context, int layoutResourceId,
+						 int textViewResourceId, List<String> fileNames) {
 		super(context, layoutResourceId, textViewResourceId, fileNames);
 	}
 
@@ -21,7 +21,7 @@ public class FileListArrayAdapter extends ArrayAdapter<String> {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		// TODO: clean this up, call to super should not be necessary
 		View view = super.getView(position, convertView, parent);
-		ImageView icon = (ImageView) view.findViewById(R.id.select_file_icon);
+		ImageView icon = view.findViewById(R.id.select_file_icon);
 		String item = this.getItem(position);
 		if (item != null) {
 			File itemFile = new File(item);

@@ -12,7 +12,7 @@ public class ImportPgnTask extends ProgressingTask<String> {
 	private static final String LOG_TAG = "ImportPgnTask";
 	private String pgnFileName;
 
-	public ImportPgnTask(Activity activity, String pgnFileName) {
+	ImportPgnTask(Activity activity, String pgnFileName) {
 		super(activity, R.string.import_pgn_title, R.string.please_wait);
 		this.pgnFileName = pgnFileName;
 	}
@@ -25,7 +25,7 @@ public class ImportPgnTask extends ProgressingTask<String> {
 		Log.d(LOG_TAG, "Result: " + importErrors);
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				TextView resultView = (TextView) activity.findViewById(R.id.importResult);
+				TextView resultView = activity.findViewById(R.id.importResult);
 				resultView.setText(importErrors);
 			}
 		});

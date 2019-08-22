@@ -23,7 +23,7 @@ public class SearchBoardActivity extends SearchActivityBase {
 	}
 
 	public void onOkClick(View view) {
-		RadioGroup radioGroup = (RadioGroup) findViewById(R.id.search_board);
+		RadioGroup radioGroup = findViewById(R.id.search_board);
 		int checked = radioGroup.getCheckedRadioButtonId();
 		switch (checked) {
 		case R.id.search_current_board:

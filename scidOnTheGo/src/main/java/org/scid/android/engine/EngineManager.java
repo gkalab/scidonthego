@@ -48,7 +48,7 @@ public class EngineManager {
 
 	// Current list of engines (doesn't include the built-in engine)
 	private Map<String, EngineConfig> engines;
-	private List<EngineChangeListener> changeListeners = new ArrayList<EngineChangeListener>();
+	private List<EngineChangeListener> changeListeners = new ArrayList<>();
 	// Lock object to manage access to engines and changeListeners
 	private final Object managerLock = new Object();
 
@@ -81,7 +81,7 @@ public class EngineManager {
 	}
 
 	public interface EngineChangeListener {
-		public void engineChanged(EngineChangeEvent event);
+		void engineChanged(EngineChangeEvent event);
 	}
 
 	public EngineManager(Context context) {
@@ -154,7 +154,7 @@ public class EngineManager {
 	 * @return Returns the list of engine names.
 	 */
 	public String[] getEngineNames(boolean includeBuiltIn) {
-		ArrayList<String> engineNames = new ArrayList<String>();
+		ArrayList<String> engineNames = new ArrayList<>();
 		if (includeBuiltIn) {
 			engineNames.add(defaultEngine.getName());
 		}
@@ -236,7 +236,7 @@ public class EngineManager {
 
 	private void saveToConfiguration(String engineName, String engineAbsPath,
 									 String packageName, int versionCode) {
-		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+		Map<String, EngineConfig> enginesList = new TreeMap<>(
 				getEnginesList());
 		enginesList.put(engineName, new EngineConfig(engineName, engineAbsPath,
 				packageName, versionCode));
@@ -276,7 +276,7 @@ public class EngineManager {
 	 *         not found.
 	 */
 	public EngineConfig removeEngine(String engineName) {
-		Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+		Map<String, EngineConfig> enginesList = new TreeMap<>(
 				getEnginesList());
 		EngineConfig removedConf = enginesList.remove(engineName);
 		if (removedConf != null) {
@@ -306,7 +306,7 @@ public class EngineManager {
 			// internal storage
 			if (!stillUsed) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(context);
-				final File _executable = new File(
+				File _executable = new File(
 						removedConf.getExecutablePath());
 				// Delete the executable
 				_executable.delete();
@@ -416,7 +416,7 @@ public class EngineManager {
 	 * Reads the data file to load the current list of engines.
 	 */
 	private void loadEngineData() {
-		TreeMap<String, EngineConfig> list = new TreeMap<String, EngineConfig>();
+		TreeMap<String, EngineConfig> list = new TreeMap<>();
 		File engineDataFile = new File(context.getFilesDir(), ENGINE_DATA_FILE);
 		if (engineDataFile.exists()) {
 			FileReader fr = null;
@@ -479,7 +479,7 @@ public class EngineManager {
 	private void notifyListeners(EngineChangeEvent event) {
 		List<EngineChangeListener> listeners;
 		synchronized (managerLock) {
-			listeners = new ArrayList<EngineChangeListener>(changeListeners);
+			listeners = new ArrayList<>(changeListeners);
 		}
 		// Notify listeners, if any
 		if (listeners.size() > 0) {
@@ -574,7 +574,7 @@ public class EngineManager {
 					Log.e("SCID", errorMsg, e);
 					result = Boolean.FALSE;
 				}
-				Map<String, EngineConfig> enginesList = new TreeMap<String, EngineConfig>(
+				Map<String, EngineConfig> enginesList = new TreeMap<>(
 						getEnginesList());
 				enginesList.put(engineName, new EngineConfig(engineName,
 						absPath, enginePackage, engineVersion));

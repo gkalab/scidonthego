@@ -14,7 +14,9 @@ public class SearchHeaderRequest {
         minEloMin, minEloMax, maxEloMin, maxEloMax;
 
     // from date.h
-    public static final int YEAR_SHIFT = 9, MONTH_SHIFT = 5, YEAR_MAX = 2047;
+    private static final int YEAR_SHIFT = 9;
+    private static final int MONTH_SHIFT = 5;
+    public static final int YEAR_MAX = 2047;
     public static int makeDate(int y, int m, int d) {
         return (y == 0) ? 0 : (y << YEAR_SHIFT) | (m << MONTH_SHIFT) | d;
     }

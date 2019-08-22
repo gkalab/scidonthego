@@ -6,7 +6,7 @@ public class DataBase {
 	/**
 	 * SCID's encoding seems to be CP1252 under Windows and under Linux
 	 */
-	public static final String SCID_ENCODING = "CP1252";
+	static final String SCID_ENCODING = "CP1252";
 
 	static {
 		System.loadLibrary("jni");

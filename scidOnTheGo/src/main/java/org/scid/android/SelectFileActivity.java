@@ -166,7 +166,7 @@ public class SelectFileActivity extends ListActivity {
 		}
 		Arrays.sort(dirNames, String.CASE_INSENSITIVE_ORDER);
 		Arrays.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
-		List<String> resultList = new ArrayList<String>(Arrays.asList(dirNames));
+		List<String> resultList = new ArrayList<>(Arrays.asList(dirNames));
 		resultList.addAll(Arrays.asList(fileNames));
 		return resultList;
 	}

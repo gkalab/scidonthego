@@ -43,7 +43,7 @@ public class Position {
 	private int wKingSq, bKingSq; // Cached king positions
 
 	/** Game half move number, starting from 1. */
-	public int halfMoveCounter;
+	int halfMoveCounter;
 
 	/** Initialize board to empty position. */
 	public Position() {
@@ -87,9 +87,7 @@ public class Position {
 			return false;
 		if (halfMoveCounter != other.halfMoveCounter)
 			return false;
-		if (hashKey != other.hashKey)
-			return false;
-		return true;
+		return hashKey == other.hashKey;
 	}
 
 	@Override
@@ -109,7 +107,7 @@ public class Position {
      * Decide if two positions are equal in the sense of the draw by repetition rule.
 	 * @return True if positions are equal, false otherwise.
 	 */
-	final public boolean drawRuleEquals(Position other) {
+	final boolean drawRuleEquals(Position other) {
 		for (int i = 0; i < 64; i++) {
 			if (squares[i] != other.squares[i])
 				return false;
@@ -118,9 +116,7 @@ public class Position {
 			return false;
 		if (castleMask != other.castleMask)
 			return false;
-		if (epSquare != other.epSquare)
-			return false;
-		return true;
+		return epSquare == other.epSquare;
 	}
 
 	public final void setWhiteMove(boolean whiteMove) {
@@ -130,19 +126,19 @@ public class Position {
 		}
 	}
 	/** Return index in squares[] vector corresponding to (x,y). */
-	public final static int getSquare(int x, int y) {
+	public static int getSquare(int x, int y) {
 		return y * 8 + x;
 	}
 	/** Return x position (file) corresponding to a square. */
-	public final static int getX(int square) {
+	public static int getX(int square) {
 		return square & 7;
 	}
 	/** Return y position (rank) corresponding to a square. */
-	public final static int getY(int square) {
+	public static int getY(int square) {
 		return square >> 3;
 	}
 	/** Return true if (x,y) is a dark square. */
-	public final static boolean darkSquare(int x, int y) {
+	public static boolean darkSquare(int x, int y) {
 		return (x & 1) == (y & 1);
 	}
 
@@ -190,7 +186,7 @@ public class Position {
 		return (castleMask & (1 << H8_CASTLE)) != 0;
 	}
 	/** Bitmask describing castling rights. */
-	public final int getCastleMask() {
+	final int getCastleMask() {
 		return castleMask;
 	}
 	public final void setCastleMask(int castleMask) {
@@ -212,14 +208,14 @@ public class Position {
 	}
 
 
-	public final int getKingSq(boolean whiteMove) {
+	final int getKingSq(boolean whiteMove) {
 		return whiteMove ? wKingSq : bKingSq;
 	}
 
 	/**
 	 * Count number of pieces of a certain type.
 	 */
-	public final int nPieces(int pType) {
+	final int nPieces(int pType) {
 		int ret = 0;
 		for (int sq = 0; sq < 64; sq++) {
 			if (squares[sq] == pType)
@@ -317,7 +313,7 @@ public class Position {
 		setWhiteMove(!wtm);
 	}
 
-	public final void unMakeMove(Move move, UndoInfo ui) {
+	final void unMakeMove(Move move, UndoInfo ui) {
 		setWhiteMove(!whiteMove);
 		int p = squares[move.to];
 		setPiece(move.from, p);
@@ -358,7 +354,7 @@ public class Position {
 		}
 	}
 
-	private final void removeCastleRights(int square) {
+	private void removeCastleRights(int square) {
 		if (square == Position.getSquare(0, 0)) {
 			setCastleMask(castleMask & ~(1 << Position.A1_CASTLE));
 		} else if (square == Position.getSquare(7, 0)) {
@@ -397,7 +393,7 @@ public class Position {
 	/**
      * Compute the Zobrist hash value non-incrementally. Only useful for test programs.
 	 */
-	final long computeZobristHash() {
+	private long computeZobristHash() {
 		long hash = 0;
 		for (int sq = 0; sq < 64; sq++) {
 			int p = squares[sq];
@@ -410,7 +406,7 @@ public class Position {
 		return hash;
 	}
 
-	private final static long getRandomHashVal(int rndNo) {
+	private static long getRandomHashVal(int rndNo) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-1");
 			byte[] input = new byte[4];

@@ -40,37 +40,36 @@ public class AddEngineActivity extends AppCompatActivity {
 	private volatile String currentExecutable;
 	private volatile String currentPackage;
 	private volatile int currentVersion = 0;
-	private List<ChessEngine> openEngines = new ArrayList<ChessEngine>();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Set<String> ignoreExtensions = new HashSet<String>(
-				Arrays.asList(new String[] { ".sg4", ".sn4", ".si4", ".pgn",
-						".zip", ".xml" }));
+		Set<String> ignoreExtensions = new HashSet<>(
+				Arrays.asList(".sg4", ".sn4", ".si4", ".pgn",
+						".zip", ".xml"));
 
 		// Build set of engines. Add any additional engines from the external
 		// directory.
 		SortedSet<Engine> engines = Tools.findEnginesInDirectory(
 				Tools.getScidDirectory(), ignoreExtensions);
 
-		executablesList = new ArrayList<Engine>(engines);
+		executablesList = new ArrayList<>(engines);
 		addOpenExchangeFormatEngines();
 
 		setContentView(R.layout.add_engine);
 
-		ListView executablesListView = (ListView) findViewById(R.id.engine_list);
+		ListView executablesListView = findViewById(R.id.engine_list);
 		executablesListView
 				.setOnItemClickListener(new ExecutableClickListener());
-		executablesListView.setAdapter(new CheckableArrayAdapter<Engine>(this,
+		executablesListView.setAdapter(new CheckableArrayAdapter<>(this,
 				android.R.layout.simple_list_item_single_choice,
 				executablesList));
 	}
 
 	private void addOpenExchangeFormatEngines() {
 		ChessEngineResolver resolver = new ChessEngineResolver(this);
-		this.openEngines = resolver.resolveEngines();
+		List<ChessEngine> openEngines = resolver.resolveEngines();
 		for (ChessEngine engine : openEngines) {
 			if (!executablesList.contains(engine.getFileName())) {
 				executablesList.add(new Engine(engine.getName(), engine
@@ -108,8 +107,8 @@ public class AddEngineActivity extends AppCompatActivity {
 	 */
 	private class CheckableArrayAdapter<T> extends ArrayAdapter<T> {
 
-		public CheckableArrayAdapter(Context context, int textViewResourceId,
-				List<T> objects) {
+		CheckableArrayAdapter(Context context, int textViewResourceId,
+							  List<T> objects) {
 			super(context, textViewResourceId, objects);
 		}
 
@@ -118,7 +117,7 @@ public class AddEngineActivity extends AppCompatActivity {
 			View view = super.getView(position, convertView, parent);
 			Engine item = (Engine) this.getItem(position);
 			if (item != null) {
-				TextView textView = (TextView) view
+				TextView textView = view
 						.findViewById(android.R.id.text1);
 				if (textView != null) {
 					textView.setText(item.getName() != null ? item.getName()
@@ -139,14 +138,13 @@ public class AddEngineActivity extends AppCompatActivity {
 	private class ExecutableClickListener implements OnItemClickListener {
 
 		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position,
-				long id) {
+		public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
 			if (position != ListView.INVALID_POSITION) {
 				Engine engine = (Engine) parent.getItemAtPosition(position);
 				currentExecutable = engine.getFileName();
 				currentPackage = engine.getPackageName();
 				currentVersion = engine.getVersionCode();
-				EditText nameField = (EditText) findViewById(R.id.engine_name);
+				EditText nameField = findViewById(R.id.engine_name);
 				Editable nameEditable = nameField.getText();
 				if (nameEditable.length() == 0) {
 					// If a name is not yet specified, set it to the selected
@@ -191,7 +189,7 @@ public class AddEngineActivity extends AppCompatActivity {
 	public void onOkClick(View view) {
 		Intent data = getIntent();
 
-		EditText nameField = (EditText) findViewById(R.id.engine_name);
+		EditText nameField = findViewById(R.id.engine_name);
 		String name = nameField.getText().toString();
 
 		boolean makeCurrentEngine = ((Checkable) findViewById(R.id.make_current))

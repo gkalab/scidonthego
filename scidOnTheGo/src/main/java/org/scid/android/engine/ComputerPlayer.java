@@ -18,10 +18,7 @@ import android.util.Log;
  * @author petero
  */
 public class ComputerPlayer {
-	public static String engineName = "";
-
-	static PipedProcess process = null;
-	int timeLimit;
+	private static PipedProcess process = null;
 
 	@SuppressLint("NewApi")
 	public ComputerPlayer(EngineConfig engineConfig) {
@@ -46,7 +43,6 @@ public class ComputerPlayer {
 		Log.d("SCID", "engine: writing ucinewgame");
 		process.writeLineToProcess("ucinewgame");
 		syncReady();
-		timeLimit = 0;
 	}
 
 	private static int getNumCPUs() {
@@ -86,7 +82,7 @@ public class ComputerPlayer {
 						break;
 					else if (tokens[0].equals("id")) {
 						if (tokens[1].equals("name")) {
-							engineName = "";
+							String engineName = "";
 							for (int i = 2; i < tokens.length; i++) {
 								if (engineName.length() > 0)
 									engineName += " ";
@@ -104,12 +100,12 @@ public class ComputerPlayer {
 	}
 
 	/** Convert a string to tokens by splitting at whitespace characters. */
-	private final String[] tokenize(String cmdLine) {
+	private String[] tokenize(String cmdLine) {
 		cmdLine = cmdLine.trim();
 		return cmdLine.split("\\s+");
 	}
 
-	private final void syncReady() {
+	private void syncReady() {
 		synchronized (process) {
 			process.writeLineToProcess("isready");
 			Log.d("SCID", "waiting for readyok");

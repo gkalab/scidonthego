@@ -32,7 +32,6 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -82,9 +81,6 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	private TextView status;
 	private ScrollView moveListScroll;
 	private TextView moveList;
-	private TextView whitePlayer;
-	private TextView blackPlayer;
-	private TextView gameNo;
 
 	SharedPreferences preferences;
 
@@ -121,12 +117,8 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 
 		timeIsUp = MediaPlayer.create(this, R.raw.time_is_up);
 
-		// do not use custom titles on Honeycomb and above - don't work with
-		// the Holo Theme
-		initUI(Integer.valueOf(android.os.Build.VERSION.SDK) < 11);
-		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 11) {
-			VersionHelper.registerClipChangedListener(this);
-		}
+		initUI();
+		VersionHelper.registerClipChangedListener(this);
 
 		gameTextListener = new PgnScreenText(pgnOptions);
 		ctrl = new ChessController(this, gameTextListener, pgnOptions);
@@ -519,7 +511,6 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 
 	private String byteArrToString(byte[] data) {
 		StringBuilder ret = new StringBuilder(32768);
-		int nBytes = data.length;
 		for (int datum : data) {
 			int b = datum;
 			if (b < 0) {
@@ -541,7 +532,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		if (statusStr.startsWith("DELETED ")) {
 			statusStr = statusStr.substring(8);
 		}
-		initUI(false);
+		initUI();
 		readPrefs();
 		cb.cursorX = oldCB.cursorX;
 		cb.cursorY = oldCB.cursorY;
@@ -556,19 +547,9 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		setFavoriteRating();
 	}
 
-	private void initUI(boolean initTitle) {
-		if (initTitle) {
-			requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-		}
+	private void initUI() {
 		setContentView(R.layout.main);
-		if (initTitle) {
-			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE,
-					R.layout.title);
-			whitePlayer = (TextView) findViewById(R.id.white_player);
-			blackPlayer = (TextView) findViewById(R.id.black_player);
-			gameNo = (TextView) findViewById(R.id.gameNo);
-		}
-		favoriteRating = (RatingBar) findViewById(R.id.favorite);
+		favoriteRating = findViewById(R.id.favorite);
 		favoriteRating.setOnTouchListener(new OnTouchListener() {
 			// it is tricky to intercept onClick of RatingBar, let us use touch instead
 			@Override
@@ -580,7 +561,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 				return true;
 			}
 		});
-		status = (TextView) findViewById(R.id.status);
+		status = findViewById(R.id.status);
 		status.setFocusable(false);
 		status.setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -594,8 +575,8 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 				return true;
 			}
 		});
-		moveListScroll = (ScrollView) findViewById(R.id.moveListScrollView);
-		moveList = (TextView) findViewById(R.id.moveList);
+		moveListScroll = findViewById(R.id.moveListScrollView);
+		moveList = findViewById(R.id.moveList);
 		moveListScroll.setFocusable(false);
 		moveList.setMovementMethod(LinkMovementMethod.getInstance());
 		moveList.setFocusable(false);
@@ -613,7 +594,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 			}
 		});
 
-		cb = (ChessBoard) findViewById(R.id.chessboard);
+		cb = findViewById(R.id.chessboard);
 		cb.setFocusable(true);
 		cb.requestFocus();
 		cb.setClickable(true);
@@ -893,7 +874,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 				GameMode.REVIEW_MODE));
 		ctrl.setTimeLimit(300000, 60, 0);
 
-		setFullScreenMode(true);
+		setFullScreenMode();
 
 		tmp = preferences.getString("fontSize", "12");
 		int fontSize = Integer.parseInt(tmp);
@@ -935,13 +916,9 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		ctrl.prefsChanged();
 	}
 
-	private void setFullScreenMode(boolean fullScreenMode) {
+	private void setFullScreenMode() {
 		WindowManager.LayoutParams attrs = getWindow().getAttributes();
-		if (fullScreenMode) {
-			attrs.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
-		} else {
-			attrs.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		}
+		attrs.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
 		getWindow().setAttributes(attrs);
 	}
 
@@ -1117,7 +1094,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 
 	private void exportPgn() {
 		final EditText input = new EditText(this);
-		input.setText(Tools.getScidDirectory() + File.separator + "export.pgn");
+		input.setText(new File(Tools.getScidDirectory(),"export.pgn").getAbsolutePath());
 		new AlertDialog.Builder(this)
 				.setTitle(getText(R.string.export_pgn_title))
 				.setMessage(getText(R.string.export_pgn_filename))
@@ -1283,15 +1260,12 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		Tools.setKeepScreenOn(this, true);
 	}
 
-	private boolean setGameMode() {
-		boolean changed = false;
+	private void setGameMode() {
 		if (ctrl.setGameMode(gameMode)) {
-			changed = true;
 			Editor editor = preferences.edit();
 			editor.putInt("gameMode", gameMode.getMode());
 			editor.commit();
 		}
-		return changed;
 	}
 
 	@Override
@@ -1891,8 +1865,8 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		final int UNDELETE_GAME = 8;
 		final int GET_FEN = 9;
 
-		List<CharSequence> lst = new ArrayList<CharSequence>();
-		List<Integer> actions = new ArrayList<Integer>();
+		List<CharSequence> lst = new ArrayList<>();
+		List<Integer> actions = new ArrayList<>();
 		// check if "add to favorites" or "remove from favorites" is needed
 		if (currentGameIsValid()) {
 			if (!getScidAppContext().isFavorite()) {
@@ -1975,8 +1949,8 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		final int IMPORT_PGN_FILE = 0;
 		final int IMPORT_TWIC = 1;
 
-		List<CharSequence> lst = new ArrayList<CharSequence>();
-		List<Integer> actions = new ArrayList<Integer>();
+		List<CharSequence> lst = new ArrayList<>();
+		List<Integer> actions = new ArrayList<>();
 		lst.add(getString(R.string.import_pgn_file));
 		actions.add(IMPORT_PGN_FILE);
 		lst.add(getString(R.string.import_twic));
@@ -2043,12 +2017,10 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 
 	private void shareGame() {
 		String data = ctrl.getPGN();
-		if (data != null) {
-			Sharer sharer = new Sharer(this, getComponentName());
-			sharer.createShareIntent("application/x-chess-pgn", data);
-			if (sharer.getIntent() != null) {
-				startActivity(sharer.getIntent());
-			}
+		Sharer sharer = new Sharer(this, getComponentName());
+		sharer.createShareIntent("application/x-chess-pgn", data);
+		if (sharer.getIntent() != null) {
+			startActivity(sharer.getIntent());
 		}
 	}
 
@@ -2224,13 +2196,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		if (!gameMode.studyMode() || studyOrientation == SO_MY_PLAYER) {
 			flipBoardForPlayerNames(white, black);
 		}
-		if (whitePlayer != null) {
-			whitePlayer.setText(white);
-			blackPlayer.setText(black);
-			this.gameNo.setText(gameNo);
-		} else {
-			setTitle(gameNo + "	  " + white + " - " + black);
-		}
+		setTitle(gameNo + "	  " + white + " - " + black);
 	}
 
 	@Override

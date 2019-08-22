@@ -30,7 +30,7 @@ public class MoveIndicator extends View {
 	private void setMoveIndicator(Canvas canvas) {
 		Position position = ((ScidApplication) context.getApplicationContext())
 				.getPosition();
-		Bitmap moveBitmap = null;
+		Bitmap moveBitmap;
 		if (position == null) {
 			moveBitmap = BitmapFactory.decodeResource(getResources(),
 					R.drawable.black_moveindicator);

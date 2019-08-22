@@ -36,14 +36,14 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		}
 	}
 
-	HashMap<Node, PgnScreenText.NodeInfo> nodeToCharPos;
+	private HashMap<Node, PgnScreenText.NodeInfo> nodeToCharPos;
 
 	PgnScreenText(PGNOptions options) {
-		nodeToCharPos = new HashMap<Node, PgnScreenText.NodeInfo>();
+		nodeToCharPos = new HashMap<>();
 		this.options = options;
 	}
 
-	public final SpannableStringBuilder getSpannableData() {
+	final SpannableStringBuilder getSpannableData() {
 		return sb;
 	}
 
@@ -54,7 +54,7 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 	 * 
 	 * @return sb of current move
 	 */
-	public final SpannableStringBuilder getCurrentSpannableData(
+	final SpannableStringBuilder getCurrentSpannableData(
 			boolean whiteMove) {
 		PgnScreenText.NodeInfo ni = nodeToCharPos.get(currNode);
 		if (ni != null) {
@@ -63,7 +63,7 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		return new SpannableStringBuilder();
 	}
 
-	public final boolean atEnd() {
+	final boolean atEnd() {
 		return currPos >= endPos - 10;
 	}
 
@@ -71,11 +71,11 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		return upToDate;
 	}
 
-	int paraStart = 0;
-	int paraIndent = 0;
-	boolean paraBold = false;
+	private int paraStart = 0;
+	private int paraIndent = 0;
+	private boolean paraBold = false;
 
-	private final void newLine() {
+	private void newLine() {
 		synchronized (sb) {
 			if (!col0) {
 				if (paraIndent > 0) {
@@ -99,7 +99,7 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		}
 	}
 
-	boolean pendingNewLine = false;
+	private boolean pendingNewLine = false;
 
 	public void processToken(Node node, int type, String token) {
 		synchronized (sb) {
@@ -237,7 +237,7 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		upToDate = false;
 	}
 
-	BackgroundColorSpan bgSpan = new BackgroundColorSpan(0xff888888);
+	private BackgroundColorSpan bgSpan = new BackgroundColorSpan(0xff888888);
 
 	@Override
 	public void setCurrent(Node node) {
@@ -258,7 +258,7 @@ class PgnScreenText implements PgnToken.PgnTokenReceiver {
 		}
 	}
 
-	public int getCurrentPosition() {
+	int getCurrentPosition() {
 		return currPos;
 	}
 }

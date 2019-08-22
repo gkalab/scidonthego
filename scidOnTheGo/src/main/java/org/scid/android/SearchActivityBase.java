@@ -14,7 +14,7 @@ class SearchActivityBase extends AppCompatActivity {
 
 	protected int filterOperation = 0;
 	protected void addSpinner() {
-		Spinner spinner = (Spinner) findViewById(R.id.search_filter_spinner);
+		Spinner spinner = findViewById(R.id.search_filter_spinner);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
 				this, R.array.search_filter_array,
 				android.R.layout.simple_spinner_item);

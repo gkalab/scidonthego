@@ -12,19 +12,17 @@ import org.scid.android.gamelogic.GameTree.Node;
  * @author petero
  */
 public class Game {
-	boolean pendingDrawOffer;
 	GameTree tree;
-	private ComputerPlayer computerPlayer;
 	TimeControl timeController;
+	private boolean pendingDrawOffer;
 	private boolean gamePaused;
 	private boolean addFirst;
 
-	PgnToken.PgnTokenReceiver gameTextListener;
+	private PgnToken.PgnTokenReceiver gameTextListener;
 
 	public Game(ComputerPlayer computerPlayer,
 			PgnToken.PgnTokenReceiver gameTextListener, int timeControl,
 			int movesPerSession, int timeIncrement) {
-		this.computerPlayer = computerPlayer;
 		this.gameTextListener = gameTextListener;
 		tree = new GameTree(gameTextListener);
 		timeController = new TimeControl();
@@ -39,19 +37,14 @@ public class Game {
 		updateTimeControl(true);
 	}
 
-	public final void setComputerPlayer(ComputerPlayer computerPlayer) {
-		this.computerPlayer = computerPlayer;
+	final void setComputerPlayer(ComputerPlayer computerPlayer) {
 	}
 
-	public final void setGamePaused(boolean gamePaused) {
+	final void setGamePaused(boolean gamePaused) {
 		if (gamePaused != this.gamePaused) {
 			this.gamePaused = gamePaused;
 			updateTimeControl(false);
 		}
-	}
-
-	public final void setAddFirst(boolean addFirst) {
-		this.addFirst = addFirst;
 	}
 
 	final void setPos(Position pos) {
@@ -83,7 +76,7 @@ public class Game {
 		}
 	}
 
-	public final Move getNextMove() {
+	final Move getNextMove() {
 		if (canRedoMove()) {
 			tree.goForward(-1);
 			Move ret = tree.currentNode.move;
@@ -101,7 +94,7 @@ public class Game {
 	 *            The move or command to process.
 	 * @return True if str was understood, false otherwise.
 	 */
-	public final boolean processString(String str, boolean inStudyMode) {
+	final boolean processString(String str, boolean inStudyMode) {
 		if (getGameState() != GameState.ALIVE)
 			return false;
 		if (str.startsWith("draw ")) {
@@ -138,8 +131,8 @@ public class Game {
 				inStudyMode);
 	}
 
-	private final boolean addToGameTree(Move m, String playerAction,
-			boolean inStudyMode) {
+	private boolean addToGameTree(Move m, String playerAction,
+								  boolean inStudyMode) {
 		if (m.equals(new Move(0, 0, 0))) { // Don't create more than one null
 			// move at a node
 			List<Move> varMoves = tree.variations();
@@ -177,7 +170,7 @@ public class Game {
 		return true;
 	}
 
-	private final void updateTimeControl(boolean discardElapsed) {
+	private void updateTimeControl(boolean discardElapsed) {
 		int move = currPos().fullMoveCounter;
 		boolean wtm = currPos().whiteMove;
 		if (discardElapsed || (move != timeController.currentMove)
@@ -196,55 +189,15 @@ public class Game {
 		}
 	}
 
-	public final String getGameStateString() {
-		switch (getGameState()) {
-		case ALIVE:
-			return "";
-		case WHITE_MATE:
-			return "Game over, white mates!";
-		case BLACK_MATE:
-			return "Game over, black mates!";
-		case WHITE_STALEMATE:
-		case BLACK_STALEMATE:
-			return "Game over, draw by stalemate!";
-		case DRAW_REP: {
-			String ret = "Game over, draw by repetition!";
-			String drawInfo = tree.getGameStateInfo();
-			if (drawInfo.length() > 0) {
-				ret = ret + " [" + drawInfo + "]";
-			}
-			return ret;
-		}
-		case DRAW_50: {
-			String ret = "Game over, draw by 50 move rule!";
-			String drawInfo = tree.getGameStateInfo();
-			if (drawInfo.length() > 0) {
-				ret = ret + " [" + drawInfo + "]";
-			}
-			return ret;
-		}
-		case DRAW_NO_MATE:
-			return "Game over, draw by impossibility of mate!";
-		case DRAW_AGREE:
-			return "Game over, draw by agreement!";
-		case RESIGN_WHITE:
-			return "Game over, white resigns!";
-		case RESIGN_BLACK:
-			return "Game over, black resigns!";
-		default:
-			throw new RuntimeException();
-		}
-	}
-
 	/**
 	 * Get the last played move, or null if no moves played yet.
 	 */
-	public final Move getLastMove() {
+	final Move getLastMove() {
 		return tree.currentNode.move;
 	}
 
 	/** Return true if there is a move to redo. */
-	public final boolean canRedoMove() {
+	final boolean canRedoMove() {
 		int nVar = tree.variations().size();
 		if (nVar == 1) {
 			// check if last move is the null move
@@ -255,7 +208,7 @@ public class Game {
 		return nVar > 0;
 	}
 
-	public final int numVariations() {
+	final int numVariations() {
 		if (tree.currentNode == tree.rootNode)
 			return 1;
 		tree.goBack();
@@ -264,16 +217,7 @@ public class Game {
 		return nChildren;
 	}
 
-    public final int currVariation() {
-        if (tree.currentNode == tree.rootNode)
-            return 0;
-        tree.goBack();
-        int defChild = tree.currentNode.defaultChild;
-        tree.goForward(-1);
-        return defChild;
-    }
-
-	public final void changeVariation(int delta) {
+	final void changeVariation(int delta) {
 		if (tree.currentNode == tree.rootNode)
 			return;
 		tree.goBack();
@@ -287,7 +231,7 @@ public class Game {
 		updateTimeControl(true);
 	}
 
-    public final void moveVariation(int delta) {
+    final void moveVariation(int delta) {
         if (tree.currentNode == tree.rootNode)
 			return;
 		tree.goBack();
@@ -302,7 +246,7 @@ public class Game {
         updateTimeControl(true);
     }
 
-    public final void removeSubTree() {
+    final void removeSubTree() {
         if (getLastMove() != null) {
             tree.goBack();
 		int defChild = tree.currentNode.defaultChild;
@@ -315,7 +259,7 @@ public class Game {
 		updateTimeControl(true);
 	}
 
-	public static enum GameState {
+	public enum GameState {
 		ALIVE, 
 		WHITE_MATE, // White mates
 		BLACK_MATE, // Black mates
@@ -332,7 +276,7 @@ public class Game {
 	/**
 	 * Get the current state (draw, mate, ongoing, etc) of the game.
 	 */
-	public final GameState getGameState() {
+	private GameState getGameState() {
 		return tree.getGameState();
 	}
 
@@ -340,11 +284,11 @@ public class Game {
 	 * Check if a draw offer is available.
 	 * @return True if the current player has the option to accept a draw offer.
 	 */
-	public final boolean haveDrawOffer() {
+	private boolean haveDrawOffer() {
 		return tree.currentNode.playerAction.equals("draw offer");
 	}
 
-	public final void undoMove() {
+	final void undoMove() {
 		Move m = tree.currentNode.move;
 		if (m != null) {
 			tree.goBack();
@@ -353,7 +297,7 @@ public class Game {
 		}
 	}
 
-	public final void redoMove() {
+	final void redoMove() {
 		if (canRedoMove()) {
 			tree.goForward(-1);
 			pendingDrawOffer = false;
@@ -361,7 +305,7 @@ public class Game {
 		}
 	}
 
-	public final void newGame() {
+	private void newGame() {
 		tree = new GameTree(gameTextListener);
 		timeController.reset();
 		pendingDrawOffer = false;
@@ -373,11 +317,11 @@ public class Game {
      * Return the last zeroing position and a list of moves
      * to go from that position to the current position.
 	 */
-	public final Pair<Position, ArrayList<Move>> getUCIHistory() {
+	final Pair<Position, ArrayList<Move>> getUCIHistory() {
 		Pair<List<Node>, Integer> ml = tree.getMoveList();
 		List<Node> moveList = ml.first;
 		Position pos = new Position(tree.startPos);
-		ArrayList<Move> mList = new ArrayList<Move>();
+		ArrayList<Move> mList = new ArrayList<>();
 		Position currPos = new Position(pos);
 		UndoInfo ui = new UndoInfo();
 		int nMoves = ml.second;
@@ -390,10 +334,10 @@ public class Game {
 				mList.clear();
 			}
 		}
-		return new Pair<Position, ArrayList<Move>>(pos, mList);
+		return new Pair<>(pos, mList);
 	}
 
-	private final void handleDrawCmd(String drawCmd, boolean inStudyMode) {
+	private void handleDrawCmd(String drawCmd, boolean inStudyMode) {
 		Position pos = tree.currentPos;
 		if (drawCmd.startsWith("rep") || drawCmd.startsWith("50")) {
 			boolean rep = drawCmd.startsWith("rep");

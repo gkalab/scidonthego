@@ -23,8 +23,8 @@ public class MoveListDialog {
 		final int MOVE_VAR_UP = 1;
 		final int MOVE_VAR_DOWN = 2;
 
-		List<CharSequence> lst = new ArrayList<CharSequence>();
-		List<Integer> actions = new ArrayList<Integer>();
+		List<CharSequence> lst = new ArrayList<>();
+		List<Integer> actions = new ArrayList<>();
 		lst.add(context.getString(R.string.truncate_gametree));
 		actions.add(REMOVE_SUBTREE);
 		if (ctrl.numVariations() > 1) {

@@ -10,7 +10,7 @@ public class EngineConfig {
 	private int versionCode;
 	private String packageName;
 
-	public EngineConfig(String name, String executablePath, String packageName, int versionCode) {
+	EngineConfig(String name, String executablePath, String packageName, int versionCode) {
 		this.name = name;
 		this.executablePath = executablePath;
 		this.packageName = packageName;
@@ -21,15 +21,15 @@ public class EngineConfig {
 		return name;
 	}
 
-	public String getExecutablePath() {
+	String getExecutablePath() {
 		return executablePath;
 	}
 
-	public int getVersionCode() {
+	int getVersionCode() {
 		return versionCode;
 	}
 
-	public String getPackageName() {
+	String getPackageName() {
 		return packageName;
 	}
 }
