@@ -82,7 +82,8 @@
         android:includeFontPadding="true"
         android:textStyle="bold"
         android:typeface="monospace"
-        android:textSize="18dip" />
+        android:textSize="18dip"
+        android:textColor="?attr/colorAccent"/>
     <ScrollView
         android:id="@+id/moveListScrollView"
         android:layout_width="fill_parent"
@@ -95,6 +96,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="true"
             android:typeface="monospace"
-            android:textSize="10dip" />
+            android:textSize="10dip"
+            android:textColor="?android:attr/textColorPrimary"/>
     </ScrollView>
 </LinearLayout>

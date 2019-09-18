@@ -170,7 +170,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 					&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 				initAfterPermissionSuccess();
 			} else {
-				final AlertDialog d = new AlertDialog.Builder(this)
+				AlertDialog d = new AlertDialog.Builder(this)
 						.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
@@ -900,7 +900,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		pgnOptions.exp.playerAction = false;
 		pgnOptions.exp.clockInfo = false;
 
-		ColorTheme.instance().readColors(preferences);
+		ColorTheme.instance().readColors(this, preferences);
 		cb.setColors();
 
 		String engineName = preferences.getString(ANALYSIS_ENGINE, engineManager
@@ -1281,7 +1281,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		case RESULT_PREFERENCES:
 			readPrefs();
 			String theme = preferences.getString("colorTheme", "0");
-			ColorTheme.instance().setTheme(preferences, Integer.parseInt(theme));
+			ColorTheme.instance().setTheme(this, preferences, Integer.parseInt(theme));
 			cb.setColors();
 			setGameMode();
 			break;
@@ -1429,7 +1429,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 							ANALYSIS_ENGINE, null);
 					if (analysisEngine != null
 							&& analysisEngine.equals(_engineName)) {
-						final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
+						EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
 
 							@Override
 							public void engineChanged(EngineChangeEvent event) {
@@ -1534,7 +1534,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	private void addNewEngine(final String engineName, String executable,
 			final String enginePackage, final int engineVersion, boolean makeCurrentEngine, boolean copied) {
 		if (makeCurrentEngine) {
-			final EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
+			EngineManager.EngineChangeListener _listener = new EngineManager.EngineChangeListener() {
 
 				@Override
 				public void engineChanged(EngineChangeEvent event) {
@@ -1578,7 +1578,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	}
 
 	@Override
-	public void setStatusString(final String str) {
+	public void setStatusString(String str) {
 		String prefix = "";
 		if (getScidAppContext().isDeleted()) {
 			prefix = "<font color='red'><b>DELETED</b></font> ";
@@ -1766,7 +1766,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	}
 
 	private AlertDialog createCreateDatabaseDialog() {
-		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		final EditText input = new EditText(this);
 		builder.setTitle(getText(R.string.create_db_title));
 		builder.setMessage(getText(R.string.create_db_message));
@@ -1804,8 +1804,8 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 		final int SEARCH_CURRENT_BOARD = 1;
 		final int SEARCH_HEADER = 2;
 		final int SHOW_FAVORITES = 3;
-		List<CharSequence> lst = new ArrayList<CharSequence>();
-		List<Integer> actions = new ArrayList<Integer>();
+		List<CharSequence> lst = new ArrayList<>();
+		List<Integer> actions = new ArrayList<>();
 		lst.add(getString(R.string.reset_filter));
 		actions.add(RESET_FILTER);
 		lst.add(getString(R.string.search_current_board));
@@ -2088,7 +2088,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	}
 
 	private void resetFilter() {
-		final String fileName = getScidAppContext().getCurrentFileName();
+		String fileName = getScidAppContext().getCurrentFileName();
 		if (fileName.length() != 0) {
 			DataBaseView dbv = setDataBaseViewFromFile();
 			if (dbv != null) {
@@ -2144,7 +2144,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	 *	   if set to false only reset the dbv if the file name changes or the current dbv is null
 	 */
 	private DataBaseView setDataBaseViewFromFile(boolean alwaysResetDbView) {
-		final String currentScidFile = preferences.getString("currentScidFile", "");
+		String currentScidFile = preferences.getString("currentScidFile", "");
 		if (currentScidFile.length() == 0) {
 			return null;
 		}

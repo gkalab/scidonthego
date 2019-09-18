@@ -1,8 +1,10 @@
 package org.scid.android;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 
 class ColorTheme {
 	private static ColorTheme inst = null;
@@ -51,7 +53,7 @@ class ColorTheme {
 					"#FFFFFFFF", "#FFAFC4D4", "#A01F1FFF", "#A0FF1F1F",
 					"#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F"}};
 
-	final void readColors(SharedPreferences preferences) {
+	final void readColors(Context context, SharedPreferences preferences) {
 		for (int i = 0; i < numColors; i++) {
 			String prefName = prefPrefix + prefNames[i];
 			String defaultColor = themeColors[0][i];
@@ -61,16 +63,17 @@ class ColorTheme {
 			} catch (IllegalArgumentException e) {
 				colorTable[i] = 0;
 			}
+			colorTable[CURRENT_MOVE] = ContextCompat.getColor(context, R.color.accent);
 		}
 	}
 
-	final void setTheme(SharedPreferences preferences, int themeType) {
+	final void setTheme(Context context, SharedPreferences preferences, int themeType) {
 		Editor editor = preferences.edit();
 		for (int i = 0; i < numColors; i++)
 			editor.putString(prefPrefix + prefNames[i],
 					themeColors[themeType][i]);
 		editor.commit();
-		readColors(preferences);
+		readColors(context, preferences);
 	}
 
 	final int getColor(int colorType) {
