@@ -1,12 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
+        android:id="@+id/item_mode"
+        android:title="@string/menu_mode"
+        app:showAsAction="always">
+        <menu>
+            <group android:checkableBehavior="single" >
+                <item
+                    android:id="@+id/item_review_mode"
+                    android:title="@string/menu_review_mode">
+                </item>
+                <item
+                    android:id="@+id/item_analysis_mode"
+                    android:title="@string/menu_analysis_mode">
+                </item>
+                <item
+                    android:id="@+id/item_study_mode"
+                    android:title="@string/menu_study_mode">
+                </item>
+            </group>
+        </menu>
+    </item>
+    <item
         android:id="@+id/item_file"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_file">
-
-        <!-- android:icon="@drawable/ic_menu_archive" -->
+        android:title="@string/menu_file"
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/item_create_database"
@@ -14,7 +34,6 @@
             </item>
             <item
                 android:id="@+id/item_open_file"
-                android:icon="@drawable/ic_menu_archive"
                 android:title="@string/menu_open_db">
             </item>
             <item
@@ -30,22 +49,19 @@
     <item
         android:id="@+id/item_gamelist"
         android:icon="@drawable/ic_menu_list"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_game_list">
+        android:title="@string/menu_game_list"
+        app:showAsAction="ifRoom">
     </item>
     <item
         android:id="@+id/item_search"
         android:icon="@drawable/ic_menu_search"
-        android:showAsAction="ifRoom"
-        android:title="@string/search">
+        android:title="@string/search"
+        app:showAsAction="ifRoom">
     </item>
     <item
         android:id="@+id/item_game"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_game">
-
-        <!-- android:icon="@drawable/ic_menu_archive" -->
-        <!-- create empty sub-menu for easy access within code -->
+        android:title="@string/menu_game"
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/item_goto_game"
@@ -81,30 +97,9 @@
         </menu>
     </item>
     <item
-        android:id="@+id/item_mode"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_mode">
-        <menu>
-            <group android:checkableBehavior="single" >
-                <item
-                    android:id="@+id/item_review_mode"
-                    android:title="@string/menu_review_mode">
-                </item>
-                <item
-                    android:id="@+id/item_analysis_mode"
-                    android:title="@string/menu_analysis_mode">
-                </item>
-                <item
-                    android:id="@+id/item_study_mode"
-                    android:title="@string/menu_study_mode">
-                </item>
-            </group>
-        </menu>
-    </item>
-    <item
         android:id="@+id/item_edit"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_edit">
+        android:title="@string/menu_edit"
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/item_paste_clipboard"
@@ -130,9 +125,9 @@
     </item>
     <item
         android:id="@+id/item_share"
-        android:showAsAction="ifRoom"
         android:icon="@drawable/ic_menu_share"
-        android:title="@string/menu_share">
+        android:title="@string/menu_share"
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/item_share_game"

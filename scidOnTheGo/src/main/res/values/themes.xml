@@ -7,9 +7,6 @@
         <item name="colorAccent">@color/accent</item>
     </style>
 
-    <style name="PrefsTheme" parent="@style/Theme.AppCompat">
-    </style>
-
     <style name="listViewPrefs" parent="@android:style/Widget.ListView">
         <item name="android:cacheColorHint">@android:color/transparent</item>
     </style>
