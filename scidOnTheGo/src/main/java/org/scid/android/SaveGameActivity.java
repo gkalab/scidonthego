@@ -22,7 +22,7 @@ public class SaveGameActivity extends AppCompatActivity {
 	private ProgressDialog progressDlg;
 	private EditText event;
 	private EditText site;
-	private EditText date = findViewById(R.id.ed_header_date);
+	private EditText date;
 	private EditText round;
 	private EditText white;
 	private EditText black;
@@ -43,6 +43,7 @@ public class SaveGameActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.save_game);
+		date = findViewById(R.id.ed_header_date);
 		TreeMap<String, String> headers = new TreeMap<>();
 		getScidAppContext().getController().getHeaders(headers);
 		// disable save game if the database is empty or if it's a new game (gameNo=-1)
