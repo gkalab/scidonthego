@@ -302,7 +302,7 @@ public class EngineManager {
 					context.getString(R.string.engine_removed, engineName),
 					Toast.LENGTH_SHORT).show();
 
-			// If executable is no longer used, deleted it from
+			// If executable is no longer used, delete it from
 			// internal storage
 			if (!stillUsed) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(context);
