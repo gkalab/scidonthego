@@ -2017,7 +2017,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 
 	private void shareGame() {
 		String data = ctrl.getPGN();
-		Sharer sharer = new Sharer(this, getComponentName());
+		Sharer sharer = new Sharer(this);
 		sharer.createShareIntent("application/x-chess-pgn", data);
 		if (sharer.getIntent() != null) {
 			startActivity(sharer.getIntent());
@@ -2025,7 +2025,7 @@ public class ScidAndroidActivity extends AppCompatActivity implements GUIInterfa
 	}
 
 	private void sharePosition() {
-		Sharer sharer = new Sharer(this, getComponentName());
+		Sharer sharer = new Sharer(this);
 		sharer.createShareIntent("application/x-chess-fen", ctrl.getFEN());
 		if (sharer.getIntent() != null) {
 			startActivity(sharer.getIntent());
