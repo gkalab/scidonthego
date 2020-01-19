@@ -153,7 +153,7 @@ public class ScidCursor extends AbstractCursor {
 		gameInfo.setDeleted(DataBase.isDeleted());
 	}
 
-	private String getSanitizedString(byte[] value) {
+	private static String getSanitizedString(byte[] value) {
 		if (value == null) {
 			return "";
 		} else {
