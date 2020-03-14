@@ -19,3 +19,4 @@ scidOnTheGo/src/main/libs
 scidOnTheGo/src/main/obj
 scidOnTheGo/release
 /screenshots/*
+/.idea/markdown*.xml
